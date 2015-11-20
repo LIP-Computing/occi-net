@@ -1,4 +1,5 @@
-OCCI Network Interface
+============================
+   OCCI Network Interface
 =============================
 
 occi-net is an implementation the Open Grid Forum's
