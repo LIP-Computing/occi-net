@@ -23,9 +23,10 @@ import os
 import six.moves.urllib.parse as urlparse
 import webob.exc
 
-from ooi.api import helpers
+from occinet.drivers import request
 
-class OpenStackNet(BaseHelper):
+
+class OpenStackNet(request.BaseHelper):
     """Class to interact with the nova API."""
 
     @staticmethod
