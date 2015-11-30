@@ -162,9 +162,9 @@ class OpenStackHelper(BaseHelper):
     @staticmethod
     def tenant_from_req(req):
         try:
-            return req.environ["keystone.token_auth"].user.project_id
-        except AttributeError:
-            return req.environ["keystone.token_info"]["token"]["project"]["id"]
+            return req.environ["HTTP_X_PROJECT_ID"]
+        except KeyError:
+            raise exception.Forbidden(reason="Cannot find project ID")
 
     def _get_index_req(self, req):
         tenant_id = self.tenant_from_req(req)
@@ -488,15 +488,14 @@ class OpenStackHelper(BaseHelper):
         # We only get one volume
         return self.get_from_response(response, "volume", {})
 
-    def _get_floating_ip_allocate_req(self, req, pool):
+    def _get_floating_ip_allocate_req(self, req, pool=None):
         tenant_id = self.tenant_from_req(req)
         path = "/%s/os-floating-ips" % tenant_id
         body = {"pool": pool}
-        return self._get_req(req, path=path,
-                             body=json.dumps(body),
+        return self._get_req(req, path=path, body=json.dumps(body),
                              method="POST")
 
-    def allocate_floating_ip(self, req, pool):
+    def allocate_floating_ip(self, req, pool=None):
         """Allocate a floating ip from a pool.
 
         :param req: the incoming request

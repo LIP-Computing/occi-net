@@ -26,6 +26,7 @@ import ooi.api.network_link
 from ooi.api import query
 import ooi.api.storage
 import ooi.api.storage_link
+from ooi import config
 from ooi import exception
 from ooi.log import log as logging
 from ooi import utils
@@ -34,6 +35,24 @@ from ooi.wsgi import parsers
 from ooi.wsgi import serializers
 
 LOG = logging.getLogger(__name__)
+
+occi_opts = [
+    config.cfg.StrOpt('ooi_listen',
+                      default="0.0.0.0",
+                      help='The IP address on which the OCCI (ooi) API '
+                      'will listen.'),
+    config.cfg.IntOpt('ooi_listen_port',
+                      default=8787,
+                      help='The port on which the OCCI (ooi) API '
+                      'will listen.'),
+    config.cfg.IntOpt('ooi_workers',
+                      help='Number of workers for OCCI (ooi) API service. '
+                      'The default will be equal to the number of CPUs '
+                      'available.'),
+]
+
+CONF = config.cfg.CONF
+CONF.register_opts(occi_opts)
 
 
 class Request(webob.Request):
@@ -63,7 +82,7 @@ class Request(webob.Request):
                                               default_match=default_match)
         if not content_type:
             LOG.debug("Unrecognized Accept Content-type provided in request")
-            raise exception.InvalidAccept(content_type=content_type)
+            raise exception.InvalidAccept(content_type=self.accept)
         return content_type
 
     def get_parser(self):
@@ -431,7 +450,7 @@ class ResourceExceptionHandler(object):
             LOG.info("HTTP exception thrown: %s", ex_value)
             raise Fault(ex_value)
         else:
-            LOG.warning("Unexpected exception: %s" % ex_value)
+            LOG.exception("Unexpected exception: %s" % ex_value)
             raise Fault(webob.exc.HTTPInternalServerError())
 
         # We didn't handle the exception

@@ -32,9 +32,7 @@ class TestStorageLinkController(test_middleware.TestMiddleware):
         for url in ("/storagelink/", "/storagelink"):
             req = self._build_req(url, tenant["id"], method="GET")
 
-            m = mock.MagicMock()
-            m.user.project_id = tenant["id"]
-            req.environ["keystone.token_auth"] = m
+            req.environ["HTTP_X_PROJECT_ID"] = tenant["id"]
 
             resp = req.get_response(app)
 
@@ -99,7 +97,8 @@ class TestStorageLinkController(test_middleware.TestMiddleware):
                                         "compute/%s" % a["serverId"])
                 target = utils.join_url(self.application_url + "/",
                                         "storage/%s" % a["volumeId"])
-                self.assertResultIncludesLink(link_id, source, target, resp)
+                self.assertResultIncludesLinkAttr(link_id, source, target,
+                                                  resp)
                 self.assertEqual(200, resp.status_code)
 
     def test_show_invalid_id(self):

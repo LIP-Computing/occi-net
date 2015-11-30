@@ -829,9 +829,7 @@ class TestOpenStackHelper(TestBaseHelper):
 
 class TestOpenStackHelperReqs(TestBaseHelper):
     def _build_req(self, tenant_id, **kwargs):
-        m = mock.MagicMock()
-        m.user.project_id = tenant_id
-        environ = {"keystone.token_auth": m}
+        environ = {"HTTP_X_PROJECT_ID": tenant_id}
         return webob.Request.blank("/whatever", environ=environ, **kwargs)
 
     def test_os_index_req(self):
@@ -1080,6 +1078,15 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         tenant = fakes.tenants["foo"]
         req = self._build_req(tenant["id"])
         pool = "foo"
+        body = {"pool": pool}
+        path = "/%s/os-floating-ips" % tenant["id"]
+        os_req = self.helper._get_floating_ip_allocate_req(req, pool)
+        self.assertExpectedReq("POST", path, body, os_req)
+
+    def test_get_os_floating_ip_allocate_no_pool(self):
+        tenant = fakes.tenants["foo"]
+        req = self._build_req(tenant["id"])
+        pool = None
         body = {"pool": pool}
         path = "/%s/os-floating-ips" % tenant["id"]
         os_req = self.helper._get_floating_ip_allocate_req(req, pool)

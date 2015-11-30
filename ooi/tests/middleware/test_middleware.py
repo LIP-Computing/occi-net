@@ -14,7 +14,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
 import webob
 import webob.dec
 import webob.exc
@@ -77,6 +76,21 @@ class TestMiddleware(base.TestCase):
                     return
         self.fail("Failed to find %s in %s." % (expected_attrs, result))
 
+    def assertResultIncludesLinkAttr(self, link_id, source, target, result):
+        expected_attrs = set([
+            'occi.core.source="%s"' % source,
+            'occi.core.target="%s"' % target,
+            'occi.core.id="%s"' % link_id,
+        ])
+        attrs = set()
+        for lines in result.text.splitlines():
+            r = lines.split(":", 1)
+            if r[0] == "X-OCCI-Attribute":
+                attrs.add(r[1].strip())
+        if expected_attrs.issubset(attrs):
+            return
+        self.fail("Failed to find %s in %s." % (expected_attrs, result))
+
     def _build_req(self, path, tenant_id, **kwargs):
         if self.accept is not None:
             kwargs["accept"] = self.accept
@@ -84,9 +98,7 @@ class TestMiddleware(base.TestCase):
         if self.content_type is not None:
             kwargs["content_type"] = self.content_type
 
-        m = mock.MagicMock()
-        m.user.project_id = tenant_id
-        environ = {"keystone.token_auth": m}
+        environ = {"HTTP_X_PROJECT_ID": tenant_id}
 
         kwargs["base_url"] = self.application_url
 
@@ -168,4 +180,15 @@ class TestMiddlewareTextOcci(TestMiddleware):
             attrs = set([s.strip() for s in val.split(";")])
             if expected_attrs.issubset(attrs):
                 return
+        self.fail("Failed to find %s in %s." % (expected_attrs, result))
+
+    def assertResultIncludesLinkAttr(self, link_id, source, target, result):
+        expected_attrs = set([
+            'occi.core.source="%s"' % source,
+            'occi.core.target="%s"' % target,
+            'occi.core.id="%s"' % link_id,
+        ])
+        attrs = set([v for v in result.headers.getall("X-OCCI-Attribute")])
+        if expected_attrs.issubset(attrs):
+            return
         self.fail("Failed to find %s in %s." % (expected_attrs, result))
