@@ -27,16 +27,36 @@ from occinet.drivers import request
 
 
 class OpenStackNet(request.BaseHelper):
-    """Class to interact with the nova API."""
+    """Class to interact with the neutron API."""
 
     @staticmethod
     def tenant_from_req(req):
+        """Return the tenant id
+        This method retrieve a list of network to which the tenant has access.
+        :param req: the original request
+        :returns: tenant Id
+        """
         try:
             return req.environ["keystone.token_auth"].user.project_id
         except AttributeError:
             return req.environ["keystone.token_info"]["token"]["project"]["id"]
 
     def _get_index_req(self, req):
+        """Return a new Request object to interact with OpenStack.
+        This method retrieve a request ready to list networks
+        :param req: the original request
+
+        :returns: request modified
+        """
         tenant_id = self.tenant_from_req(req)
-        path = "/%s/servers" % tenant_id
+        path = "/networks?%s" % tenant_id
         return self._get_req(req, path=path, method="GET")
+
+    def index(self, req):
+        """Get a list of servers for a tenant.
+        This method retrieve a list of network to which the tenant has access.
+        :param req: the incoming request
+        """
+        os_req = self._get_index_req(req)
+        response = os_req.get_response(self.app)
+        return self.get_from_response(response, "networks", [])
