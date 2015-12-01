@@ -23,10 +23,10 @@ import os
 import six.moves.urllib.parse as urlparse
 import webob.exc
 
-from occinet.drivers import request
+from occinet.drivers import base
 
 
-class OpenStackNet(request.BaseHelper):
+class OpenStackNet(base.BaseHelper):
     """Class to interact with the neutron API."""
 
     @staticmethod
