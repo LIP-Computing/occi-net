@@ -31,6 +31,8 @@ from ooi.tests import base
 
 from occinet.drivers.openstack import openstack_driver
 from occinet.tests import fakes
+from keystone.session import KeySession
+
 
 
 class TestNetworkController(base.TestController):
@@ -52,3 +54,18 @@ class TestNetworkController(base.TestController):
             self.assertEqual(expected, result.resources)
             m_index.assert_called_with(None)
 
+    def test_list(self):
+        key_session = KeySession()
+        #session = key_session.create_session("admin", "stack1", "dev01")
+        auth_ref = key_session.create_keystone("dev", "passwd", "6271876e5bea4935a98cf10840f8dcb6").auth_ref
+        environ = {"HTTP_X_PROJECT_ID": "dev", "keystone.token_auth": auth_ref}
+        kwargs = {}
+        kwargs["base_url"] = "/v2.0"
+        kwargs["host"] = "http://localhost:35357"
+        path="/networks"
+        net = network.Controller(None,None)
+        req = webob.Request.blank(path, environ=environ, **kwargs)
+
+        lista = net.index(req)
+        expected = collection.Collection
+        self.assertIs(expected, lista)
