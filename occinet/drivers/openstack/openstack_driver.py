@@ -53,7 +53,7 @@ class OpenStackNet(base.BaseHelper):
         return self._get_req(req, path=path, method="GET")
 
     def index(self, req):
-        """Get a list of servers for a tenant.
+        """Get a list of networks for a tenant.
         This method retrieve a list of network to which the tenant has access.
         :param req: the incoming request
         """

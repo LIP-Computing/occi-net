@@ -15,7 +15,7 @@
 # under the License.
 
 from ooi.api import base
-import ooi.api.helpers
+from occinet.drivers.openstack.openstack_driver import OpenStackNet  # it was import ooi.api.helpers
 from ooi import exception
 from ooi.occi.core import collection
 from ooi.occi.infrastructure import network
@@ -38,28 +38,22 @@ def _build_network(name, prefix=None):
 class Controller(base.Controller):
     def __init__(self, *args, **kwargs):
         super(Controller, self).__init__(*args, **kwargs)
-        self.os_helper = ooi.api.helpers.OpenStackHelper(
+        self.os_helper = OpenStackNet(
             self.app,
             self.openstack_version
         )
 
-    def _floating_index(self, req):
-        pools = self.os_helper.get_floating_ip_pools(req)
+    def _get_network_resources(self, networks):
         occi_network_resources = []
-        if pools:
-            occi_network_resources.append(_build_network(FLOATING_PREFIX))
+        if networks:
+            for s in networks:
+                s = network.NetworkResource(title=s["name"], id=s["id"])
+                occi_network_resources.append(s)
+
         return occi_network_resources
 
     def index(self, req):
-        occi_network_resources = self._floating_index(req)
-        occi_network_resources.append(_build_network(FIXED_PREFIX))
-        return collection.Collection(resources=occi_network_resources)
+        occi_networks = self.os_helper.index(req)
+        occi_network_resources = self._get_network_resources(occi_networks)
 
-    def show(self, req, id):
-        if id == FIXED_PREFIX:
-            return [_build_network(id)]
-        elif id == FLOATING_PREFIX:
-            pools = self.os_helper.get_floating_ip_pools(req)
-            if pools:
-                return [_build_network(id)]
-        raise exception.NetworkNotFound(resource_id=id)
+        return collection.Collection(resources=occi_network_resources)
