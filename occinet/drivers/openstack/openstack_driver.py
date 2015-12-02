@@ -16,13 +16,7 @@
 #
 
 
-import copy
-import json
-import os
-
-import six.moves.urllib.parse as urlparse
-import webob.exc
-
+from ooi import exception
 from occinet.drivers import base
 
 
@@ -37,9 +31,9 @@ class OpenStackNet(base.BaseHelper):
         :returns: tenant Id
         """
         try:
-            return req.environ["keystone.token_auth"].user.project_id
-        except AttributeError:
-            return req.environ["keystone.token_info"]["token"]["project"]["id"]
+            return req.environ["HTTP_X_PROJECT_ID"]
+        except KeyError:
+            raise exception.Forbidden(reason="Cannot find project ID")
 
     def _get_index_req(self, req):
         """Return a new Request object to interact with OpenStack.
@@ -49,7 +43,7 @@ class OpenStackNet(base.BaseHelper):
         :returns: request modified
         """
         tenant_id = self.tenant_from_req(req)
-        path = "/networks?%s" % tenant_id
+        path = "/networks"  # % tenant_id
         return self._get_req(req, path=path, method="GET")
 
     def index(self, req):

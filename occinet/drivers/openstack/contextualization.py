@@ -14,21 +14,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from occi.core import attribute
-from occi.core import mixin
-from occinet.drivers.openstack import helpers
-
-_OPENSTACK_PATH='org.openstack'
+from ooi.occi.core import attribute
+from ooi.occi.core import mixin
+from ooi.openstack import helpers
 
 
 class OpenStackUserData(mixin.Mixin):
+    scheme = helpers.build_scheme("compute/instance")
+    term = "user_data"
 
     def __init__(self, user_data=None):
-        self.scheme = helpers.build_scheme("network/instance")
-        self.resource_name = "network"
-        self.term = "user_data"
         attrs = [
-            attribute.InmutableAttribute("%s.%s.%s" % (_OPENSTACK_PATH,self.resource_name,self.term),
+            attribute.InmutableAttribute("org.openstack.compute.user_data",
                                          user_data),
         ]
 
@@ -41,20 +38,19 @@ class OpenStackUserData(mixin.Mixin):
 
     @property
     def user_data(self):
-        return self.attributes["%s.%s.%s" % (_OPENSTACK_PATH,self.resource_name,self.term)].value
+        return self.attributes["org.openstack.compute.user_data"].value
 
 
 class OpenStackPublicKey(mixin.Mixin):
+    scheme = helpers.build_scheme("instance/credentials")
+    term = "public_key"
 
-    def __init__(self, name = None, data = None):
-        self.scheme = helpers.build_scheme("instance/credentials")
-        self.term = "public_key"
-        self.path = "%s.credentials.publickey" % _OPENSTACK_PATH
+    def __init__(self, name=None, data=None):
         attrs = [
             attribute.InmutableAttribute(
-                "%s.name" % self.path, name),
+                "org.openstack.credentials.publickey.name", name),
             attribute.InmutableAttribute(
-                "%s.data" % self.path , data),
+                "org.openstack.credentials.publickey.data", data),
         ]
 
         attrs = attribute.AttributeCollection({a.name: a for a in attrs})
@@ -66,12 +62,12 @@ class OpenStackPublicKey(mixin.Mixin):
 
     @property
     def name(self):
-        attr = "%s.name" % self.path
+        attr = "org.openstack.credentials.publickey.name"
         return self.attributes[attr].value
 
     @property
     def data(self):
-        attr = "%s..data" % self.path
+        attr = "org.openstack.credentials.publickey.data"
         return self.attributes[attr].value
 
 

@@ -154,4 +154,3 @@ class BaseHelper(object):
             return response.json_body.get(element, default)
         else:
             raise exception_from_response(response)
-

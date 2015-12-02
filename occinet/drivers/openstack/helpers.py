@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from occi import helpers
+from ooi.occi import helpers
 
 _PREFIX = "http://schemas.openstack.org/"
 

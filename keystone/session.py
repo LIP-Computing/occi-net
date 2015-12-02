@@ -16,10 +16,12 @@
 
 from keystoneclient import session
 from keystoneclient.v2_0 import client
+import webob
 
 from keystoneclient.auth.identity import v3
 
-from keystonemiddleware import auth_token
+
+
 
 
 class KeySession(object):
@@ -35,11 +37,23 @@ class KeySession(object):
         return session.Session(auth=auth)
 
     def create_keystone(self, user, password, project):
-       #session = self.create_session(user, password, project)
-       auth_token()
+        #sess = self.create_session(user, password, project)
+
+        #
         keystone = client.Client(auth_url=self.auth_url,
                                  username=user,
                                  password=password,
                                  project_id=project)
 
-        return keystone
+        return keystone.auth_ref # token in keystone.auth_ref.auth_token
+
+    def create_request_conection(self,user,password,project_id):
+
+        app = self.create_keystone(user,password,project_id)  #"dev", "passwd", "6271876e5bea4935a98cf10840f8dcb6")
+        environ = {"HTTP_X_PROJECT_ID": "dev01", "HTTP_X-Auth-Token": app.auth_token}
+        kwargs = {}
+        kwargs["http_version"] = "HTTP/1.1"
+        kwargs["server_name"] = "127.0.0.1"
+        kwargs["server_port"] = "9696"
+
+        return webob.Request.blank(path="/", environ=environ, base_url="/v2.0",**kwargs)

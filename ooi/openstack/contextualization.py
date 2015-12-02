@@ -20,12 +20,12 @@ from ooi.openstack import helpers
 
 
 class OpenStackUserData(mixin.Mixin):
-    scheme = helpers.build_scheme("compute/instance")
+    scheme = helpers.build_scheme("network/instance")
     term = "user_data"
 
     def __init__(self, user_data=None):
         attrs = [
-            attribute.InmutableAttribute("org.openstack.compute.user_data",
+            attribute.InmutableAttribute("org.openstack.network.user_data",
                                          user_data),
         ]
 
@@ -38,7 +38,7 @@ class OpenStackUserData(mixin.Mixin):
 
     @property
     def user_data(self):
-        return self.attributes["org.openstack.compute.user_data"].value
+        return self.attributes["org.openstack.network.user_data"].value
 
 
 class OpenStackPublicKey(mixin.Mixin):
