@@ -32,8 +32,6 @@ tenants = {
             "name": "foo"},
     "bar": {"id": uuid.uuid4().hex,
             "name": "bar"},
-    "baz": {"id": uuid.uuid4().hex,
-            "name": "baz"},
 }
 
 #  {
@@ -107,29 +105,7 @@ def fake_query_results():
         'class="kind"; title="entity"; '
         'location="%s/entity/"' % application_url)
 
-    # OCCI Infrastructure Compute
-    cats.append(
-        'compute; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure#"; '
-        'class="kind"; title="compute resource"; '
-        'rel="http://schemas.ogf.org/occi/core#resource"; '
-        'location="%s/compute/"' % application_url)
-    cats.append(
-        'start; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"; '
-        'class="action"; title="start compute instance"')
-    cats.append(
-        'stop; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"; '
-        'class="action"; title="stop compute instance"')
-    cats.append(
-        'restart; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"; '
-        'class="action"; title="restart compute instance"')
-    cats.append(
-        'suspend; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure/compute/action#"; '
-        'class="action"; title="suspend compute instance"')
+
 
     # OCCI Templates
     cats.append(
@@ -202,39 +178,7 @@ def fake_query_results():
         'networkinterface#"; '
         'class="mixin"; title="IP Network interface Mixin"')
 
-    # OCCI Infrastructure Storage
-    cats.append(
-        'storage; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure#"; '
-        'class="kind"; title="storage resource"; '
-        'rel="http://schemas.ogf.org/occi/core#resource"; '
-        'location="%s/storage/"' % application_url)
-    cats.append(
-        'storagelink; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure#"; '
-        'class="kind"; title="storage link resource"; '
-        'rel="http://schemas.ogf.org/occi/core#link"; '
-        'location="%s/storagelink/"' % application_url)
-    cats.append(
-        'offline; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure/storage/action#"; '
-        'class="action"; title="offline storage instance"')
-    cats.append(
-        'online; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure/storage/action#"; '
-        'class="action"; title="online storage instance"')
-    cats.append(
-        'backup; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure/storage/action#"; '
-        'class="action"; title="backup storage instance"')
-    cats.append(
-        'resize; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure/storage/action#"; '
-        'class="action"; title="resize storage instance"')
-    cats.append(
-        'snapshot; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure/storage/action#"; '
-        'class="action"; title="snapshot storage instance"')
+
 
     # OpenStack contextualization
     cats.append(
