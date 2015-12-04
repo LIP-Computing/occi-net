@@ -24,6 +24,8 @@ import webob.exc
 from ooi import utils
 import ooi.wsgi
 
+from occinet.wsgi import parsers
+
 
 application_url = "https://foo.example.org:8774/ooiv1"
 
@@ -232,10 +234,10 @@ class FakeApp(object):
         self.routes = {}
 
         for tenant in tenants.values():
-            path = "/%s" % tenant["id"]
+            path = ""
 
-            self._populate(path, "network", networks[tenant["id"]], actions=True)
-            self._populate(path, "subnet", list(subnets.values()))
+            self._populate(path, "networks", networks[tenant["id"]], objs_path="networks/?tenant_id=%s" % tenant["id"], actions=True)
+            self._populate(path, "subnets", list(subnets.values()), objs_path="subnets/?tenant_id=%s" % tenant["id"])
             # NOTE(aloga): dict_values un Py3 is not serializable in JSON
 
     def _populate(self, path_base, obj_name, obj_list,

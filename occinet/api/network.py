@@ -52,8 +52,9 @@ class Controller(base.Controller):
 
         return occi_network_resources
 
-    def index(self, req):
-        occi_networks = self.os_helper.index(req)
+    def index(self, req, parameters=None):
+
+        occi_networks = self.os_helper.index(req, parameters)
         occi_network_resources = self._get_network_resources(occi_networks)
 
         return collection.Collection(resources=occi_network_resources)

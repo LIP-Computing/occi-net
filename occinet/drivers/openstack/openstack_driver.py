@@ -15,10 +15,11 @@
 # under the License.
 #
 
+import six.moves.urllib.parse as urlparse
 
 from ooi import exception
 from occinet.drivers import base
-
+from occinet.wsgi import parsers
 
 class OpenStackNet(base.BaseHelper):
     """Class to interact with the neutron API."""
@@ -35,22 +36,30 @@ class OpenStackNet(base.BaseHelper):
         except KeyError:
             raise exception.Forbidden(reason="Cannot find project ID")
 
-    def _get_index_req(self, req):
+    def _get_index_req(self, req, _query_string=None):
         """Return a new Request object to interact with OpenStack.
         This method retrieve a request ready to list networks
         :param req: the original request
+        :param _query_string: additional query information
 
         :returns: request modified
         """
-        tenant_id = self.tenant_from_req(req)
-        path = "/networks"  # % tenant_id
-        return self._get_req(req, path=path, method="GET")
 
-    def index(self, req):
-        """Get a list of networks for a tenant.
+        _path = "/networks"
+        return self._get_req(req, path=_path, method="GET", query_string=_query_string)
+
+    def index(self, req, parameters=None):
+        """Get a list of networks.
         This method retrieve a list of network to which the tenant has access.
         :param req: the incoming request
+        :param parameters: parameters to filter results
         """
-        os_req = self._get_index_req(req)
+        query_string = None
+        if parameters is not None:
+            query_string = parsers._get_query_string(parameters)
+        os_req = self._get_index_req(req, query_string)
         response = os_req.get_response(self.app)
+
         return self.get_from_response(response, "networks", [])
+
+

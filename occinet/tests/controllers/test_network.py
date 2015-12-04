@@ -38,8 +38,14 @@ class TestNetworkController(base.TestController):
 
         for nets in test_networks:
             m_index.return_value = nets
-            result = self.controller.index(None)
+            result = self.controller.index(None, None)
             expected = self.controller._get_network_resources(nets)
             self.assertEqual(expected, result.resources)
-            m_index.assert_called_with(None)
+            m_index.assert_called_with(None, None)
 
+    @mock.patch.object(openstack_driver.OpenStackNet, "index")
+    def test_list_by_tenant(self, m_index): #TODO(jorgesece): the fake driver should be improved to make parametriced query tests
+        list = self.controller.index(None, {"tenant_id" : "foo", "name" : "public"})
+
+        self.assertIsInstance(list.resources[0], network_occi.NetworkResource)
+        self.assertEqual("public", list.resources[0].title)

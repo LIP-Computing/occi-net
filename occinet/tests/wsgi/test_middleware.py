@@ -14,25 +14,26 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import collections
+import webob
+import webob.dec
+import webob.exc
 
-
-from ooi import exception
 from ooi.tests import base
-from ooi.wsgi import parsers
-from occinet.drivers.openstack.openstack_driver import OpenStackNet  # it was import ooi.api.helpers
-from occinet.wsgi import parsers
+from occinet.tests import fakes
+from ooi.tests.middleware import test_middleware as testmi
+from occinet.wsgi.middleware import OCCIMiddleware
 
-class TestOSDriver(base.TestCase):
-    """Test OpenStack Driver against DevStack."""
+
+
+class TestMiddleware(testmi.TestMiddleware):
+    """OCCI middleware test without Accept header.
+
+    According to the OCCI HTTP rendering, no Accept header
+    means text/plain.
+    """
 
     def setUp(self):
-        super(TestOSDriver, self).setUp()
-       # self.driver = OpenStackNet
+        super(TestMiddleware, self).setUp()
 
-    def test_query_string(self): #TODO(jorgesece): the fake driver should be improved to make parametriced query tests
-        query = parsers._get_query_string({"tenant_id" : "foo", "name" : "public"})
-
-        self.assertEqual(25, query.__len__())
-
-
+    def get_app(self, resp=None):
+        return OCCIMiddleware(fakes.FakeApp(), openstack_version="/v2.0")
