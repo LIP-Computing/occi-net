@@ -56,10 +56,44 @@ class OpenStackNet(base.BaseHelper):
         """
         query_string = None
         if parameters is not None:
-            query_string = parsers._get_query_string(parameters)
+            query_string = parsers.get_query_string(parameters)
         os_req = self._get_index_req(req, query_string)
         response = os_req.get_response(self.app)
 
         return self.get_from_response(response, "networks", [])
 
+    def get_network(self, req, parameters):
+        """Get info from a network. It returns json code from the server
 
+        :param req: the incoming network
+        :param parameters: parameters to filter results (networkID,owner tenant)
+        """
+
+        req = self._get_network_req(req, parameters)
+        response = req.get_response(self.app)
+
+        return self.get_from_response(response, "network", {})
+
+    def _get_network_req(self, req, parameters):
+        path = "/networks"
+        query_string = parsers.get_query_string(parameters)
+
+        return self._get_req(req, path=path, query_string=query_string, method="GET")
+
+    # RETRIEVE SUBNET DETAILS
+    def get_flavor(self, req, parameters):
+        """Get information from a flavor.
+
+        :param req: the incoming request
+        :param parameters: parameters to filter results (subnetID,networkID,owner tenant)
+        """
+        req = self._get_flavor_req(req, parameters)
+        response = req.get_response(self.app)
+
+        return self.get_from_response(response, "flavor", {})
+
+    def _get_subnets_req(self, req, parameters):
+        path = "/subnets"
+        query_string = parsers.get_query_string(parameters)
+
+        return self._get_req(req, path=path, query_string=query_string, method="GET")

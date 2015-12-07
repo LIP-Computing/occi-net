@@ -19,6 +19,7 @@ from occinet.drivers.openstack.openstack_driver import OpenStackNet  # it was im
 from ooi import exception
 from ooi.occi.core import collection
 from occinet.infrastructure.network_extend import Network
+from occinet.drivers.openstack import templates
 
 FLOATING_PREFIX = "floating"
 FIXED_PREFIX = "fixed"
@@ -55,3 +56,39 @@ class Controller(base.Controller):
         occi_network_resources = self._get_network_resources(occi_networks)
 
         return collection.Collection(resources=occi_network_resources)
+
+
+    def show(self, req, id): #TODO(jorgesece): It is not ready. I have to check drivers/openstack/templates and drivers/openstack/open_stack_driver
+        # get info from server
+        s = self.os_helper.get_network(req, id)
+
+        # get info from flavor
+        subnets = self.os_helper.get_subnets(req, s["subnets"]["id"])
+        res_tpl = templates.OpenStackResourceTemplate(flavor["id"],
+                                                      flavor["name"],
+                                                      flavor["vcpus"],
+                                                      flavor["ram"],
+                                                      flavor["disk"])
+
+        # get info from image
+        img_id = s["image"]["id"]
+        try:
+            image = self.os_helper.get_image(req, img_id)
+        except webob.exc.HTTPNotFound:
+            image = {
+                "id": img_id,
+                "name": "None (Image with ID '%s' not found)" % img_id,
+            }
+
+        os_tpl = templates.OpenStackOSTemplate(image["id"],
+                                               image["name"])
+
+        # build the compute object
+        comp = compute.ComputeResource(title=s["name"], id=s["id"],
+                                       cores=flavor["vcpus"],
+                                       hostname=s["name"],
+                                       memory=flavor["ram"],
+                                       state=helpers.vm_state(s["status"]),
+                                       mixins=[os_tpl, res_tpl])
+
+        return [comp]

@@ -31,16 +31,16 @@ class OpenStackOSTemplate(templates.OCCIOSTemplate):
             location=location)
 
 
-class OpenStackResourceTemplate(templates.OCCIResourceTemplate):
+class OSNetworkResourceTemplate(templates.OCCIResourceTemplate):#TODO(modify to manage networks)
     scheme = helpers.build_scheme("template/resource")
 
     def __init__(self, id, name, cores, memory, disk, ephemeral=0, swap=0):
         attrs = [
-            attribute.InmutableAttribute("occi.compute.cores", cores),
-            attribute.InmutableAttribute("occi.compute.memory", memory),
-            attribute.InmutableAttribute("occi.compute.disk", disk),
-            attribute.InmutableAttribute("occi.compute.ephemeral", ephemeral),
-            attribute.InmutableAttribute("occi.compute.swap", swap),
+            attribute.InmutableAttribute("occinet.network.cores", cores),
+            attribute.InmutableAttribute("occinet.network.memory", memory),
+            attribute.InmutableAttribute("occinet.network.disk", disk),
+            attribute.InmutableAttribute("occinet.network.ephemeral", ephemeral),
+            attribute.InmutableAttribute("occinet.network.swap", swap),
             attribute.InmutableAttribute("org.openstack.flavor.name", name)
         ]
 

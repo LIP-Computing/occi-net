@@ -31,7 +31,7 @@ class TestOSDriver(base.TestCase):
        # self.driver = OpenStackNet
 
     def test_query_string(self): #TODO(jorgesece): the fake driver should be improved to make parametriced query tests
-        query = parsers._get_query_string({"tenant_id" : "foo", "name" : "public"})
+        query = parsers.get_query_string({"tenant_id" : "foo", "name" : "public"})
 
         self.assertEqual(25, query.__len__())
 

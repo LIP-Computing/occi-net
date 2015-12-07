@@ -16,7 +16,7 @@
 #
 
 
-def _get_query_string(parameters):
+def get_query_string(parameters):
 
     query_string = ""
     for key in parameters.keys():
