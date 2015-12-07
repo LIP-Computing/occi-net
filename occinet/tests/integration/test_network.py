@@ -17,7 +17,9 @@
 
 from keystone.session import KeySession
 from occinet.api import network
-from ooi.occi.infrastructure import network as network_occi
+#from ooi.occi.infrastructure import network as network_occi
+
+from occinet.infrastructure import network_extend
 from ooi.tests import base
 
 
@@ -31,14 +33,14 @@ class TestIntegrationNetwork(base.TestController):
     def test_list(self):
         list = self.controller.index(self.req, None)
 
-        self.assertIsInstance(list.resources[0], network_occi.NetworkResource)
+        self.assertIsInstance(list.resources[0], network_extend.Network)
         self.assertEqual("public", list.resources[0].title)
 
     def test_list_by_tenant(self):
         tenant_id = self.req.environ["HTTP_X_PROJECT_ID"]
         list = self.controller.index(self.req, {"tenant_id": "c7edc47ad16041d9985de95f4443a3ab"})
 
-        self.assertIsInstance(list.resources[0], network_occi.NetworkResource)
+        self.assertIsInstance(list.resources[0], network_extend.Network)
         self.assertEqual("public", list.resources[0].title)
 
     def test_list_by_tenant_error(self):

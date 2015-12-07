@@ -14,14 +14,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from ooi.wsgi import OCCIMiddleware as BaseMiddleware
-
 import occinet.api.network
+from ooi.wsgi import OCCIMiddleware as BaseMiddleware
 
 
 class OCCIMiddleware(BaseMiddleware):
 
-    def __init__(self, application, openstack_version="/v2.1"):
+    def __init__(self, application, openstack_version=None):
          super(OCCIMiddleware, self).__init__(application, openstack_version)
          self.resources["networks"] = self._create_resource(occinet.api.network.Controller)
          self._setup_resource_routes("networks", self.resources["networks"])

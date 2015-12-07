@@ -237,6 +237,7 @@ class FakeApp(object):
             path = ""
 
             self._populate(path, "networks", networks[tenant["id"]], objs_path="networks/?tenant_id=%s" % tenant["id"], actions=True)
+            self._populate(path, "networks", networks[tenant["id"]], actions=True)
             self._populate(path, "subnets", list(subnets.values()), objs_path="subnets/?tenant_id=%s" % tenant["id"])
             # NOTE(aloga): dict_values un Py3 is not serializable in JSON
 

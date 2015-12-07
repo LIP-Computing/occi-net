@@ -81,7 +81,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
         tenant = fakes.tenants["bar"]
         app = self.get_app()
 
-        for url in ("/networks/?=tenant_id=%s" % tenant["id"], "/networks"):
+        for url in ("/networks/?tenant_id=%s" % tenant["id"], "/networks"):
             req = self._build_req(url, tenant["id"], method="GET")
 
             req.environ["HTTP_X_PROJECT_ID"] = tenant["id"]

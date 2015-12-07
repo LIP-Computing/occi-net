@@ -18,7 +18,7 @@ from ooi.api import base
 from occinet.drivers.openstack.openstack_driver import OpenStackNet  # it was import ooi.api.helpers
 from ooi import exception
 from ooi.occi.core import collection
-from ooi.occi.infrastructure import network
+from occinet.infrastructure.network_extend import Network
 
 FLOATING_PREFIX = "floating"
 FIXED_PREFIX = "fixed"
@@ -29,10 +29,7 @@ def _build_network(name, prefix=None):
         network_id = '/'.join([prefix, name])
     else:
         network_id = name
-    return network.NetworkResource(title=name,
-                                   id=network_id,
-                                   state="active",
-                                   mixins=[network.ip_network])
+    return Network(title=name, id=network_id, state="active")
 
 
 class Controller(base.Controller):
@@ -47,7 +44,7 @@ class Controller(base.Controller):
         occi_network_resources = []
         if networks:
             for s in networks:
-                s = network.NetworkResource(title=s["name"], id=s["id"])
+                s = Network(title=s["name"], id=s["id"])
                 occi_network_resources.append(s)
 
         return occi_network_resources
