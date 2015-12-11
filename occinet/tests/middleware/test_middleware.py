@@ -21,7 +21,7 @@ import webob.exc
 from ooi.tests import base
 from occinet.tests import fakes
 from ooi.tests.middleware import test_middleware as testmi
-from occinet.wsgi.middleware import OCCIMiddleware
+from occinet.wsgi.middleware import OCCINetworkMiddleware
 
 
 
@@ -36,4 +36,25 @@ class TestMiddleware(testmi.TestMiddleware):
         super(TestMiddleware, self).setUp()
 
     def get_app(self, resp=None):
-        return OCCIMiddleware(fakes.FakeApp(), openstack_version="/v2.0")
+        return OCCINetworkMiddleware(fakes.FakeApp())
+
+    def assertDefaults(self, result):
+        self.assertContentType(result)
+        self.assertNetworkHeader(result)
+
+    def assertNetworkHeader(self, result):
+        self.assertIn("Network", result.headers)
+        self.assertIn(self.occi_string, result.headers["network"])
+
+    def _build_req(self, path, tenant_id, **kwargs):
+        if self.accept is not None:
+            kwargs["accept"] = self.accept
+
+        if self.content_type is not None:
+            kwargs["content_type"] = self.content_type
+
+        environ = {"HTTP_X_PROJECT_ID": tenant_id}
+
+        kwargs["base_url"] = self.application_url
+
+        return webob.Request.blank(path, environ=environ, **kwargs)

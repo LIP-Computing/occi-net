@@ -236,25 +236,25 @@ class FakeApp(object):
         for tenant in tenants.values():
             path = ""
 
-            self._populate(path, "networks", networks[tenant["id"]], objs_path="networks/?tenant_id=%s" % tenant["id"], actions=True)
-            self._populate(path, "networks", networks[tenant["id"]], actions=True)
-            self._populate(path, "subnets", list(subnets.values()), objs_path="subnets/?tenant_id=%s" % tenant["id"])
-            # NOTE(aloga): dict_values un Py3 is not serializable in JSON
+            #self._populate(path, "networks", networks[tenant["id"]], objs_path="networks/?tenant_id=%s" % tenant["id"], actions=True)
+            self._populate(path, "network", networks[tenant["id"]],tenant_id=tenant["id"], actions=True)
+            self._populate(path, "subnet", list(subnets.values()), tenant_id=tenant["id"])
 
-    def _populate(self, path_base, obj_name, obj_list,
+    def _populate(self, path_base, obj_name, obj_list, tenant_id,
                   objs_path=None, actions=[]):
         objs_name = "%ss" % obj_name
         if objs_path:
             path = "%s/%s" % (path_base, objs_path)
         else:
             path = "%s/%s" % (path_base, objs_name)
-        objs_details_path = "%s/detail" % path
         self.routes[path] = create_fake_json_resp({objs_name: obj_list})
+
+        objs_details_path = "%s?tenant_id=%s" % (path, tenant_id)
         self.routes[objs_details_path] = create_fake_json_resp(
             {objs_name: obj_list})
 
         for o in obj_list:
-            obj_path = "%s/%s" % (path, o["id"])
+            obj_path = "%s?%s_id=%s" % (path, obj_name, o["id"])
             self.routes[obj_path] = create_fake_json_resp({obj_name: o})
 
             if actions:
@@ -269,7 +269,7 @@ class FakeApp(object):
     def _do_create_network(self, req):
         # TODO(enolfc): this should check the json is
         # semantically correct
-        s = {"server": {"id": "foo",
+        s = {"network": {"id": "foo",
                         "name": "foo",
                         "flavor": {"id": "1"},
                         "image": {"id": "2"},
@@ -290,7 +290,7 @@ class FakeApp(object):
 
     def _get_from_routes(self, req):
         try:
-            ret = self.routes[req.path_info]
+            ret = self.routes[req.path_info + "?" + req.query_string]
         except KeyError:
             exc = webob.exc.HTTPNotFound()
             ret = FakeOpenStackFault(exc)

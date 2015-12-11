@@ -16,11 +16,9 @@
 
 import uuid
 
-from occinet.tests.wsgi import test_middleware
-from ooi import utils
-
-
 from occinet.tests import fakes
+from occinet.tests.middleware import test_middleware
+from ooi import utils
 
 def build_occi_network(network):
     name = network["name"]
@@ -54,21 +52,12 @@ def build_occi_network(network):
         'occi.core.title="%s"' % name,
         'occi.network.state="%s"' % status,
     ]
-    links = []
-    links.append('<%s/compute/%s?action=start>; '
-                 'rel="http://schemas.ogf.org/occi/'
-                 'infrastructure/compute/action#start"' %
-                 (fakes.application_url, network_id))
-    links.append('<%s/compute/%s?action=stop>; '
-                 'rel="http://schemas.ogf.org/occi/'
-                 'infrastructure/compute/action#stop"' %
-                 (fakes.application_url, network_id))
+
+
 
     result = []
     for c in cats:
         result.append(("Category", c))
-    for l in links:
-        result.append(("Link", l))
     for a in attrs:
         result.append(("X-OCCI-Attribute", a))
     return result
@@ -77,11 +66,17 @@ def build_occi_network(network):
 class TestNetworkController(test_middleware.TestMiddleware):
     """Test OCCI compute controller."""
 
+    def assertExpectedResult(self, expected, result):
+        expected = ["%s: %s" % e for e in expected]
+        # NOTE(aloga): the order of the result does not matter
+        results = str(result.text).splitlines()
+        self.assertItemsEqual(expected, results)
+
     def test_list_networks_empty(self):
         tenant = fakes.tenants["bar"]
         app = self.get_app()
 
-        for url in ("/networks/?tenant_id=%s" % tenant["id"], "/networks"):
+        for url in ("/networks", "/networks?tenant_id=33"): #delete the parameters to check it
             req = self._build_req(url, tenant["id"], method="GET")
 
             req.environ["HTTP_X_PROJECT_ID"] = tenant["id"]
@@ -97,21 +92,24 @@ class TestNetworkController(test_middleware.TestMiddleware):
     def test_list_networks(self):
         tenant = fakes.tenants["foo"]
         app = self.get_app()
+        headers = {
+            'X-OCCI-Attribute': 'tenant_id=%s, network_id=1' %tenant["id"],
+        }
 
-        for url in ("/networks/", "/networks"):
-            req = self._build_req(url, tenant["id"], method="GET")
-            resp = req.get_response(app)
+        #for url in (, "/networks/"): #todo(jorgesece): Create test with different headers
+        req = self._build_req("/networks", tenant["id"], method="GET",headers=headers)
+        resp = req.get_response(app)
 
-            self.assertEqual(200, resp.status_code)
-            expected = []
-            for s in fakes.networks[tenant["id"]]:
-                expected.append(
-                    ("X-OCCI-Location",
-                     utils.join_url(self.application_url + "/",
-                                    "networks/%s" % s["id"]))
+        self.assertEqual(200, resp.status_code)
+        expected = []
+        for s in fakes.networks[tenant["id"]]:
+            expected.append(
+                ("X-OCCI-Location",
+                 utils.join_url(self.application_url + "/",
+                               "networkextend/%s" % s["id"]))
                 )
-            self.assertDefaults(resp)
-            self.assertExpectedResult(expected, resp)
+        self.assertDefaults(resp)
+        self.assertExpectedResult(expected, resp)
 
     def test_show_networks(self):
         tenant = fakes.tenants["foo"]
