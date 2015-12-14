@@ -44,7 +44,7 @@ class TestIntegrationNetwork(base.TestController):
         self.assertEqual("public", list.resources[0].title)
 
     def test_list_by_tenant_error(self):
-        tenant_id = self.req.environ["HTTP_X_PROJECT_ID"]
-        list = self.controller.index(self.req, {"tenant_id": "falso"})
+
+        list = self.controller.index(self.req, {"tenant_id": "noexits"})
 
         self.assertIs(0, list.resources.__len__())

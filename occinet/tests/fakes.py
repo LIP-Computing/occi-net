@@ -247,7 +247,10 @@ class FakeApp(object):
             path = "%s/%s" % (path_base, objs_path)
         else:
             path = "%s/%s" % (path_base, objs_name)
-        self.routes[path] = create_fake_json_resp({objs_name: obj_list})
+        if path in self.routes:
+            self.routes[path] = add_to_fake_json_resp(self.routes[path], objs_name, obj_list)
+        else:
+            self.routes[path] = create_fake_json_resp({objs_name: obj_list})
 
         objs_details_path = "%s?tenant_id=%s" % (path, tenant_id)
         self.routes[objs_details_path] = create_fake_json_resp(
@@ -290,7 +293,10 @@ class FakeApp(object):
 
     def _get_from_routes(self, req):
         try:
-            ret = self.routes[req.path_info + "?" + req.query_string]
+            if req.query_string:
+                ret = self.routes[req.path_info + "?" + req.query_string]
+            else:
+                ret = self.routes[req.path_info]
         except KeyError:
             exc = webob.exc.HTTPNotFound()
             ret = FakeOpenStackFault(exc)
@@ -304,3 +310,15 @@ def create_fake_json_resp(data, status=200):
     r.body = json.dumps(data).encode("utf8")
     r.status_code = status
     return r
+
+
+def add_to_fake_json_resp(req, obj_name, data):
+
+    body = json.loads(req.body)
+    for element in data:
+        body[obj_name].append(element)
+
+    req.body = json.dumps(body).encode("utf8")
+
+    return  req
+

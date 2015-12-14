@@ -19,7 +19,9 @@ import webob.dec
 
 from ooi.wsgi import OCCIMiddleware as OCCIMiddleware
 from ooi.wsgi import Fault
-from ooi.wsgi import parsers
+
+from occinet.wsgi import parsers
+
 from ooi.wsgi import ResourceExceptionHandler
 from ooi.wsgi import ResponseObject
 from ooi.wsgi import serializers
@@ -47,6 +49,15 @@ class OCCINetworkMiddleware(OCCIMiddleware):
     def _setup_routes(self):
         self.mapper.redirect("", "/")
 
+        self.resources["query"] = self._create_resource(query.Controller)
+        self.mapper.connect("query", "/-/",
+                            controller=self.resources["query"],
+                            action="index")
+
+        # RFC5785, OCCI section 3.6.7
+        self.mapper.connect("query", "/.well-known/org/ogf/occi/-/",
+                            controller=self.resources["query"],
+                            action="index")
         self.resources["networks"] = self._create_resource(occinet.api.network.Controller)
         self._setup_resource_routes("networks", self.resources["networks"])
 
@@ -66,8 +77,7 @@ class OCCINetworkMiddleware(OCCIMiddleware):
 
     def process_request(self, req):
         if req.user_agent:
-            # FIXME(aloga): review the regexp, since it will only match the
-            # first string
+
             match = re.search(r"\bOCCI/\d\.\d\b", req.user_agent)
             if match and self.occi_string != match.group():
                 return Fault(webob.exc.HTTPNotImplemented(
@@ -77,8 +87,9 @@ class OCCINetworkMiddleware(OCCIMiddleware):
         if not match:
             return Fault(webob.exc.HTTPNotFound())
         #TODO(jorgesece): create parse method to create the array from HTTP_OCCI_ATTRIBUTE
-        if( req.environ['HTTP_X_OCCI_ATTRIBUTE'] ):
-            match["parameters"] = {"tenant_id" : req.environ['HTTP_X_PROJECT_ID']} # req.environ['HTTP_X_OCCI_ATTRIBUTE']
+        if( 'HTTP_X_OCCI_ATTRIBUTE' in req.environ ):
+            match["parameters"] = parsers.get_attributes_from_headers(req.environ)
+            #match["parameters"] = {"tenant_id" : req.environ['HTTP_X_PROJECT_ID']} # req.environ['HTTP_X_OCCI_ATTRIBUTE']
             del req.environ['HTTP_X_OCCI_ATTRIBUTE']
         method = match["controller"]
         return method(req, match)

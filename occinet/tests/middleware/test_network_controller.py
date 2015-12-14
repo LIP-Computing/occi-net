@@ -15,10 +15,15 @@
 # under the License.
 
 import uuid
+import webob
+
+from ooi import utils
 
 from occinet.tests import fakes
 from occinet.tests.middleware import test_middleware
-from ooi import utils
+
+from occinet.wsgi.middleware import OCCINetworkMiddleware
+
 
 def build_occi_network(network):
     name = network["name"]
@@ -75,29 +80,37 @@ class TestNetworkController(test_middleware.TestMiddleware):
     def test_list_networks_empty(self):
         tenant = fakes.tenants["bar"]
         app = self.get_app()
+        headers = { #TODO(jorgesece): tenant_id attribute name should be in OCCI format
+            'X_Occi_Attribute': {'tenant_id' : tenant["id"]},
+        }
+        url ="/networks"
+        req = self._build_req(url, tenant["id"], method="GET", headers=headers)
 
-        for url in ("/networks", "/networks?tenant_id=33"): #delete the parameters to check it
-            req = self._build_req(url, tenant["id"], method="GET")
+        resp = req.get_response(app)
 
-            req.environ["HTTP_X_PROJECT_ID"] = tenant["id"]
-            # OCCIMiddleware contain a mapper independent from fake.
-            # It maps only the occi components. CONTROLADOR CARGADO ES DE OOOI
-            resp = req.get_response(app)
+        expected_result = ""
+        self.assertDefaults(resp)
+        self.assertExpectedResult(expected_result, resp)
+        self.assertEqual(204, resp.status_code)
 
-            expected_result = ""
-            self.assertDefaults(resp)
-            self.assertExpectedResult(expected_result, resp)
-            self.assertEqual(204, resp.status_code)
-
-    def test_list_networks(self):
+    def test_list_attributes_query(self):
         tenant = fakes.tenants["foo"]
         app = self.get_app()
         headers = {
-            'X-OCCI-Attribute': 'tenant_id=%s, network_id=1' %tenant["id"],
+            'X_Occi_Attribute': {'tenant_id' : tenant['id']},
         }
 
         #for url in (, "/networks/"): #todo(jorgesece): Create test with different headers
         req = self._build_req("/networks", tenant["id"], method="GET",headers=headers)
+        resp = req.get_response(app)
+
+        self.assertEqual(200, resp.status_code)
+
+    def test_list_networks(self):
+        tenant = fakes.tenants["foo"]
+        app = self.get_app()
+
+        req = self._build_req("/networks", tenant["id"], method="GET")
         resp = req.get_response(app)
 
         self.assertEqual(200, resp.status_code)
@@ -111,6 +124,19 @@ class TestNetworkController(test_middleware.TestMiddleware):
         self.assertDefaults(resp)
         self.assertExpectedResult(expected, resp)
 
+    def test_400_from_openstack(self):
+        @webob.dec.wsgify()
+        def _fake_app(req):
+            exc = webob.exc.HTTPBadRequest()
+            resp = fakes.FakeOpenStackFault(exc)
+            return resp
+
+        mdl = OCCINetworkMiddleware(_fake_app)
+        result = self._build_req("/-/", "tenant").get_response(mdl)
+        self.assertEqual(400, result.status_code)
+        self.assertDefaults(result)
+
+"""
     def test_show_networks(self):
         tenant = fakes.tenants["foo"]
         app = self.get_app()
@@ -167,7 +193,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
             resp = req.get_response(app)
             self.assertDefaults(resp)
             self.assertEqual(400, resp.status_code)
-"""
+
     def test_action_body_mismatch(self):
         tenant = fakes.tenants["foo"]
         app = self.get_app()

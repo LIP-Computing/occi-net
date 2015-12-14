@@ -19,9 +19,11 @@ import collections
 
 from ooi import exception
 from ooi.tests import base
-from ooi.wsgi import parsers
-from occinet.drivers.openstack.openstack_driver import OpenStackNet  # it was import ooi.api.helpers
+#from ooi.wsgi import parsers
+
 from occinet.wsgi import parsers
+from occinet.drivers.openstack.openstack_driver import OpenStackNet  # it was import ooi.api.helpers
+from ooi.wsgi.parsers import TextParser
 
 class TestOSDriver(base.TestCase):
     """Test OpenStack Driver against DevStack."""
@@ -34,5 +36,17 @@ class TestOSDriver(base.TestCase):
         query = parsers.get_query_string({"tenant_id" : "foo", "name" : "public"})
 
         self.assertEqual(25, query.__len__())
+
+    def test_param_from_headers(self): #TODO(jorgesece): the fake driver should be improved to make parametriced query tests
+        tenant_id=33
+        headers = {
+            'HTTP_X_OCCI_ATTRIBUTE': {'tenant_id' : tenant_id, 'network_id' : 1},
+        }
+
+        #TextParse from ooi.wsgi I can use well. I will come back to it
+        parameters = parsers.get_attributes_from_headers(headers)
+
+        self.assertEqual(2,parameters.__len__())
+        self.assertEqual(tenant_id, parameters['tenant_id'])
 
 

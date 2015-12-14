@@ -23,3 +23,12 @@ def get_query_string(parameters):
         query_string = query_string + ("%s=%s&" % (key, parameters[key]))
 
     return query_string[:-1] # delete last character
+
+
+def get_attributes_from_headers(headers):
+    parameters = {}
+    for key in headers['HTTP_X_OCCI_ATTRIBUTE'].keys():
+        parameters[key]= headers['HTTP_X_OCCI_ATTRIBUTE'][key]
+
+    return parameters
+
