@@ -71,6 +71,10 @@ def build_occi_network(network):
 class TestNetworkController(test_middleware.TestMiddleware):
     """Test OCCI compute controller."""
 
+    def setUp(self):
+        super(TestNetworkController, self).setUp()
+
+
     def assertExpectedResult(self, expected, result):
         expected = ["%s: %s" % e for e in expected]
         # NOTE(aloga): the order of the result does not matter
@@ -124,6 +128,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
         self.assertDefaults(resp)
         self.assertExpectedResult(expected, resp)
 
+
     def test_400_from_openstack(self):
         @webob.dec.wsgify()
         def _fake_app(req):
@@ -135,8 +140,8 @@ class TestNetworkController(test_middleware.TestMiddleware):
         result = self._build_req("/-/", "tenant").get_response(mdl)
         self.assertEqual(400, result.status_code)
         self.assertDefaults(result)
-
 """
+
     def test_show_networks(self):
         tenant = fakes.tenants["foo"]
         app = self.get_app()
@@ -150,6 +155,26 @@ class TestNetworkController(test_middleware.TestMiddleware):
             self.assertDefaults(resp)
             self.assertExpectedResult(expected, resp)
             self.assertEqual(200, resp.status_code)
+
+{
+    "network": {
+        "status": "ACTIVE",
+        "subnets": [
+            "54d6f61d-db07-451c-9ab3-b9609b6b6f0b"
+        ],
+        "name": "private-network",
+        "router:external": false,
+        "admin_state_up": true,
+        "tenant_id": "4fd44f30292945e481c7b8a0c8908869",
+        "mtu": 0,
+        "shared": true,
+        "port_security_enabled": true,
+        "id": "d32019d3-bc6e-4319-9c1d-6722fc136a22"
+    }
+}
+"""
+"""
+
 
     def test_net_not_found(self):
         tenant = fakes.tenants["foo"]

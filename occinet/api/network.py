@@ -14,12 +14,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import webob
+
 from ooi.api import base
 from occinet.drivers.openstack.openstack_driver import OpenStackNet  # it was import ooi.api.helpers
 from ooi import exception
 from ooi.occi.core import collection
+
+
 from occinet.infrastructure.network_extend import Network
-from occinet.drivers.openstack import templates
+#from occinet.drivers.openstack import templates
 
 FLOATING_PREFIX = "floating"
 FIXED_PREFIX = "fixed"
@@ -57,38 +61,23 @@ class Controller(base.Controller):
 
         return collection.Collection(resources=occi_network_resources)
 
+    def show(self, req, id, parameters=None):
+        # TODO(jorgesece): It is not ready.
+        # I have to check drivers/openstack/templates and drivers/openstack/open_stack_driver
 
-    def show(self, req, id): #TODO(jorgesece): It is not ready. I have to check drivers/openstack/templates and drivers/openstack/open_stack_driver
         # get info from server
-        s = self.os_helper.get_network(req, id)
+        resp = self.os_helper.get_network(req, id, parameters)
 
-        # get info from flavor
-        subnets = self.os_helper.get_subnets(req, s["subnets"]["id"])
-        res_tpl = templates.OpenStackResourceTemplate(flavor["id"],
-                                                      flavor["name"],
-                                                      flavor["vcpus"],
-                                                      flavor["ram"],
-                                                      flavor["disk"])
+        # get info from subnet
+        subnets_array = []
+        for subnet_id in resp["subnets"]:
+            subnet = self.os_helper.get_subnets(req, subnet_id)
+            subnets_array.append(subnet)
 
-        # get info from image
-        img_id = s["image"]["id"]
-        try:
-            image = self.os_helper.get_image(req, img_id)
-        except webob.exc.HTTPNotFound:
-            image = {
-                "id": img_id,
-                "name": "None (Image with ID '%s' not found)" % img_id,
-            }
-
-        os_tpl = templates.OpenStackOSTemplate(image["id"],
-                                               image["name"])
+   #     os_tpl = templates.OpenStackOSTemplate(image["id"],     image["name"])
 
         # build the compute object
-        comp = compute.ComputeResource(title=s["name"], id=s["id"],
-                                       cores=flavor["vcpus"],
-                                       hostname=s["name"],
-                                       memory=flavor["ram"],
-                                       state=helpers.vm_state(s["status"]),
-                                       mixins=[os_tpl, res_tpl])
+        net = Network(title=resp["name"], id=resp["id"],subnets=subnets_array)
 
-        return [comp]
+        return net
+

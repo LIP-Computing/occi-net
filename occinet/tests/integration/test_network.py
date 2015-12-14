@@ -29,6 +29,7 @@ class TestIntegrationNetwork(base.TestController):
         super(TestIntegrationNetwork, self).setUp()
         self.controller = network.Controller(None, "/v2.0")
         self.req = KeySession().create_request_conection("dev", "passwd", "6271876e5bea4935a98cf10840f8dcb6")
+        self.public_network="3e75d5af-f5b9-4a69-bef6-7539f3323a73"
 
     def test_list(self):
         list = self.controller.index(self.req, None)
@@ -48,3 +49,8 @@ class TestIntegrationNetwork(base.TestController):
         list = self.controller.index(self.req, {"tenant_id": "noexits"})
 
         self.assertIs(0, list.resources.__len__())
+
+    def test_show_network(self):
+
+        net = self.controller.show(self.req, self.public_network)
+        self.assertEqual("public", net.title)

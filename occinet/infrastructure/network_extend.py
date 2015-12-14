@@ -43,7 +43,7 @@ class Network(NetworkResource):
         self.attributes["occinet.network.tenantid"] = attr.MutableAttribute(
             "occinet.network.tenantid", tenantid)
         self.attributes["occinet.network.subnets"] = attr.MutableAttribute(
-            "occinet.network.subnets", subnets)
+            "occinet.network.subnets", subnets) #todo(jorgesece): subnets should be and Mixin class.
 
 
     @property

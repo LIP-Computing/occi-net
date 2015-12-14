@@ -19,6 +19,9 @@
 def get_query_string(parameters):
 
     query_string = ""
+    if parameters is None:
+        return None
+
     for key in parameters.keys():
         query_string = query_string + ("%s=%s&" % (key, parameters[key]))
 
