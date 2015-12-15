@@ -24,6 +24,7 @@ from occinet.drivers.openstack import openstack_driver
 from occinet.tests import fakes
 from occinet.infrastructure.network_extend import Network
 
+
 class TestNetworkController(base.TestController):
 
     def setUp(self):
@@ -43,9 +44,20 @@ class TestNetworkController(base.TestController):
             expected = self.controller._get_network_resources(nets)
             self.assertEqual(result.resources.__len__(),result.resources.__len__())
             self.assertEqual(expected, expected)
-            if (result.resources.__len__() > 0): #check that the object has 9 attributes, they belong from RESOURCE+NETWORKRESOURCE+NETWORK
+            if result.resources.__len__() > 0: #check that the object has 9 attributes,
+                                                 # they belong from RESOURCE+NETWORKRESOURCE+NETWORK
                 self.assertEqual(10, result.resources[0].attributes.attributes.__len__())
             m_index.assert_called_with(None, None)
+
+    @mock.patch.object(openstack_driver.OpenStackNet, "get_network")
+    def test_show(self, m_network):
+        test_networks = fakes.networks[fakes.tenants["foo"]["id"]
+        ]
+        for net in test_networks:
+
+            ret = self.controller.show(None, net["id"])
+            self.assertIsInstance(ret, Network)
+
 
 #    @mock.patch.object(openstack_driver.OpenStackNet, "index")
 #    def test_list_by_tenant(self, m_index): #TODO(jorgesece): the fake driver should be improved to make parametriced query tests

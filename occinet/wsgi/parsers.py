@@ -22,7 +22,7 @@ def get_query_string(parameters):
         return None
 
     for key in parameters.keys():
-        query_string = query_string + ("%s=%s&" % (key, parameters[key]))
+        query_string = ("%s%s=%s&" % (query_string, key, parameters[key]))
 
     return query_string[:-1] # delete last character
 
@@ -33,6 +33,14 @@ def get_attributes_from_headers(headers):
         parameters[key]= headers['HTTP_X_OCCI_ATTRIBUTE'][key]
 
     return parameters
+
+
+def make_body(parameters):
+    body = {"network":{}}
+    for key in parameters.keys():
+        body["network"][key] = parameters[key]
+
+    return body
 
 
 def network_status(neutron_status):

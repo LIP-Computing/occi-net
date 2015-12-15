@@ -79,6 +79,8 @@ class Network(NetworkResource):
         self.attributes["occinet.network.subnets"].value.append(value)
 
 
+
+
 #
 #WE DO NOT USE THIS CLASS, IT WAS JUST TO TEST THE
 #

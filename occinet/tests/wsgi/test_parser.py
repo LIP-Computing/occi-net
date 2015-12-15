@@ -14,22 +14,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import collections
-
-
-from ooi import exception
 from ooi.tests import base
-#from ooi.wsgi import parsers
 
 from occinet.wsgi import parsers
-from occinet.drivers.openstack.openstack_driver import OpenStackNet  # it was import ooi.api.helpers
-from ooi.wsgi.parsers import TextParser
 
-class TestOSDriver(base.TestCase):
+
+class TestParser(base.TestCase):
     """Test OpenStack Driver against DevStack."""
 
     def setUp(self):
-        super(TestOSDriver, self).setUp()
+        super(TestParser, self).setUp()
        # self.driver = OpenStackNet
 
     def test_query_string(self): #TODO(jorgesece): the fake driver should be improved to make parametriced query tests
@@ -48,5 +42,12 @@ class TestOSDriver(base.TestCase):
 
         self.assertEqual(2,parameters.__len__())
         self.assertEqual(tenant_id, parameters['tenant_id'])
+
+    def test_make_body(self):
+        parameters = {"tenant_id" : "foo", "name" : "public"}
+        body = parsers.make_body(parameters)
+
+        self.assertIsNotNone(body["network"])
+        self.assertEqual(2, body["network"].__len__())
 
 

@@ -30,7 +30,8 @@ class TestIntegrationNetwork(base.TestController):
         self.controller = network.Controller(None, "/v2.0")
         self.project_id = "6858ff1c34004e15887425722ab37443"
         self.public_network = "2147424c-7a61-4c72-b221-2b51dd104c8e"
-
+        self.new_network_name = "networkOCCINET"
+        self.new_network_id = "7ec0e3d6-e036-4146-ac83-3a310c634a55"
         self.req = KeySession().create_request_conection("admin", "stack1", self.project_id)
 
     def test_list(self):
@@ -56,3 +57,16 @@ class TestIntegrationNetwork(base.TestController):
 
         net = self.controller.show(self.req, self.public_network)
         self.assertEqual("public", net.title)
+"""
+    def test_create_network(self):
+
+        net = self.controller.create(self.req, {"name": self.new_network_name,"tenant_id": self.project_id})
+
+        self.new_network_id = net.id
+        self.assertEqual(self.new_network_name, net.title)
+
+    def test_delete_network(self):
+        response = self.controller.delete(self.req, self.new_network_id)
+
+        self.assertEqual(204, response.status_code)
+"""

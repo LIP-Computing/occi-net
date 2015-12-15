@@ -16,20 +16,32 @@
 #
 
 import six.moves.urllib.parse as urlparse
+import json
 
 from ooi import exception
 from occinet.drivers import base
 from occinet.wsgi import parsers
 
+
 class OpenStackNet(base.BaseHelper):
     """Class to interact with the neutron API."""
 
-    def _create_os_request(self, req, path, parameters=None):
+    def _make_get_request(self, req, path, parameters=None):
 
         query_string = parsers.get_query_string(parameters)
 
         return self._get_req(req, path=path, query_string=query_string, method="GET")
 
+    def _make_create_request(self, req, parameters):
+
+        path = "/networks"
+        body = parsers.make_body(parameters)
+
+        return self._get_req(req, path=path, content_type="application/json", body=json.dumps(body), method="POST")
+
+    def _make_delete_request(self, req, path):
+
+        return self._get_req(req, path=path, method="DELETE")
 
     def index(self, req, parameters=None):
         """Get a list of networks.
@@ -38,7 +50,7 @@ class OpenStackNet(base.BaseHelper):
         :param parameters: parameters to filter results
         """
         path = "/networks"
-        os_req = self._create_os_request(req, path, parameters)
+        os_req = self._make_get_request(req, path, parameters)
 
         response = os_req.get_response(self.app)
 
@@ -52,7 +64,7 @@ class OpenStackNet(base.BaseHelper):
         :param parameters: parameters to filter results (networkID,owner tenant)
         """
         path = "/networks/%s" % id
-        req = self._create_os_request(req, path, parameters)
+        req = self._make_get_request(req, path, parameters)
 
         response = req.get_response(self.app)
 
@@ -61,19 +73,40 @@ class OpenStackNet(base.BaseHelper):
 
         return resp
 
-
-    # RETRIEVE SUBNET DETAILS
-    def get_subnets(self, req, id, parameters=None):
-        """Get information from a flavor.
+    def get_subnet(self, req, id, parameters=None):
+        """Get information from a subnet.
 
         :param req: the incoming request
         :param id: subnet identification
         :param parameters: parameters to filter results (subnetID,networkID,owner tenant)
         """
         path = "/subnets/%s" % id
-        req = self._create_os_request(req, path, parameters)
-
+        req = self._make_get_request(req, path, parameters)
         response = req.get_response(self.app)
 
         return self.get_from_response(response, "subnet", {})
 
+    def create_network(self, req, parameters):
+        """Create a server.
+
+        :param req: the incoming request
+        :param parameters: parameters for the new network
+        """
+        req = self._make_create_request(req, parameters)
+
+        response = req.get_response(self.app)
+        # We only get one server
+        return self.get_from_response(response, "network", {})
+
+    def delete_network(self, req, id):
+        """Delete network. It returns id
+
+        :param req: the incoming network
+        :param id: net identification
+
+        """
+        path = "/networks/%s" % id
+        req = self._make_delete_request(req, path)
+        response = req.get_response(self.app)
+
+        return response
