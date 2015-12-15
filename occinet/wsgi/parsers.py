@@ -17,7 +17,6 @@
 
 
 def get_query_string(parameters):
-
     query_string = ""
     if parameters is None:
         return None
@@ -35,3 +34,11 @@ def get_attributes_from_headers(headers):
 
     return parameters
 
+
+def network_status(neutron_status):
+    if neutron_status == "ACTIVE":
+        return "active"
+    elif neutron_status == "SUSPENDED":
+        return "suspended"
+    else:
+        return "inactive"

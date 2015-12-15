@@ -56,7 +56,10 @@ class OpenStackNet(base.BaseHelper):
 
         response = req.get_response(self.app)
 
-        return self.get_from_response(response, "network", {})
+        resp = self.get_from_response(response, "network", {})
+        resp["status"] = parsers.network_status(resp["status"]);
+
+        return resp
 
 
     # RETRIEVE SUBNET DETAILS

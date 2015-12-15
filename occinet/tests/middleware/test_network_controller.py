@@ -28,8 +28,8 @@ from occinet.wsgi.middleware import OCCINetworkMiddleware
 def build_occi_network(network):
     name = network["name"]
     network_id = network["id"]
-    subnet_id = fakes.subnets[network["subnets"]["id"]]["id"]
-    subnet_name = fakes.subnets[network["subnets"]["id"]]["name"]
+    subnet_id = network["subnets"][0]
+
 
 
     status = network["status"].upper()
@@ -40,29 +40,43 @@ def build_occi_network(network):
 
     app_url = fakes.application_url
     cats = []
-    cats.append('network; '
-                'scheme="http://schemas.ogf.org/occi/infrastructure#"; '
-                'class="kind"; title="network resource"; '
-                'rel="http://schemas.ogf.org/occi/core#resource"; '
-                'location="%s/network/"' % app_url)
-    cats.append('%s; '
-                'scheme="http://schemas.openstack.org/template/resource#"; '
-                'class="mixin"; title="Subnet: %s"; '
-                'rel="http://schemas.ogf.org/occi/infrastructure#resource_tpl"'
-                '; '
-                'location="%s/resource_tpl/%s"'
-                % (subnet_id, subnet_name, app_url, subnet_id)),
+    cats.append('networkextended; '
+                'scheme="http://schemas.ogf.org/occi/infrastructure/network#"; '
+                'class="kind"; title="network extended"; '
+                'rel="http://schemas.ogf.org/occi/infrastructure#network"; '
+                'location="%s/networkextended/"' % app_url)
+
+    #links.append('<https://foo.example.org:8774/ooiv1/networkextended/0af4fab11e2548e9becd0ab4fa03b835?action=down>; rel="http://schemas.ogf.org/occi/infrastructure/network/action#down"')
+#    cats.append('%s; '
+#                'scheme="http://schemas.openstack.org/template/resource#"; '
+#                'class="mixin"; title="Subnet: %s"; '
+#                'rel="http://schemas.ogf.org/occi/infrastructure#resource_tpl"'
+#                '; '
+#                'location="%s/resource_tpl/%s"'
+#                % (subnet_id, subnet_name, app_url, subnet_id)),
+
+    links = []
+    links.append('<%s/networkextended/%s?action=up>; '
+                 'rel="http://schemas.ogf.org/occi/'
+                 'infrastructure/network/action#up"' %
+                 (fakes.application_url, network_id))
+    links.append('<%s/networkextended/%s?action=down>; '
+                 'rel="http://schemas.ogf.org/occi/'
+                 'infrastructure/network/action#down"' %
+                 (fakes.application_url, network_id))
 
     attrs = [
-        'occi.core.title="%s"' % name,
-        'occi.network.state="%s"' % status,
-    ]
-
-
+            'occi.core.id="%s"' % network_id,
+            'occi.core.title="%s"' % name,
+            'occi.network.state="%s"' % status,
+            'occinet.network.subnets=[%s]' % subnet_id,
+            ]
 
     result = []
     for c in cats:
         result.append(("Category", c))
+    for l in links:
+        result.append(("Link", l))
     for a in attrs:
         result.append(("X-OCCI-Attribute", a))
     return result
@@ -123,7 +137,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
             expected.append(
                 ("X-OCCI-Location",
                  utils.join_url(self.application_url + "/",
-                               "networkextend/%s" % s["id"]))
+                               "networkextended/%s" % s["id"]))
                 )
         self.assertDefaults(resp)
         self.assertExpectedResult(expected, resp)
@@ -140,7 +154,6 @@ class TestNetworkController(test_middleware.TestMiddleware):
         result = self._build_req("/-/", "tenant").get_response(mdl)
         self.assertEqual(400, result.status_code)
         self.assertDefaults(result)
-"""
 
     def test_show_networks(self):
         tenant = fakes.tenants["foo"]
@@ -152,10 +165,12 @@ class TestNetworkController(test_middleware.TestMiddleware):
 
             resp = req.get_response(app)
             expected = build_occi_network(network)
+            self.assertEqual(200, resp.status_code)
             self.assertDefaults(resp)
             self.assertExpectedResult(expected, resp)
-            self.assertEqual(200, resp.status_code)
 
+
+"""
 {
     "network": {
         "status": "ACTIVE",

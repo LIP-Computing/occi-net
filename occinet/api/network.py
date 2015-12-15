@@ -62,22 +62,20 @@ class Controller(base.Controller):
         return collection.Collection(resources=occi_network_resources)
 
     def show(self, req, id, parameters=None):
-        # TODO(jorgesece): It is not ready.
-        # I have to check drivers/openstack/templates and drivers/openstack/open_stack_driver
-
         # get info from server
         resp = self.os_helper.get_network(req, id, parameters)
-
-        # get info from subnet
+        state =resp["status"]
+        # get info from subnet #TODO(jorgesece): we have to define subnets infrastructuer (mixing or resource?)
         subnets_array = []
         for subnet_id in resp["subnets"]:
-            subnet = self.os_helper.get_subnets(req, subnet_id)
-            subnets_array.append(subnet)
+            subnets_array.append(subnet_id)
+            #subnet = self.os_helper.get_subnets(req, subnet_id)
+            #subnets_array.append(subnet)
 
    #     os_tpl = templates.OpenStackOSTemplate(image["id"],     image["name"])
 
-        # build the compute object
-        net = Network(title=resp["name"], id=resp["id"],subnets=subnets_array)
+        # build the network object
+        net = Network(title=resp["name"], id=resp["id"],state=state, subnets=subnets_array)
 
         return net
 

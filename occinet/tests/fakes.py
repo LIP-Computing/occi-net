@@ -58,12 +58,12 @@ tenants = {
 
 subnets = {
         1: {
-            "id": uuid.uuid4().hex,
+            "id": 1,
             "name": "private-subnet",
         },
         2: {
-            "id": uuid.uuid4().hex,
-            "name": "private-subnet",
+            "id": 1,
+            "name": "public-subnet",
         },
 }
 
@@ -72,13 +72,13 @@ networks = {
         {
             "id": uuid.uuid4().hex,
             "name": "foo",
-            "subnets": {"id": subnets[1]["id"]},
+            "subnets": [subnets[1]["id"]],
             "status": "ACTIVE",
         },
         {
             "id": uuid.uuid4().hex,
             "name": "bar",
-            "subnets": {"id": subnets[2]["id"]},
+            "subnets": [subnets[2]["id"]],
             "status": "SHUTOFF",
         },
 
@@ -252,11 +252,14 @@ class FakeApp(object):
         else:
             self.routes[path] = create_fake_json_resp({objs_name: obj_list})
 
-        objs_details_path = "%s?tenant_id=%s" % (path, tenant_id)
-        self.routes[objs_details_path] = create_fake_json_resp(
-            {objs_name: obj_list})
+        path_by_tenant = "%s?tenant_id=%s" % (path, tenant_id)
+        self.routes[path_by_tenant] = create_fake_json_resp({objs_name: obj_list})
 
-        for o in obj_list:
+        for net in obj_list:
+            objs_details_path = "%s/%s" % (path, net['id'])
+            self.routes[objs_details_path] = create_fake_json_resp({obj_name: net})
+
+        for o in obj_list: #this maybe is not necessary. ID path is created in the previous lines.
             obj_path = "%s?%s_id=%s" % (path, obj_name, o["id"])
             self.routes[obj_path] = create_fake_json_resp({obj_name: o})
 
