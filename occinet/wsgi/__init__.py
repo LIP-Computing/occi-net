@@ -39,8 +39,6 @@ class Request(RequestOOI):
         return self.parser.get_attributes_from_headers()
 
 
-
-
 class ResourceNet(Resource):
     def __init__(self, controller):
         super(ResourceNet, self).__init__(controller)
@@ -54,59 +52,10 @@ class ResourceNet(Resource):
 
     def __call__(self, request, args):
         """Control the method dispatch."""
-        action_args = self.get_action_args(args)
-        action = action_args.pop('action', None)
-        try:
-            accept = request.get_best_match_content_type()
-            content_type = request.get_content_type()
-        except exception.InvalidContentType as e:
-            msg = e.format_message()
-            return Fault(webob.exc.HTTPNotAcceptable(explanation=msg))
-
-        body = request.body
-
-        # Get the implementing method
-        try:
-            method = self.get_method(request, action,
-                                     content_type, body)
-        except (AttributeError, TypeError):
-            return Fault(webob.exc.HTTPNotFound())
-        except KeyError as ex:
-            msg = "There is no such action: %s" % ex.args[0]
-            return Fault(webob.exc.HTTPBadRequest(explanation=msg))
-
-        contents = {}
-        if request.should_have_body():
-            # allow empty body with PUT and POST
-            if request.content_length == 0:
-                contents = {'body': None}
-            else:
-                contents["body"] = body
-
-       #parameters = request.get_parser().get_attributes_from_headers()
         parameters = self._process_parameters(request)
+        content = {}
         if parameters:
-            contents["parameters"] = parameters
+            content["parameters"] = parameters
+            args.update(content)
 
-        action_args.update(contents)
-
-        response = None
-        try:
-            with ResourceExceptionHandler():
-                action_result = self.dispatch(method, request, action_args)
-        except Fault as ex:
-            response = ex
-
-        # No exceptions, so create a response
-        # NOTE(aloga): if the middleware returns None, the pipeline will
-        # continue, but we do not want to do so, so we convert the action
-        # result to a ResponseObject.
-        if not response:
-            if isinstance(action_result, ResponseObject):
-                resp_obj = action_result
-            else:
-                resp_obj = ResponseObject(action_result)
-
-            response = resp_obj.serialize(request, accept,
-                                          self.default_serializers)
-        return response
+        return super(ResourceNet,self).__call__(request,args)
