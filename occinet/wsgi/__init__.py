@@ -35,16 +35,22 @@ class Request(RequestOOI):
     def get_parser(self):
         return self.parser
 
+    def get_parameter_list(self):
+        return self.parser.get_attributes_from_headers()
+
+
+
 
 class ResourceNet(Resource):
     def __init__(self, controller):
         super(ResourceNet, self).__init__(controller)
+
     @staticmethod
     def _process_parameters(req):
-        if( 'HTTP_X_OCCI_ATTRIBUTE' in req.environ ):
-            parameters = ParserNet(req.environ,None).get_attributes_from_headers()
-            #match["parameters"] = {"tenant_id" : req.environ['HTTP_X_PROJECT_ID']} # req.environ['HTTP_X_OCCI_ATTRIBUTE']
+        param = req.get_parameter_list()
+        if param:
             del req.environ['HTTP_X_OCCI_ATTRIBUTE']
+        return param
 
     def __call__(self, request, args):
         """Control the method dispatch."""
@@ -77,7 +83,8 @@ class ResourceNet(Resource):
             else:
                 contents["body"] = body
 
-        parameters = request.get_parser().get_attributes_from_headers()
+       #parameters = request.get_parser().get_attributes_from_headers()
+        parameters = self._process_parameters(request)
         if parameters:
             contents["parameters"] = parameters
 
