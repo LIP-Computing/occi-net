@@ -43,7 +43,7 @@ class ParserNet (parsers.HeaderParser):
 
         return attrs
 
-    def make_body(self, parameters):
+def make_body(parameters):
         body = {"network":{}}
         for key in parameters.keys():
             body["network"][key] = parameters[key]
