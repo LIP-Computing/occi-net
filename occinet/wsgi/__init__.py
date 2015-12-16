@@ -46,16 +46,16 @@ class ResourceNet(Resource):
     @staticmethod
     def _process_parameters(req):
         param = req.get_parameter_list()
+        content = None
         if param:
+            content = {"parameters": param}
             del req.environ['HTTP_X_OCCI_ATTRIBUTE']
-        return param
+        return content
 
     def __call__(self, request, args):
         """Control the method dispatch."""
         parameters = self._process_parameters(request)
-        content = {}
         if parameters:
-            content["parameters"] = parameters
-            args.update(content)
+            args.update(parameters)
 
         return super(ResourceNet,self).__call__(request,args)

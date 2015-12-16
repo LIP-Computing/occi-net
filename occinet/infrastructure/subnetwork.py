@@ -15,7 +15,41 @@
 from ooi.occi.core import attribute as attr
 from ooi.occi.core import resource
 from ooi.occi.core import kind
+from ooi.occi.core import mixin
 from ooi.occi import helpers
+from ooi.occi.core import attribute
+
+class SubnetworkMixin(mixin.Mixin): #FIXME(jorgesece): this class is still not used
+    scheme = helpers.build_scheme("infrastructure/network")
+
+    def __init__(self, id, name, cores, memory, disk, ephemeral=0, swap=0):
+        attrs = [
+            attribute.InmutableAttribute("occi.compute.cores", cores),
+            attribute.InmutableAttribute("occi.compute.memory", memory),
+            attribute.InmutableAttribute("occi.compute.disk", disk),
+            attribute.InmutableAttribute("occi.compute.ephemeral", ephemeral),
+            attribute.InmutableAttribute("occi.compute.swap", swap),
+            attribute.InmutableAttribute("org.openstack.flavor.name", name)
+        ]
+
+        attrs = attribute.AttributeCollection({a.name: a for a in attrs})
+
+        location = "%s/%s" % (self._location, id)
+        super(SubnetworkMixin, self).__init__(
+            id,
+            "Flavor: %s" % name,
+            related=[mixin.Mixin],
+            attributes=attrs,
+            location=location)
+
+    @property
+    def cores(self):
+        return self.attributes["occi.compute.cores"].value
+
+    @property
+    def memory(self):
+        return self.attributes["occi.compute.memory"].value
+
 
 
 class Subnetwork(resource.Resource): #FIXME(jorgesece): this class is still not used
