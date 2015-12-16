@@ -32,14 +32,16 @@ class ParserNet (parsers.HeaderParser):
 
     def get_attributes_from_headers(self):
         #attr = self.parse_attributes(self.headers)
-        attrs = {}
-        try:
-            header_attrs = self.headers["HTTP_X_OCCI_ATTRIBUTE"]
-            for attr in parsers._quoted_split(header_attrs):
-                l = parsers._split_unquote(attr)
-                attrs[l[0].strip()] = l[1]
-        except KeyError:
-            pass
+        attrs = None
+        if 'HTTP_X_OCCI_ATTRIBUTE' in self.headers:
+            attrs = {}
+            try:
+                header_attrs = self.headers["HTTP_X_OCCI_ATTRIBUTE"]
+                for attr in parsers._quoted_split(header_attrs):
+                    l = parsers._split_unquote(attr)
+                    attrs[l[0].strip()] = l[1]
+            except KeyError:
+                pass
 
         return attrs
 

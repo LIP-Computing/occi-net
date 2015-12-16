@@ -24,19 +24,23 @@ from occinet.wsgi.parsers import ParserNet
 
 from ooi.wsgi import ResourceExceptionHandler
 from ooi.wsgi import ResponseObject
-from ooi.wsgi import serializers
+from ooi.wsgi import Resource
 from ooi import exception
-
 from ooi import version
 from ooi.api import query
 
 import occinet.api.network
+from occinet.wsgi import ResourceNet
 from occinet.wsgi import Request
+
 
 class OCCINetworkMiddleware(OCCIMiddleware):
 
     def __init__(self, application, openstack_version="/v2.1"):
         super(OCCINetworkMiddleware, self).__init__(application, openstack_version)
+
+    def _create_resource(self, controller):
+        return ResourceNet(controller(self.application, self.openstack_version))
 
     def _setup_resource_routes(self, resource, controller):
         path = "/" + resource
@@ -86,12 +90,16 @@ class OCCINetworkMiddleware(OCCIMiddleware):
         match = self.mapper.match(req.path_info, req.environ)
         if not match:
             return Fault(webob.exc.HTTPNotFound())
-        if( 'HTTP_X_OCCI_ATTRIBUTE' in req.environ ):
-            match["parameters"] = ParserNet(req.environ,None).get_attributes_from_headers()
-            #match["parameters"] = {"tenant_id" : req.environ['HTTP_X_PROJECT_ID']} # req.environ['HTTP_X_OCCI_ATTRIBUTE']
-            del req.environ['HTTP_X_OCCI_ATTRIBUTE']
         method = match["controller"]
         return method(req, match)
+
+    @webob.dec.wsgify(RequestClass=Request)
+    def __call__(self, req):
+        response = self.process_request(req)
+        if not response:
+            response = req.get_response(self.application)
+
+        return self.process_response(response)
 
 
 

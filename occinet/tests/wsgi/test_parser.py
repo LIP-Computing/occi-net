@@ -52,7 +52,7 @@ class TestParser(base.TestCase):
 
     def test_make_body(self):
         parameters = {"tenant_id" : "foo", "name" : "public"}
-        body = parsers.ParserNet(None,None).make_body(parameters)
+        body = parsers.make_body(parameters)
 
         self.assertIsNotNone(body["network"])
         self.assertEqual(2, body["network"].__len__())
