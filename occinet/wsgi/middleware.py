@@ -20,7 +20,7 @@ import webob.dec
 from ooi.wsgi import OCCIMiddleware as OCCIMiddleware
 from ooi.wsgi import Fault
 
-from occinet.wsgi import parsers
+from occinet.wsgi.parsers import ParserNet
 
 from ooi.wsgi import ResourceExceptionHandler
 from ooi.wsgi import ResponseObject
@@ -31,7 +31,7 @@ from ooi import version
 from ooi.api import query
 
 import occinet.api.network
-
+from occinet.wsgi import Request
 
 class OCCINetworkMiddleware(OCCIMiddleware):
 
@@ -86,12 +86,12 @@ class OCCINetworkMiddleware(OCCIMiddleware):
         match = self.mapper.match(req.path_info, req.environ)
         if not match:
             return Fault(webob.exc.HTTPNotFound())
-        #TODO(jorgesece): create parse method to create the array from HTTP_OCCI_ATTRIBUTE
         if( 'HTTP_X_OCCI_ATTRIBUTE' in req.environ ):
-            match["parameters"] = parsers.get_attributes_from_headers(req.environ)
+            match["parameters"] = ParserNet(req.environ,None).get_attributes_from_headers()
             #match["parameters"] = {"tenant_id" : req.environ['HTTP_X_PROJECT_ID']} # req.environ['HTTP_X_OCCI_ATTRIBUTE']
             del req.environ['HTTP_X_OCCI_ATTRIBUTE']
         method = match["controller"]
         return method(req, match)
+
 
 

@@ -28,17 +28,18 @@ class TestIntegrationNetwork(base.TestController):
     def setUp(self):
         super(TestIntegrationNetwork, self).setUp()
         self.controller = network.Controller(None, "/v2.0")
-        self.project_id = "6858ff1c34004e15887425722ab37443"
+        self.project_id = "86bf9730b23d4817b431f4c34cc9cc8e"
         self.public_network = "2147424c-7a61-4c72-b221-2b51dd104c8e"
         self.new_network_name = "networkOCCINET"
-        self.new_network_id = "7ec0e3d6-e036-4146-ac83-3a310c634a55"
+        self.new_network_id = "cd58eade-79a1-4633-8fb7-c7d8a030c942" # public network
         self.req = KeySession().create_request_conection("admin", "stack1", self.project_id)
 
     def test_list(self):
         list = self.controller.index(self.req, None)
 
         self.assertIsInstance(list.resources[0], network_extend.Network)
-        self.assertEqual("public", list.resources[0].title)
+        sortedList = sorted(list.resources, key=lambda Network: Network.title, reverse=True)
+        self.assertEqual("public", sortedList[0].title)
 
     def test_list_by_tenant(self):
         tenant_id = self.req.environ["HTTP_X_PROJECT_ID"]

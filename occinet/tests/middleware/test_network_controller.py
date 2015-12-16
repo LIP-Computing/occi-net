@@ -45,16 +45,6 @@ def build_occi_network(network):
                 'class="kind"; title="network extended"; '
                 'rel="http://schemas.ogf.org/occi/infrastructure#network"; '
                 'location="%s/networkextended/"' % app_url)
-
-    #links.append('<https://foo.example.org:8774/ooiv1/networkextended/0af4fab11e2548e9becd0ab4fa03b835?action=down>; rel="http://schemas.ogf.org/occi/infrastructure/network/action#down"')
-#    cats.append('%s; '
-#                'scheme="http://schemas.openstack.org/template/resource#"; '
-#                'class="mixin"; title="Subnet: %s"; '
-#                'rel="http://schemas.ogf.org/occi/infrastructure#resource_tpl"'
-#                '; '
-#                'location="%s/resource_tpl/%s"'
-#                % (subnet_id, subnet_name, app_url, subnet_id)),
-
     links = []
     links.append('<%s/networkextended/%s?action=up>; '
                  'rel="http://schemas.ogf.org/occi/'
@@ -99,7 +89,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
         tenant = fakes.tenants["bar"]
         app = self.get_app()
         headers = { #TODO(jorgesece): tenant_id attribute name should be in OCCI format
-            'X_Occi_Attribute': {'tenant_id' : tenant["id"]},
+            'X_Occi_Attribute': 'tenant_id=%s' % tenant["id"],
         }
         url ="/networks"
         req = self._build_req(url, tenant["id"], method="GET", headers=headers)
@@ -115,7 +105,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
         tenant = fakes.tenants["foo"]
         app = self.get_app()
         headers = {
-            'X_Occi_Attribute': {'tenant_id' : tenant['id']},
+            'X_Occi_Attribute': 'tenant_id=%s' % tenant["id"],
         }
 
         #for url in (, "/networks/"): #todo(jorgesece): Create test with different headers

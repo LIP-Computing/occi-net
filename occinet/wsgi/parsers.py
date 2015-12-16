@@ -15,32 +15,50 @@
 # under the License.
 #
 
+from ooi.wsgi import parsers
+
+
+class ParserNet (parsers.HeaderParser):
+
+    def __init__(self, headers, body):
+        super(ParserNet, self).__init__(headers, body)
+
+    def get_attributes_from_dict(self):
+        parameters = {}
+        for key in self.headers['HTTP_X_OCCI_ATTRIBUTE'].keys():
+            parameters[key]= self.headers['HTTP_X_OCCI_ATTRIBUTE'][key]
+
+        return parameters
+
+    def get_attributes_from_headers(self):
+        #attr = self.parse_attributes(self.headers)
+        attrs = {}
+        try:
+            header_attrs = self.headers["HTTP_X_OCCI_ATTRIBUTE"]
+            for attr in parsers._quoted_split(header_attrs):
+                l = parsers._split_unquote(attr)
+                attrs[l[0].strip()] = l[1]
+        except KeyError:
+            pass
+
+        return attrs
+
+    def make_body(self, parameters):
+        body = {"network":{}}
+        for key in parameters.keys():
+            body["network"][key] = parameters[key]
+
+        return body
 
 def get_query_string(parameters):
-    query_string = ""
-    if parameters is None:
-        return None
+        query_string = ""
+        if parameters is None:
+            return None
 
-    for key in parameters.keys():
-        query_string = ("%s%s=%s&" % (query_string, key, parameters[key]))
+        for key in parameters.keys():
+            query_string = ("%s%s=%s&" % (query_string, key, parameters[key]))
 
-    return query_string[:-1] # delete last character
-
-
-def get_attributes_from_headers(headers):
-    parameters = {}
-    for key in headers['HTTP_X_OCCI_ATTRIBUTE'].keys():
-        parameters[key]= headers['HTTP_X_OCCI_ATTRIBUTE'][key]
-
-    return parameters
-
-
-def make_body(parameters):
-    body = {"network":{}}
-    for key in parameters.keys():
-        body["network"][key] = parameters[key]
-
-    return body
+        return query_string[:-1] # delete last character
 
 
 def network_status(neutron_status):

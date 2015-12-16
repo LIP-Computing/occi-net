@@ -24,6 +24,7 @@ from ooi.occi.core import collection
 from ooi.occi import validator as occi_validator
 
 from occinet.infrastructure.network_extend import Network
+from occinet.wsgi.parsers import ParserNet
 
 
 FLOATING_PREFIX = "floating"
@@ -45,8 +46,16 @@ class Controller(base.Controller):
             self.app,
             self.openstack_version
         )
+    @staticmethod
+    def _get_parameters_from_header(req): #FIXME: dedice to use parse here or in middleware
+        if 'HTTP_X_OCCI_ATTRIBUTE' in req.environ:
+            parameters = ParserNet(req.environ,None).get_attributes_from_headers()
+            del req.environ['HTTP_X_OCCI_ATTRIBUTE']
 
-    def _get_network_resources(self, networks):
+        return parameters
+
+    @staticmethod
+    def _get_network_resources(networks):
         occi_network_resources = []
         if networks:
             for s in networks:

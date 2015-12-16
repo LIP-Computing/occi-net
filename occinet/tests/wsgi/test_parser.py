@@ -16,7 +16,7 @@
 
 from ooi.tests import base
 
-from occinet.wsgi import parsers
+from  occinet.wsgi import parsers
 
 
 class TestParser(base.TestCase):
@@ -32,20 +32,27 @@ class TestParser(base.TestCase):
         self.assertEqual(25, query.__len__())
 
     def test_param_from_headers(self): #TODO(jorgesece): the fake driver should be improved to make parametriced query tests
-        tenant_id=33
+        tenant_id="33"
         headers = {
             'HTTP_X_OCCI_ATTRIBUTE': {'tenant_id' : tenant_id, 'network_id' : 1},
         }
 
         #TextParse from ooi.wsgi I can use well. I will come back to it
-        parameters = parsers.get_attributes_from_headers(headers)
+        parameters = parsers.ParserNet(headers, None).get_attributes_from_dict()
+
+        headers2 = {
+            "HTTP_X_OCCI_ATTRIBUTE": 'tenant_id=%s, network_id=1' % tenant_id,
+        }
+        parameters2 = parsers.ParserNet(headers2, None).get_attributes_from_headers()
 
         self.assertEqual(2,parameters.__len__())
-        self.assertEqual(tenant_id, parameters['tenant_id'])
+        self.assertEqual(2,parameters2.__len__())
+        self.assertEqual(tenant_id, parameters2['tenant_id'])
+        self.assertEqual(parameters['tenant_id'], parameters2['tenant_id'])
 
     def test_make_body(self):
         parameters = {"tenant_id" : "foo", "name" : "public"}
-        body = parsers.make_body(parameters)
+        body = parsers.ParserNet(None,None).make_body(parameters)
 
         self.assertIsNotNone(body["network"])
         self.assertEqual(2, body["network"].__len__())
