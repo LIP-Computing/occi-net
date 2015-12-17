@@ -24,6 +24,7 @@ from ooi.occi.core import collection
 from ooi.occi import validator as occi_validator
 
 from occinet.infrastructure.network_extend import Network
+from occinet.infrastructure.subnetwork import Subnetwork
 
 
 FLOATING_PREFIX = "floating"
@@ -63,18 +64,17 @@ class Controller(base.Controller):
 
         return collection.Collection(resources=occi_network_resources)
 
-    def show(self, req, id, parameters=None):
+    def show(self, req, id):
         # get info from server
-        resp = self.os_helper.get_network(req, id, parameters)
+        resp = self.os_helper.get_network(req, id)
         state =resp["status"]
         # get info from subnet #FIXME(jorgesece): we have to define subnets infrastructuer (mixing or resource?)
         subnets_array = []
         for subnet_id in resp["subnets"]:
-            subnets_array.append(subnet_id)
-            #subnet = self.os_helper.get_subnets(req, subnet_id)
-            #subnets_array.append(subnet)
-
-   #     os_tpl = templates.OpenStackOSTemplate(image["id"],     image["name"])
+            #subnets_array.append(subnet_id)
+            subnet = self.os_helper.get_subnet(req, subnet_id)
+            sb = Subnetwork(title=subnet["name"], id=subnet["id"], cidr=subnet["cidr"],ip_version=subnet["ip_version"])
+            subnets_array.append(sb)
 
         # build the network object
         net = Network(title=resp["name"], id=resp["id"],state=state, subnets=subnets_array)

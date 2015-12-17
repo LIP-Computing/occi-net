@@ -60,10 +60,14 @@ subnets = {
         1: {
             "id": 1,
             "name": "private-subnet",
+            "cidr": "0000000000001",
+            "ip_version": "4",
         },
         2: {
             "id": 1,
             "name": "public-subnet",
+            "cidr": "0000000000002",
+            "ip_version": "4",
         },
 }
 

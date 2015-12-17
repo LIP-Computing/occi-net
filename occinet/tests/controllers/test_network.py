@@ -54,7 +54,6 @@ class TestNetworkController(base.TestController):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]
         ]
         for net in test_networks:
-
             ret = self.controller.show(None, net["id"])
             self.assertIsInstance(ret, Network)
 

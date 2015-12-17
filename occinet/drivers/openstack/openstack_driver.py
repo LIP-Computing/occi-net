@@ -56,7 +56,7 @@ class OpenStackNet(base.BaseHelper):
 
         return self.get_from_response(response, "networks", [])
 
-    def get_network(self, req, id, parameters=None):
+    def get_network(self, req, id):
         """Get info from a network. It returns json code from the server
 
         :param req: the incoming network
@@ -64,7 +64,7 @@ class OpenStackNet(base.BaseHelper):
         :param parameters: parameters to filter results (networkID,owner tenant)
         """
         path = "/networks/%s" % id
-        req = self._make_get_request(req, path, parameters)
+        req = self._make_get_request(req, path)
 
         response = req.get_response(self.app)
 
@@ -73,7 +73,7 @@ class OpenStackNet(base.BaseHelper):
 
         return resp
 
-    def get_subnet(self, req, id, parameters=None):
+    def get_subnet(self, req, id):
         """Get information from a subnet.
 
         :param req: the incoming request
@@ -81,7 +81,7 @@ class OpenStackNet(base.BaseHelper):
         :param parameters: parameters to filter results (subnetID,networkID,owner tenant)
         """
         path = "/subnets/%s" % id
-        req = self._make_get_request(req, path, parameters)
+        req = self._make_get_request(req, path)
         response = req.get_response(self.app)
 
         return self.get_from_response(response, "subnet", {})
