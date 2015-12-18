@@ -39,6 +39,15 @@ class OCCINetworkMiddleware(OCCIMiddleware):
     def __init__(self, application, openstack_version="/v2.1"):
         super(OCCINetworkMiddleware, self).__init__(application, openstack_version)
 
+    @classmethod
+    def factory(cls, global_conf, **local_conf):
+        """Factory method for paste.deploy."""
+        def _factory(app):
+            conf = global_conf.copy()
+            conf.update(local_conf)
+            return cls(app, **local_conf)
+        return _factory
+
     def _create_resource(self, controller):
         return ResourceNet(controller(self.application, self.openstack_version))
 
