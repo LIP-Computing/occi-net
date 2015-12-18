@@ -79,7 +79,7 @@ configuration file and adapt the port if needed, via the ``ooi_listen_port``
 (by default it listens in the ``8787`` port)::
 
     enabled_apis=ec2,osapi_compute,metadata,ooi
-    ooi_listen_port=8787
+    ooi_listen_port=8786
 
 If everything is OK, after rebooting the ``nova-api`` service you should be able
 to access your OCCI endpoint at::
@@ -87,5 +87,5 @@ to access your OCCI endpoint at::
     $ nova credentials
     # Grab the token
     $ export KID=<token>
-    $ curl -H "x-auth-token: $KID" http://localhost:8787/occi1.1/-/
+    $ curl -H "x-auth-token: $KID" http://localhost:8786/occi1.1/-/
 
