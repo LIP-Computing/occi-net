@@ -37,15 +37,15 @@ from ooi.wsgi import serializers
 LOG = logging.getLogger(__name__)
 
 occi_opts = [
-    config.cfg.StrOpt('occinet_listen',
+    config.cfg.StrOpt('ooi_listen',
                       default="0.0.0.0",
                       help='The IP address on which the OCCI (ooi) API '
                       'will listen.'),
-    config.cfg.IntOpt('occinet_listen_port',
-                      default=8786,
+    config.cfg.IntOpt('ooi_listen_port',
+                      default=8787,
                       help='The port on which the OCCI (ooi) API '
                       'will listen.'),
-    config.cfg.IntOpt('occinet_workers',
+    config.cfg.IntOpt('ooi_workers',
                       help='Number of workers for OCCI (ooi) API service. '
                       'The default will be equal to the number of CPUs '
                       'available.'),
