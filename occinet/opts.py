@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2015 LIP - Lisbon
+# Copyright 2015 Spanish National Research Council (CSIC)
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -14,7 +14,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import pbr.version
+from ooi import wsgi
 
-version_info = pbr.version.VersionInfo('occinet')
-version_string = version_info.version_string()
+
+def list_opts():
+    return [("DEFAULT", wsgi.occi_opts)]

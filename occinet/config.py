@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2015 LIP - Lisbon
+# Copyright 2015 Spanish National Research Council
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -14,7 +14,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import pbr.version
 
-version_info = pbr.version.VersionInfo('occinet')
-version_string = version_info.version_string()
+try:
+    from oslo_config import cfg
+except ImportError:
+    from oslo.config import cfg  # noqa
+
+
+def parse_args(argv, default_config_files=None):
+    cfg.CONF(argv[1:],
+             project='occinet',
+             default_config_files=default_config_files)
