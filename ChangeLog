@@ -1,0 +1,36 @@
+CHANGES
+=======
+
+* Update doc from ooi1.1 release
+* Add kilo configuration for occinet
+* Add subnetwork object. Add subnetwork details to show. Add test_wsgi
+* Creating subnetworkMixin
+* Response modify request using call (reusing the OOI Response call)
+* More about RequestNet
+* New RequestNet Class, which includes a ParserNet class. It is used to add the parameters in the controlers
+* create_delete network integration test
+* ParseNet created, it inherit from OOI parsers
+* Started create and delete network methods
+* Modify copyrith to LIP - Lisbon
+* create network show method including unittest and integration test. Integration tests have been modified to login in admin user of devstack
+* Delete compute templates. Create unique methdo create request in driver. Create basic show method in controller
+* X_OCCI_Attributes included in requests
+* created OCCINetworkMiddleware. Two tests control that list event is working. X_OCCI_ATTRIBUTES are working in GET. Still need to be parsed
+* modify network attributes (including subnets). Starting show network detail method in controller
+* create class infrastructure Network with the rest of the attributes. It inherit from NetworkResource
+* query string for filtering networks included in controller and OS driver. Several tests are implemented
+* wsgi empezado. un test OK
+* connection to openstack READY
+* create test using keystone. They still fail
+* create unittest for network index
+* initial changes occinet
+* save os_driver
+* New release ooi
+* add rest of initial openstack driver draft
+* Add, openstack_driver draft
+* delete methods from helper openstack
+* modify README
+* Update README.md
+* modify README
+* initial commit
+* Initial commit

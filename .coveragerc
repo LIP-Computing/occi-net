@@ -1,7 +1,7 @@
 [run]
 branch = True
-source = ooi
-omit = ooi/tests/*
+source = occinet
+omit = occinet/tests/*
 
 [report]
 ignore_errors = True
