@@ -16,8 +16,7 @@
 
 import re
 import webob.dec
-import routes
-import routes.middleware
+
 
 from ooi.wsgi import OCCIMiddleware as OCCIMiddleware
 from ooi.wsgi import Fault
@@ -31,25 +30,7 @@ import occinet.api.network
 from occinet.wsgi import ResourceNet
 from occinet.wsgi import Request
 
-LOG = logging.getLogger(__name__)
 
-occi_opts = [
-    config.cfg.StrOpt('occinet_listen',
-                      default="0.0.0.0",
-                      help='The IP address on which the OCCI (ooi) API '
-                      'will listen.'),
-    config.cfg.IntOpt('occinet_listen_port',
-                      default=8786,
-                      help='The port on which the OCCI (ooi) API '
-                      'will listen.'),
-    config.cfg.IntOpt('occinet_workers',
-                      help='Number of workers for OCCI (ooi) API service. '
-                      'The default will be equal to the number of CPUs '
-                      'available.'),
-]
-
-CONF = config.cfg.CONF
-CONF.register_opts(occi_opts)
 
 
 class OCCINetworkMiddleware(object):
