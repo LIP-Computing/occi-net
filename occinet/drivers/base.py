@@ -92,7 +92,7 @@ def exception_from_response(response):
         message = response.json_body.popitem()[1].get("message")
     except Exception:
         LOG.exception("Unknown error happenened processing responseSSSS %s"
-                      % response)
+                      % response.body)
         return webob.exc.HTTPInternalServerError()
 
     exc = exceptions.get(code, webob.exc.HTTPInternalServerError)
