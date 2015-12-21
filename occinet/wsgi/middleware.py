@@ -16,16 +16,14 @@
 
 import re
 import webob.dec
+import routes
+import routes.middleware
 
 from ooi.wsgi import OCCIMiddleware as OCCIMiddleware
 from ooi.wsgi import Fault
+from ooi.log import log as logging
 
-from occinet.wsgi.parsers import ParserNet
-
-from ooi.wsgi import ResourceExceptionHandler
-from ooi.wsgi import ResponseObject
-from ooi.wsgi import Resource
-from ooi import exception
+from ooi import config
 from ooi import version
 from ooi.api import query
 
@@ -33,20 +31,51 @@ import occinet.api.network
 from occinet.wsgi import ResourceNet
 from occinet.wsgi import Request
 
+LOG = logging.getLogger(__name__)
 
-class OCCINetworkMiddleware(OCCIMiddleware):
+occi_opts = [
+    config.cfg.StrOpt('ooi_listen',
+                      default="0.0.0.0",
+                      help='The IP address on which the OCCI (ooi) API '
+                      'will listen.'),
+    config.cfg.IntOpt('ooi_listen_port',
+                      default=8787,
+                      help='The port on which the OCCI (ooi) API '
+                      'will listen.'),
+    config.cfg.IntOpt('ooi_workers',
+                      help='Number of workers for OCCI (ooi) API service. '
+                      'The default will be equal to the number of CPUs '
+                      'available.'),
+]
 
-    def __init__(self, application, openstack_version="/v2.1"):
-        super(OCCINetworkMiddleware, self).__init__(application, openstack_version)
+CONF = config.cfg.CONF
+CONF.register_opts(occi_opts)
+
+
+class OCCINetworkMiddleware(object):
+
+    occi_version = "1.1"
+    occi_string = "OCCI/%s" % occi_version
 
     @classmethod
     def factory(cls, global_conf, **local_conf):
         """Factory method for paste.deploy."""
+        LOG.debug("Factory definition")
         def _factory(app):
+
             conf = global_conf.copy()
             conf.update(local_conf)
             return cls(app, **local_conf)
         return _factory
+
+    def __init__(self, application, openstack_version="/v2.1"):
+        self.application = application
+        self.openstack_version = openstack_version
+
+        self.resources = {}
+
+        self.mapper = routes.Mapper()
+        self._setup_routes()
 
     def _create_resource(self, controller):
         return ResourceNet(controller(self.application, self.openstack_version))

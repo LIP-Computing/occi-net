@@ -49,7 +49,7 @@ class FakeController(object):
 
 class FakeMiddleware(OCCINetworkMiddleware):
     def _setup_routes(self):
-        self.resources["foo"] = wsgi.Resource(FakeController())
+        self.resources["foo"] = wsgi.ResourceNet(FakeController())
         self.mapper.resource("foo", "foos",
                              controller=self.resources["foo"])
 
