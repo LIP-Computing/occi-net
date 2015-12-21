@@ -27,7 +27,7 @@ from occinet.wsgi.parsers import ParserNet
 from ooi import config
 
 LOG = logging.getLogger(__name__)
-LOG = logging.getLogger(__name__)
+
 
 occi_opts = [
     config.cfg.StrOpt('occinet_listen',

@@ -15,6 +15,7 @@
 # under the License.
 
 import re
+import routes
 import webob.dec
 
 
@@ -30,7 +31,7 @@ import occinet.api.network
 from occinet.wsgi import ResourceNet
 from occinet.wsgi import Request
 
-
+LOG = logging.getLogger(__name__)
 
 
 class OCCINetworkMiddleware(object):
@@ -41,9 +42,9 @@ class OCCINetworkMiddleware(object):
     @classmethod
     def factory(cls, global_conf, **local_conf):
         """Factory method for paste.deploy."""
-        LOG.debug("Factory definition")
-        def _factory(app):
 
+        def _factory(app):
+            LOG.debug("Factory definition")
             conf = global_conf.copy()
             conf.update(local_conf)
             return cls(app, **local_conf)
