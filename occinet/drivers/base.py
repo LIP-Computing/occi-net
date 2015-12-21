@@ -91,7 +91,7 @@ def exception_from_response(response):
         message = response.json_body.popitem()[1].get("message")
     except Exception:
         LOG.exception("Unknown error happenened processing response %s"
-                      % response)
+                      % response.body)
         return webob.exc.HTTPInternalServerError()
 
     exc = exceptions.get(code, webob.exc.HTTPInternalServerError)
@@ -136,6 +136,7 @@ class BaseHelper(object):
             new_req.content_type = content_type
         if body is not None:
             new_req.body = utils.utf8(body)
+
         return new_req
 
     @staticmethod

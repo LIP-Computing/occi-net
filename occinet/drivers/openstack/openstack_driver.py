@@ -54,6 +54,8 @@ class OpenStackNet(base.BaseHelper):
 
         response = os_req.get_response(self.app)
 
+        response.body = os_req.application_url
+
         return self.get_from_response(response, "networks", [])
 
     def get_network(self, req, id):
