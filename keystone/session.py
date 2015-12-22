@@ -49,8 +49,8 @@ class KeySession(object):
 
     def create_request_conection(self,user,password,project_id):
 
-        #app = self.create_keystone(user,password,project_id)  #"dev", "passwd", "6271876e5bea4935a98cf10840f8dcb6")
-        environ = {"HTTP_X_PROJECT_ID": project_id, "HTTP_X-Auth-Token": "40358d12906e47ddaf0ec4c196bedacd"}
+        app = self.create_keystone(user,password,project_id)  #"dev", "passwd", "6271876e5bea4935a98cf10840f8dcb6")
+        environ = {"HTTP_X_PROJECT_ID": project_id, "HTTP_X-Auth-Token": app.auth_token} #"4cf9e807516c450fa98f320f4a9f431a
         kwargs = {}
         kwargs["http_version"] = "HTTP/1.1"
         kwargs["server_name"] = "127.0.0.1"
