@@ -29,7 +29,7 @@ class Network(NetworkResource):
     _scheme = helpers.build_scheme("infrastructure/network",)
     _term = "networkextended"
 
-    kind = kind.Kind(_scheme, _term, 'network extended', attributes=attributes, location='networkextended/',  related=[NetworkResource.kind])
+    kind = kind.Kind(_scheme, _term, 'network extended', attributes=attributes, location='networks/',  related=[NetworkResource.kind])
 
     def __init__(self, title=None, summary=None, id=None,vlan=None, label=None, state=None, shared=None, adminstate=None, tenantid=None, subnets=[]):
 
