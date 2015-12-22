@@ -27,7 +27,7 @@ class Network(NetworkResource):
                                            "occinet.network.tenantid",
                                            "occinet.network.subnets"])
     _scheme = helpers.build_scheme("infrastructure/network",)
-    _term = "networkextended"
+    _term = "networks"
 
     kind = kind.Kind(_scheme, _term, 'network extended', attributes=attributes, location='networks/',  related=[NetworkResource.kind])
 

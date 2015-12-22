@@ -108,6 +108,7 @@ class OCCINetworkMiddleware(object):
                              explanation="%s not supported" % match.group()))
 
         match = self.mapper.match(req.path_info, req.environ)
+
         if not match:
             return Fault(webob.exc.HTTPNotFound())
         method = match["controller"]

@@ -17,7 +17,7 @@
 
 from keystone.session import KeySession
 from occinet.api import network
-#from ooi.occi.infrastructure import network as network_occi
+
 
 from occinet.infrastructure import network_extend
 from ooi.tests import base

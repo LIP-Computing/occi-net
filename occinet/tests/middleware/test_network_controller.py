@@ -40,17 +40,17 @@ def build_occi_network(network):
 
     app_url = fakes.application_url
     cats = []
-    cats.append('networkextended; '
+    cats.append('networks; '
                 'scheme="http://schemas.ogf.org/occi/infrastructure/network#"; '
                 'class="kind"; title="network extended"; '
                 'rel="http://schemas.ogf.org/occi/infrastructure#network"; '
-                'location="%s/networkextended/"' % app_url)
+                'location="%s/networks/"' % app_url)
     links = []
-    links.append('<%s/networkextended/%s?action=up>; '
+    links.append('<%s/networks/%s?action=up>; '
                  'rel="http://schemas.ogf.org/occi/'
                  'infrastructure/network/action#up"' %
                  (fakes.application_url, network_id))
-    links.append('<%s/networkextended/%s?action=down>; '
+    links.append('<%s/networks/%s?action=down>; '
                  'rel="http://schemas.ogf.org/occi/'
                  'infrastructure/network/action#down"' %
                  (fakes.application_url, network_id))
@@ -127,7 +127,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
             expected.append(
                 ("X-OCCI-Location",
                  utils.join_url(self.application_url + "/",
-                               "networkextended/%s" % s["id"]))
+                               "networks/%s" % s["id"]))
                 )
         self.assertDefaults(resp)
         self.assertExpectedResult(expected, resp)
