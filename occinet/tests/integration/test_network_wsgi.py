@@ -47,7 +47,8 @@ class TestMiddleware(base.TestCase):
 
     def test_create_delete_network(self):
         headers = {
-             "X_OCCI_ATTRIBUTE": 'tenant_id=%s, name=pruebas' % (self.project_id),
+            # "X_OCCI_ATTRIBUTE": 'tenant_id=%s, name=pruebas' % (self.project_id),
+            "X_OCCI_ATTRIBUTE": 'project=%s, occi.core.title=pruebas' % (self.project_id),
         }
         req = KeySession().create_request(self.session, path="/networks", headers=headers, method="POST")
         result = req.get_response(self.app)
@@ -55,7 +56,7 @@ class TestMiddleware(base.TestCase):
 
         net_id = result.text.split('\n')[2].split('=')[1];
         headers_delete = {
-             "X_OCCI_ATTRIBUTE": 'network_id=%s' % net_id,
+             "X_OCCI_ATTRIBUTE": 'occi.core.id=%s' % net_id,
         }
         req = KeySession().create_request(self.session, path="/networks", headers=headers_delete, method="DELETE")
         result = req.get_response(self.app)

@@ -45,12 +45,29 @@ class ParserNet (parsers.HeaderParser):
 
         return attrs
 
+    def get_attributes_from_headers(self):
+        #attr = self.parse_attributes(self.headers)
+        attrs = None
+        if 'HTTP_X_OCCI_ATTRIBUTE' in self.headers:
+            attrs = {}
+            try:
+                header_attrs = self.headers["HTTP_X_OCCI_ATTRIBUTE"]
+                for attr in parsers._quoted_split(header_attrs):
+                    l = parsers._split_unquote(attr)
+                    attrs[l[0].strip()] = l[1]
+            except KeyError:
+                pass
+
+        return attrs
+
+
 def make_body(parameters):
         body = {"network":{}}
         for key in parameters.keys():
             body["network"][key] = parameters[key]
 
         return body
+
 
 def get_query_string(parameters):
         query_string = ""
@@ -61,6 +78,16 @@ def get_query_string(parameters):
             query_string = ("%s%s=%s&" % (query_string, key, parameters[key]))
 
         return query_string[:-1] # delete last character
+
+
+def translate_parameters(translation, parameters):
+    if not parameters:
+        return parameters
+    out = {}
+    for key in parameters.keys():
+        if key in translation:
+            out[translation[key]] = parameters[key]
+    return out
 
 
 def network_status(neutron_status):

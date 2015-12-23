@@ -88,8 +88,8 @@ class TestNetworkController(test_middleware.TestMiddleware):
     def test_list_networks_empty(self):
         tenant = fakes.tenants["bar"]
         app = self.get_app()
-        headers = { #TODO(jorgesece): tenant_id attribute name should be in OCCI format
-            'X_Occi_Attribute': 'tenant_id=%s' % tenant["id"],
+        headers = {
+            'X_Occi_Attribute': 'project=%s' % tenant["id"],
         }
         url ="/networks"
         req = self._build_req(url, tenant["id"], method="GET", headers=headers)
@@ -105,7 +105,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
         tenant = fakes.tenants["foo"]
         app = self.get_app()
         headers = {
-            'X_Occi_Attribute': 'tenant_id=%s' % tenant["id"],
+            'X_Occi_Attribute': 'project=%s' % tenant["id"],
         }
 
         #for url in (, "/networks/"): #todo(jorgesece): Create test with different headers

@@ -25,17 +25,25 @@ from occinet.wsgi import parsers
 
 class OpenStackNet(base.BaseHelper):
     """Class to interact with the neutron API."""
+    translation = {"occi.core.title":"name",
+                   "occi.core.id":"network_id",
+                   "occi.network.state":"status",
+                   "project":"tenant_id",
+                   "occi.core.title":"name",}
 
     def _make_get_request(self, req, path, parameters=None):
 
-        query_string = parsers.get_query_string(parameters)
+        param = parsers.translate_parameters(self.translation,parameters)
+        query_string = parsers.get_query_string(param)
 
         return self._get_req(req, path=path, query_string=query_string, method="GET")
 
     def _make_create_request(self, req, parameters):
 
         path = "/networks"
-        body = parsers.make_body(parameters)
+        param = parsers.translate_parameters(self.translation,parameters)
+
+        body = parsers.make_body(param)
 
         return self._get_req(req, path=path, content_type="application/json", body=json.dumps(body), method="POST")
 
@@ -107,7 +115,8 @@ class OpenStackNet(base.BaseHelper):
         :param id: net identification
 
         """
-        id = parameters["network_id"]
+        param = parsers.translate_parameters(self.translation,parameters)
+        id = param["network_id"]
         path = "/networks/%s" % id
         req = self._make_delete_request(req, path)
         response = req.get_response(self.app)
