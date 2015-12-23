@@ -69,6 +69,10 @@ class OCCINetworkMiddleware(object):
                             action="index",  conditions=dict(method=["GET"]))
         self.mapper.connect(resource, path + "/{id}", controller=controller,
                             action="show", conditions=dict(method=["GET"]))
+        self.mapper.connect(resource, path, controller=controller,
+                            action="create", conditions=dict(method=["POST"]))
+        self.mapper.connect(resource, path, controller=controller,
+                            action="delete", conditions=dict(method=["DELETE"]))
 
     def _setup_routes(self):
         self.mapper.redirect("", "/")

@@ -40,8 +40,17 @@ class TestMiddleware(base.TestCase):
         self.assertIsNot("", result.text)
 
     def test_show(self):
-        req = KeySession().create_request(self.session, path="/networks/%s" % self.public_network)
+        req = KeySession().create_request(self.session, path="/networks/%s" % self.public_network, method="GET")
         result = req.get_response(self.app)
         self.assertEqual(200, result.status_code)
         self.assertIsNot("", result.text)
+
+    def test_create_network(self):
+        headers = {
+             "X_OCCI_ATTRIBUTE": 'tenant_id=%s, name=pruebas' % (self.project_id),
+        }
+        req = KeySession().create_request(self.session, path="/networks", headers=headers, method="POST")
+        result = req.get_response(self.app)
+        self.assertEqual(200, result.status_code)
+
 

@@ -100,13 +100,14 @@ class OpenStackNet(base.BaseHelper):
         # We only get one server
         return self.get_from_response(response, "network", {})
 
-    def delete_network(self, req, id):
+    def delete_network(self, req, parameters):
         """Delete network. It returns id
 
         :param req: the incoming network
         :param id: net identification
 
         """
+        id = parameters["network_id"]
         path = "/networks/%s" % id
         req = self._make_delete_request(req, path)
         response = req.get_response(self.app)

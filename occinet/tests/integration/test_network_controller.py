@@ -69,7 +69,7 @@ class TestIntegrationNetwork(base.TestController):
         self.assertEqual(list1.resources.__len__() + 1, list2.resources.__len__())
 
         # Delete
-        response = self.controller.delete(self.req, net.id)
+        response = self.controller.delete(self.req, {"network_id": net.id})
         self.assertEqual(204, response.status_code)
         list3 = self.controller.index(self.req, None)
         self.assertEqual(list1.resources.__len__(), list3.resources.__len__())

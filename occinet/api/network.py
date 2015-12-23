@@ -68,26 +68,25 @@ class Controller(base.Controller):
         # get info from server
         resp = self.os_helper.get_network(req, id)
         state =resp["status"]
-        # get info from subnet #FIXME(jorgesece): we have to define subnets infrastructuer (mixing or resource?)
+        # get info from subnet
         subnets_array = []
         for subnet_id in resp["subnets"]:
             #subnets_array.append(subnet_id)
             subnet = self.os_helper.get_subnet(req, subnet_id)
             sb = Subnetwork(title=subnet["name"], id=subnet["id"], cidr=subnet["cidr"],ip_version=subnet["ip_version"])
             subnets_array.append(sb)
-
-        # build the network object
         net = Network(title=resp["name"], id=resp["id"],state=state, subnets=subnets_array)
 
         return net
 
-    def create(self, req, parameters): #TODO(jorgesece): Create parameters here from REQ. Check parser class from OOI
+    def create(self, req, parameters, body=None):
+        #FIXME(jorgesece): Body is coming from OOI resource class and is not used
         net = self.os_helper.create_network(req, parameters)
         occi_network_resources = self._get_network_resources([net])
 
         return occi_network_resources[0]
 
-    def delete(self, req, parameters): #TODO(jorgesece): Not working
+    def delete(self, req, parameters):
         network_id = self.os_helper.delete_network(req, parameters)
 
         return network_id

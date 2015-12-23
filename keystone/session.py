@@ -56,7 +56,7 @@ class KeySession(object):
         kwargs["server_name"] = "127.0.0.1"
         kwargs["server_port"] = "9696"
 
-        return webob.Request.blank(path=path, environ=environ, base_url="/v2.0",**kwargs)
+        return webob.Request.blank(path=path, environ=environ, base_url="/v2.0", **kwargs)
 
     def create_request_conection(self,user,password,project_id, path="/"):
         app = self.create_keystone(user,password,project_id)  #"dev", "passwd", "6271876e5bea4935a98cf10840f8dcb6")
@@ -64,11 +64,10 @@ class KeySession(object):
 
         return self.create_request(app, path=path, environ=environ)
 
-    def create_request(self, app, path="/", environ={}):
+    def create_request(self, app, path="/", environ={}, headers=None, **kwargs):
         environ ["HTTP_X-Auth-Token"]= app.auth_token #"4cf9e807516c450fa98f320f4a9f431a
-        kwargs = {}
         kwargs["http_version"] = "HTTP/1.1"
         kwargs["server_name"] = "127.0.0.1"
         kwargs["server_port"] = "9696"
 
-        return webob.Request.blank(path=path, environ=environ, base_url="/v2.0",**kwargs)
+        return webob.Request.blank(path=path, environ=environ, base_url="/v2.0", headers=headers, **kwargs)
