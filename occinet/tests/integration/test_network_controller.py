@@ -70,7 +70,7 @@ class TestIntegrationNetwork(base.TestController):
 
         # Delete
         response = self.controller.delete(self.req, {"network_id": net.id})
-        self.assertEqual(204, response.status_code)
+        self.assertIsInstance(response, list)
         list3 = self.controller.index(self.req, None)
         self.assertEqual(list1.resources.__len__(), list3.resources.__len__())
 

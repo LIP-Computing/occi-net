@@ -19,7 +19,7 @@ import webob.dec
 import webob.exc
 
 from ooi.tests import base
-from ooi import wsgi
+from occinet.wsgi.parsers import ParserNet
 
 from occinet.wsgi.middleware import OCCINetworkMiddleware
 from keystone.session import KeySession
@@ -45,7 +45,7 @@ class TestMiddleware(base.TestCase):
         self.assertEqual(200, result.status_code)
         self.assertIsNot("", result.text)
 
-    def test_create_network(self):
+    def test_create_delete_network(self):
         headers = {
              "X_OCCI_ATTRIBUTE": 'tenant_id=%s, name=pruebas' % (self.project_id),
         }
@@ -53,4 +53,11 @@ class TestMiddleware(base.TestCase):
         result = req.get_response(self.app)
         self.assertEqual(200, result.status_code)
 
+        net_id = result.text.split('\n')[2].split('=')[1];
+        headers_delete = {
+             "X_OCCI_ATTRIBUTE": 'network_id=%s' % net_id,
+        }
+        req = KeySession().create_request(self.session, path="/networks", headers=headers_delete, method="DELETE")
+        result = req.get_response(self.app)
+        self.assertEqual(204, result.status_code)
 

@@ -89,4 +89,4 @@ class Controller(base.Controller):
     def delete(self, req, parameters):
         network_id = self.os_helper.delete_network(req, parameters)
 
-        return network_id
+        return []
