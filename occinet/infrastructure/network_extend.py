@@ -29,11 +29,13 @@ class Network(NetworkResource):
     _scheme = helpers.build_scheme("infrastructure/network",)
     _term = "networks"
 
-    kind = kind.Kind(_scheme, _term, 'network extended', attributes=attributes, location='networks/',  related=[NetworkResource.kind])
+    kind = kind.Kind(_scheme, _term, 'network extended', attributes=attributes,
+                     location='networks/',  related=[NetworkResource.kind])
 
-    def __init__(self, title=None, summary=None, id=None,vlan=None, label=None, state=None, shared=None, adminstate=None, tenantid=None, subnets=[]):
-
-        super(Network, self).__init__(title=title, summary=summary, id=id, vlan=vlan, label=label, state=state)
+    def __init__(self, title=None, summary=None, id=None,vlan=None, label=None, state=None,
+                 shared=None, adminstate=None, tenantid=None, subnets=[]):
+        super(Network, self).__init__(title=title, summary=summary, id=id, vlan=vlan,
+                                      label=label, state=state, mixins=subnets)
         self.attributes["occinet.network.shared"] = attr.MutableAttribute(
             "occinet.network.shared", shared)
         self.attributes["occinet.network.adminstate"] = attr.MutableAttribute(
@@ -43,7 +45,7 @@ class Network(NetworkResource):
         self.attributes["occinet.network.tenantid"] = attr.MutableAttribute(
             "occinet.network.tenantid", tenantid)
         self.attributes["occinet.network.subnets"] = attr.MutableAttribute(
-            "occinet.network.subnets", subnets) #todo(jorgesece): subnets should be and Mixin class.
+            "occinet.network.subnets", None) #todo(jorgesece): subnets should be and Mixin class.
 
 
     @property

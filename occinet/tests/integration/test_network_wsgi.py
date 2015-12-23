@@ -29,12 +29,18 @@ class TestMiddleware(base.TestCase):
     def setUp(self):
         super(TestMiddleware, self).setUp()
         self.project_id = "86bf9730b23d4817b431f4c34cc9cc8e"
+        self.public_network = "cd58eade-79a1-4633-8fb7-c7d8a030c942"
         self.session = KeySession().create_keystone("admin", "stack1", self.project_id)
-
         self.app = OCCINetworkMiddleware(None,openstack_version="/v2.0")
 
     def test_index(self):
         req = KeySession().create_request(self.session, path="/networks")
+        result = req.get_response(self.app)
+        self.assertEqual(200, result.status_code)
+        self.assertIsNot("", result.text)
+
+    def test_show(self):
+        req = KeySession().create_request(self.session, path="/networks/%s" % self.public_network)
         result = req.get_response(self.app)
         self.assertEqual(200, result.status_code)
         self.assertIsNot("", result.text)
