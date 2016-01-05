@@ -23,7 +23,7 @@ from ooi.wsgi import ResourceExceptionHandler
 from ooi.wsgi import ResponseObject
 from ooi.wsgi import exception
 from ooi.log import log as logging
-from occinet.wsgi.parsers import ParserNet
+from ooi.wsgi.parsers import HeaderParser as ParserNet
 from ooi import config
 
 LOG = logging.getLogger(__name__)
@@ -67,13 +67,16 @@ class ResourceNet(Resource):
 
     @staticmethod
     def _process_parameters(req):
-        param = req.get_parser().parse()
-        #TODO(jorgesece): req.get_parser.parse(). parameter:{category:,att:{},mixing:{}...}
-        #param = req.get_parameter_list()
         content = None
+        param = None
+        if 'Categories' in req.headers:
+            param = req.get_parser().parse()
+        else:
+            attrs = req.get_parser().parse_attributes(req.headers)
+            if attrs.__len__():
+                param = {"attributes": attrs}
         if param:
             content = {"parameters": param}
-            #del req.environ['HTTP_X_OCCI_ATTRIBUTE']
         return content
 
     def __call__(self, request, args):

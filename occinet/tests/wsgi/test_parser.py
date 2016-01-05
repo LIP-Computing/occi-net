@@ -15,7 +15,7 @@
 # under the License.
 
 from ooi.tests import base
-
+from  ooi.wsgi.parsers import HeaderParser
 from  occinet.wsgi import parsers
 
 
@@ -39,7 +39,7 @@ class TestParser(base.TestCase):
         }
 
         #TextParse from ooi.wsgi I can use well. I will come back to it
-        parsed = parsers.ParserNet(headers, None).parse()
+        parsed = HeaderParser(headers, None).parse()
         parameters = parsed["attributes"]
         self.assertEqual(2,parameters.__len__())
         self.assertEqual(tenant_id, parameters['tenant_id'])

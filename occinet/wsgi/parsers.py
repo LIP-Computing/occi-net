@@ -18,23 +18,6 @@
 from ooi.wsgi import parsers
 
 
-class ParserNet (parsers.HeaderParser):
-
-    def __init__(self, headers, body):
-        super(ParserNet, self).__init__(headers, body)
-
-    def parse(self):
-        obj = None
-        if 'Categories' in self.headers:
-            obj = self.parse_categories(self.headers)
-        parameters = self.parse_attributes(self.headers)
-        if parameters.__len__() > 0:
-            if not obj:
-                obj = {}
-            obj['attributes'] = parameters
-
-        return obj
-
 def make_body(parameters):
         body = {"network":{}}
         for key in parameters.keys():
