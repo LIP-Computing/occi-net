@@ -41,13 +41,13 @@ class TestIntegrationNetwork(base.TestController):
 
     def test_list_by_tenant(self):
         tenant_id = self.req.environ["HTTP_X_PROJECT_ID"]
-        list = self.controller.index(self.req, {"project": self.project_id})
+        list = self.controller.index(self.req, {"attributes": {"project": self.project_id}})
         sortedList = sorted(list.resources, key=lambda Network: Network.title, reverse=True)
         self.assertIsInstance(sortedList[0], network_extend.Network)
         self.assertEqual("public", sortedList[0].title)
 
     def test_list_by_tenant_error(self):
-        list = self.controller.index(self.req, {"project": "noexits"})
+        list = self.controller.index(self.req, {"attributes": {"project": "noexits"}})
         self.assertIs(0, list.resources.__len__())
 
     def test_show_network(self):
@@ -63,13 +63,13 @@ class TestIntegrationNetwork(base.TestController):
     def test_create_delete_network(self):
         list1 = self.controller.index(self.req, None)
         #Create
-        net = self.controller.create(self.req, {"occi.core.title": self.new_network_name,"project": self.project_id})
+        net = self.controller.create(self.req, {"attributes": {"occi.core.title": self.new_network_name,"project": self.project_id}})
         self.assertEqual(self.new_network_name, net.title)
         list2 = self.controller.index(self.req, None)
         self.assertEqual(list1.resources.__len__() + 1, list2.resources.__len__())
 
         # Delete
-        response = self.controller.delete(self.req, {"occi.core.id": net.id})
+        response = self.controller.delete(self.req, {"attributes":{"occi.core.id": net.id}})
         self.assertIsInstance(response, list)
         list3 = self.controller.index(self.req, None)
         self.assertEqual(list1.resources.__len__(), list3.resources.__len__())

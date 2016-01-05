@@ -23,43 +23,17 @@ class ParserNet (parsers.HeaderParser):
     def __init__(self, headers, body):
         super(ParserNet, self).__init__(headers, body)
 
-    def get_attributes_from_dict(self):
-        parameters = {}
-        for key in self.headers['HTTP_X_OCCI_ATTRIBUTE'].keys():
-            parameters[key]= self.headers['HTTP_X_OCCI_ATTRIBUTE'][key]
+    def parse(self):
+        obj = None
+        if 'Categories' in self.headers:
+            obj = self.parse_categories(self.headers)
+        parameters = self.parse_attributes(self.headers)
+        if parameters.__len__() > 0:
+            if not obj:
+                obj = {}
+            obj['attributes'] = parameters
 
-        return parameters
-
-    def get_attributes_from_headers(self):
-        #attr = self.parse_attributes(self.headers)
-        attrs = None
-        if 'HTTP_X_OCCI_ATTRIBUTE' in self.headers:
-            attrs = {}
-            try:
-                header_attrs = self.headers["HTTP_X_OCCI_ATTRIBUTE"]
-                for attr in parsers._quoted_split(header_attrs):
-                    l = parsers._split_unquote(attr)
-                    attrs[l[0].strip()] = l[1]
-            except KeyError:
-                pass
-
-        return attrs
-
-    def get_attributes_from_headers(self):
-        #attr = self.parse_attributes(self.headers)
-        attrs = None
-        if 'HTTP_X_OCCI_ATTRIBUTE' in self.headers:
-            attrs = {}
-            try:
-                header_attrs = self.headers["HTTP_X_OCCI_ATTRIBUTE"]
-                for attr in parsers._quoted_split(header_attrs):
-                    l = parsers._split_unquote(attr)
-                    attrs[l[0].strip()] = l[1]
-            except KeyError:
-                pass
-
-        return attrs
-
+        return obj
 
 def make_body(parameters):
         body = {"network":{}}

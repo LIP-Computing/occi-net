@@ -52,7 +52,7 @@ class Request(RequestOOI):
 
     def __init__(self, environ):
         super(Request,self).__init__(environ)
-        self.parser = ParserNet(environ, None)
+        self.parser = ParserNet(self.headers, None)
 
     def get_parser(self):
         return self.parser
@@ -67,11 +67,13 @@ class ResourceNet(Resource):
 
     @staticmethod
     def _process_parameters(req):
-        param = req.get_parameter_list()
+        param = req.get_parser().parse()
+        #TODO(jorgesece): req.get_parser.parse(). parameter:{category:,att:{},mixing:{}...}
+        #param = req.get_parameter_list()
         content = None
         if param:
             content = {"parameters": param}
-            del req.environ['HTTP_X_OCCI_ATTRIBUTE']
+            #del req.environ['HTTP_X_OCCI_ATTRIBUTE']
         return content
 
     def __call__(self, request, args):

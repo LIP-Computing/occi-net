@@ -19,9 +19,8 @@ import uuid
 
 from ooi.api import base
 from occinet.drivers.openstack.openstack_driver import OpenStackNet  # it was import ooi.api.helpers
-from ooi import exception
 from ooi.occi.core import collection
-
+from ooi.occi import validator as occi_validator
 
 from occinet.infrastructure.network_extend import Network
 from occinet.infrastructure.subnetwork import Subnetwork
@@ -64,7 +63,7 @@ class Controller(base.Controller):
 
         return collection.Collection(resources=occi_network_resources)
 
-    def show(self, req, id, parameters=None):
+    def show(self, req, id):
         # get info from server
         resp = self.os_helper.get_network(req, id)
         state =resp["status"]

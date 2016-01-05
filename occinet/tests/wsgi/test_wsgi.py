@@ -67,7 +67,11 @@ class TestMiddleware(base.TestCase):
         self.assertEqual("", result.text)
 
     def test_show(self):
+        headers = {
+            "Content-Type": "text/occi",
+            'Category': 'network; scheme="http://schema#";class="kind";',
+        }
         result = webob.Request.blank("/foos/id890234",
-                                     method="GET").get_response(self.app)
+                                     method="GET", headers=headers).get_response(self.app)
         self.assertEqual(204, result.status_code)
         self.assertEqual("", result.text)

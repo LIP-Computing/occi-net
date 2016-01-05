@@ -89,10 +89,10 @@ class TestNetworkController(test_middleware.TestMiddleware):
         tenant = fakes.tenants["bar"]
         app = self.get_app()
         headers = {
-            'X_Occi_Attribute': 'project=%s' % tenant["id"],
+            'X_OCCI_Attribute': 'project=%s' % tenant["id"],
         }
         url ="/networks"
-        req = self._build_req(url, tenant["id"], method="GET", headers=headers)
+        req = self._build_req(url, tenant["id"], method="GET", headers=headers, content_type="text/occi")
 
         resp = req.get_response(app)
 

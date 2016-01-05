@@ -14,9 +14,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
+from numpy.distutils.system_info import atlas_blas_info
 
 import six.moves.urllib.parse as urlparse
 import json
+
+from docutils.nodes import abbreviation
 
 from ooi import exception
 from occinet.drivers import base
@@ -32,16 +35,22 @@ class OpenStackNet(base.BaseHelper):
                    "occi.core.title":"name",}
 
     def _make_get_request(self, req, path, parameters=None):
-
-        param = parsers.translate_parameters(self.translation,parameters)
+        if parameters:
+            attributes = parameters.get("attributes", None)
+        else:
+            attributes = None
+        param = parsers.translate_parameters(self.translation,attributes)
         query_string = parsers.get_query_string(param)
 
         return self._get_req(req, path=path, query_string=query_string, method="GET")
 
-    def _make_create_request(self, req, parameters):
-
+    def _make_create_request(self, req, parameters):#TODO(jorgesece): Create test for it
+        if parameters:
+            attributes = parameters.get("attributes", None)
+        else:
+            attributes = None
         path = "/networks"
-        param = parsers.translate_parameters(self.translation,parameters)
+        param = parsers.translate_parameters(self.translation, attributes)
 
         body = parsers.make_body(param)
 
@@ -115,7 +124,7 @@ class OpenStackNet(base.BaseHelper):
         :param id: net identification
 
         """
-        param = parsers.translate_parameters(self.translation,parameters)
+        param = parsers.translate_parameters(self.translation, parameters["attributes"])
         id = param["network_id"]
         path = "/networks/%s" % id
         req = self._make_delete_request(req, path)

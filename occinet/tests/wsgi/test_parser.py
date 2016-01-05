@@ -34,21 +34,17 @@ class TestParser(base.TestCase):
     def test_param_from_headers(self): #TODO(jorgesece): the fake driver should be improved to make parametriced query tests
         tenant_id="33"
         headers = {
-            'HTTP_X_OCCI_ATTRIBUTE': {'tenant_id' : tenant_id, 'network_id' : 1},
+            'Category': 'network; scheme="http://schema#";class="kind";',
+            'X-OCCI-Attribute': 'tenant_id=%s, network_id=1' % tenant_id,
         }
 
         #TextParse from ooi.wsgi I can use well. I will come back to it
-        parameters = parsers.ParserNet(headers, None).get_attributes_from_dict()
-
-        headers2 = {
-            "HTTP_X_OCCI_ATTRIBUTE": 'tenant_id=%s, network_id=1' % tenant_id,
-        }
-        parameters2 = parsers.ParserNet(headers2, None).get_attributes_from_headers()
-
+        parsed = parsers.ParserNet(headers, None).parse()
+        parameters = parsed["attributes"]
         self.assertEqual(2,parameters.__len__())
-        self.assertEqual(2,parameters2.__len__())
-        self.assertEqual(tenant_id, parameters2['tenant_id'])
-        self.assertEqual(parameters['tenant_id'], parameters2['tenant_id'])
+        self.assertEqual(tenant_id, parameters['tenant_id'])
+
+
 
     def test_make_body(self):
         parameters = {"tenant_id" : "foo", "name" : "public"}
