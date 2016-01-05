@@ -44,7 +44,23 @@ class TestParser(base.TestCase):
         self.assertEqual(2,parameters.__len__())
         self.assertEqual(tenant_id, parameters['tenant_id'])
 
-
+    def test_param_from_headers_mixin(self):
+        tenant_id = "33"
+        mixin_id = "mixinID"
+        mixin_scheme = "http://subnet#"
+        network_term = "network"
+        network_scheme = "http://schema#"
+        headers = {
+            'Category': '%s; scheme="%s";class="kind",' % (network_term, network_scheme) +
+            '%s; scheme="%s"; class=mixin' % (mixin_id, mixin_scheme),
+            'X-OCCI-Attribute': 'tenant_id=%s, network_id=1' % tenant_id,
+        }
+        parameters = HeaderParser(headers, None).parse()
+        attributes = parameters["attributes"]
+        self.assertEqual(2, attributes.__len__())
+        self.assertEqual(tenant_id, attributes['tenant_id'])
+        self.assertIn(mixin_scheme, parameters["schemes"])
+        self.assertEquals( '%s%s' % (network_scheme, network_term), parameters["category"])
 
     def test_make_body(self):
         parameters = {"tenant_id" : "foo", "name" : "public"}

@@ -46,8 +46,8 @@ class TestMiddleware(base.TestCase):
 
     def test_create_delete_network(self):
         headers = {
-            # "X_OCCI_ATTRIBUTE": 'tenant_id=%s, name=pruebas' % (self.project_id),
-            "X_OCCI_Attribute": 'project=%s, occi.core.title=pruebas' % (self.project_id),
+            #'Category': 'network; scheme="http://schema#";class="kind";',
+            "X_OCCI_Attribute": 'project=%s, occi.core.title= pruebas' % (self.project_id),
         }
         req = KeySession().create_request(self.session, path="/networks", headers=headers, method="POST")
         result = req.get_response(self.app)

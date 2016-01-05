@@ -89,9 +89,10 @@ class TestNetworkController(test_middleware.TestMiddleware):
         tenant = fakes.tenants["bar"]
         app = self.get_app()
         headers = {
+            'Category': 'network; scheme="http://schema#";class="kind";',
             'X_OCCI_Attribute': 'project=%s' % tenant["id"],
         }
-        url ="/networks"
+        url = "/networks"
         req = self._build_req(url, tenant["id"], method="GET", headers=headers, content_type="text/occi")
 
         resp = req.get_response(app)
@@ -105,11 +106,23 @@ class TestNetworkController(test_middleware.TestMiddleware):
         tenant = fakes.tenants["foo"]
         app = self.get_app()
         headers = {
+            'Category': 'network; scheme="http://schema#";class="kind";',
             'X_Occi_Attribute': 'project=%s' % tenant["id"],
         }
-
         #for url in (, "/networks/"): #todo(jorgesece): Create test with different headers
         req = self._build_req("/networks", tenant["id"], method="GET",headers=headers)
+        resp = req.get_response(app)
+        self.assertEqual(200, resp.status_code)
+
+    def test_create(self):
+        tenant = fakes.tenants["foo"]
+        app = self.get_app()
+        headers = {
+            'Category': 'network; scheme="http://schema#";class="kind";'
+            + 'mixinID; scheme="http://schemas.openstack.org/template/os#"; class=mixin',
+            'X_Occi_Attribute': 'project=%s' % tenant["id"],
+        }
+        req = self._build_req("/networks", tenant["id"], method="POST",headers=headers)
         resp = req.get_response(app)
 
         self.assertEqual(200, resp.status_code)

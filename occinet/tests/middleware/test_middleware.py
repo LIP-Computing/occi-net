@@ -54,7 +54,7 @@ class TestMiddleware(testmi.TestMiddleware):
         if self.content_type is not None:
             kwargs["content_type"] = self.content_type
 
-        environ = {"HTTP_X_PROJECT_ID": tenant_id} #todo(jorgesece): network does not use it
+        environ = {"HTTP_X_PROJECT_ID": tenant_id} #fixme(jorgesece): network does not use it
 
         kwargs["base_url"] = self.application_url
 
