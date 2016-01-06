@@ -28,36 +28,45 @@ from occinet.wsgi import parsers
 
 class OpenStackNet(base.BaseHelper):
     """Class to interact with the neutron API."""
-    translation = {"occi.core.title":"name",
+    translation = {"networks":{"occi.core.title":"name",
                    "occi.core.id":"network_id",
                    "occi.network.state":"status",
                    "project":"tenant_id",
-                   "occi.core.title":"name",}
+                   "occi.core.title":"name"},
+                   "subnet":{"occi.core.title":"name"}
+                   }
 
     def _make_get_request(self, req, path, parameters=None):
-        if parameters:
-            attributes = parameters.get("attributes", None)
-        else:
-            attributes = None
-        param = parsers.translate_parameters(self.translation,attributes)
+        """Create GET request
+        This method create a GET Request instance
+        :param req: the incoming request
+        :param path: element location
+        :param parameters: parameters to filter results
+        """
+        param = parsers.translate_parameters(self.translation["networks"],parameters)
         query_string = parsers.get_query_string(param)
-
         return self._get_req(req, path=path, query_string=query_string, method="GET")
 
     def _make_create_request(self, req, parameters):#TODO(jorgesece): Create test for it
-        if parameters:
-            attributes = parameters.get("attributes", None)
-        else:
-            attributes = None
+        """Create CREATE request
+        This method create a CREATE Request instance
+        :param req: the incoming request
+        :param parameters: parameters with values
+        """
         path = "/networks"
-        param = parsers.translate_parameters(self.translation, attributes)
-
+        param = parsers.translate_parameters(self.translation["networks"], parameters)
         body = parsers.make_body(param)
-
         return self._get_req(req, path=path, content_type="application/json", body=json.dumps(body), method="POST")
 
-    def _make_delete_request(self, req, path):
-
+    def _make_delete_request(self, req, path, parameters):
+        """Create DELETE request
+        This method create a DELETE Request instance
+        :param req: the incoming request
+        :param path: element location
+        """
+        param = parsers.translate_parameters(self.translation["networks"], parameters)
+        id = param["network_id"]
+        path = "%s/%s" % (path, id)
         return self._get_req(req, path=path, method="DELETE")
 
     def index(self, req, parameters=None):
@@ -68,36 +77,25 @@ class OpenStackNet(base.BaseHelper):
         """
         path = "/networks"
         os_req = self._make_get_request(req, path, parameters)
-
         response = os_req.get_response(self.app)
-
-      #  response.body = os_req.application_url
-
         return self.get_from_response(response, "networks", [])
 
     def get_network(self, req, id):
         """Get info from a network. It returns json code from the server
-
         :param req: the incoming network
         :param id: net identification
-        :param parameters: parameters to filter results (networkID,owner tenant)
         """
         path = "/networks/%s" % id
         req = self._make_get_request(req, path)
-
         response = req.get_response(self.app)
-
         resp = self.get_from_response(response, "network", {})
         resp["status"] = parsers.network_status(resp["status"]);
-
         return resp
 
     def get_subnet(self, req, id):
         """Get information from a subnet.
-
         :param req: the incoming request
         :param id: subnet identification
-        :param parameters: parameters to filter results (subnetID,networkID,owner tenant)
         """
         path = "/subnets/%s" % id
         req = self._make_get_request(req, path)
@@ -107,27 +105,19 @@ class OpenStackNet(base.BaseHelper):
 
     def create_network(self, req, parameters):
         """Create a server.
-
         :param req: the incoming request
-        :param parameters: parameters for the new network
+        :param parameters: parameters with values for the new network
         """
         req = self._make_create_request(req, parameters)
-
         response = req.get_response(self.app)
-        # We only get one server
         return self.get_from_response(response, "network", {})
 
     def delete_network(self, req, parameters):
-        """Delete network. It returns id
-
+        """Delete network. It returns empty array
         :param req: the incoming network
         :param id: net identification
-
         """
-        param = parsers.translate_parameters(self.translation, parameters["attributes"])
-        id = param["network_id"]
-        path = "/networks/%s" % id
-        req = self._make_delete_request(req, path)
+        path = "/networks"
+        req = self._make_delete_request(req, path, parameters)
         response = req.get_response(self.app)
-
         return response

@@ -21,6 +21,7 @@ import webob.exc
 from ooi.tests import base
 from occinet import wsgi
 from occinet.wsgi.middleware import OCCINetworkMiddleware
+from occinet.infrastructure import subnetwork
 
 
 
@@ -40,7 +41,7 @@ class FakeController(object):
     def delete(self, req, id):
         raise webob.exc.HTTPNotImplemented()
 
-    def show(self, req, id):
+    def show(self, req, id, parameters):
         # Returning a ResponseObject should stop the pipepline
         # so the application won't be called.
         resp = wsgi.ResponseObject([])
@@ -69,7 +70,29 @@ class TestMiddleware(base.TestCase):
     def test_show(self):
         headers = {
             "Content-Type": "text/occi",
-            'Category': 'network; scheme="http://schema#";class="kind";',
+            'Category': 'network; scheme="http://schema/resource#";class="kind",' +
+            'subnet11; scheme="http://schema/mixin#";class="mixin", ' +
+            'subnet33; scheme="http://schema/mixin#";class="mixin";',
+        }
+        result = webob.Request.blank("/foos/id890234",
+                                     method="GET", headers=headers).get_response(self.app)
+        self.assertEqual(204, result.status_code)
+        self.assertEqual("", result.text)
+
+    def test_show_no_mixin(self):
+        headers = {
+            "Content-Type": "text/occi",
+            'Category': 'network; scheme="http://schema/resource#";class="kind"'
+        }
+        result = webob.Request.blank("/foos/id890234",
+                                     method="GET", headers=headers).get_response(self.app)
+        self.assertEqual(204, result.status_code)
+        self.assertEqual("", result.text)
+
+    def test_show_attr(self):
+        headers = {
+            "Content-Type": "text/occi",
+            'X-OCCI-Attribute': 'tenant_id=t1, network_id=n1',
         }
         result = webob.Request.blank("/foos/id890234",
                                      method="GET", headers=headers).get_response(self.app)

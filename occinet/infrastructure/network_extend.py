@@ -26,10 +26,10 @@ class Network(NetworkResource):
                                            "occinet.network.adminstate",
                                            "occinet.network.tenantid",
                                            "occinet.network.subnets"])
-    _scheme = helpers.build_scheme("infrastructure/network",)
-    _term = "networks"
+    scheme = helpers.build_scheme("infrastructure/network",)
+    term = "networks"
 
-    kind = kind.Kind(_scheme, _term, 'network extended', attributes=attributes,
+    kind = kind.Kind(scheme, term, 'network extended', attributes=attributes,
                      location='networks/',  related=[NetworkResource.kind])
 
     def __init__(self, title=None, summary=None, id=None,vlan=None, label=None, state=None,

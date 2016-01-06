@@ -22,8 +22,8 @@ from ooi.occi.core import mixin
 
 class Subnetwork(mixin.Mixin): #TODO(jorgesece):create routes Mixin.
 
-    _scheme = helpers.build_scheme("infrastructure/subnetwork",)
-    _term = "subnetwork"
+    scheme = helpers.build_scheme("infrastructure/subnetwork",)
+    term = "subnetwork"
     def __init__(self, title=None, id=None, start=None, end=None, ip_version=None, cidr=None, host_routes=[]):
         _attributes = [
             attr.MutableAttribute("occinet.subnetwork.start", start),
@@ -34,7 +34,7 @@ class Subnetwork(mixin.Mixin): #TODO(jorgesece):create routes Mixin.
 
         _att = attr.AttributeCollection({a.name: a for a in _attributes})
         location = 'subnetworks/%s' % id
-        super(Subnetwork, self).__init__(scheme=self._scheme, term=self._term, title=title
+        super(Subnetwork, self).__init__(scheme=self.scheme, term=self.term, title=title
                                         , attributes=_att, location=location, related=host_routes)
 
     @property

@@ -15,7 +15,7 @@
 # under the License.
 
 import webob
-import uuid
+import collections
 
 from ooi.api import base
 from occinet.drivers.openstack.openstack_driver import OpenStackNet  # it was import ooi.api.helpers
@@ -48,6 +48,18 @@ class Controller(base.Controller):
         )
 
     @staticmethod
+    def _filter_attributes(parameters):
+        if parameters:
+            attributes = parameters.get("attributes", None)
+            schemes = parameters.get("schemes", None)
+            if schemes: #fixme(jorgesece): check if it is just one element or a listo of them
+                attributes["subnet"]  = schemes.get(Subnetwork.scheme, None)
+                #isinstance(subnet, collections.Collecion
+        else:
+            attributes = None
+        return attributes
+
+    @staticmethod
     def _get_network_resources(networks):
         occi_network_resources = []
         if networks:
@@ -58,8 +70,8 @@ class Controller(base.Controller):
         return occi_network_resources
 
     def index(self, req, parameters=None):
-
-        occi_networks = self.os_helper.index(req, parameters)
+        attributes = self._filter_attributes(parameters)
+        occi_networks = self.os_helper.index(req, attributes)
         occi_network_resources = self._get_network_resources(occi_networks)
 
         return collection.Collection(resources=occi_network_resources)
@@ -71,7 +83,6 @@ class Controller(base.Controller):
         # get info from subnet
         subnets_array = []
         for subnet_id in resp["subnets"]:
-            #subnets_array.append(subnet_id)
             subnet = self.os_helper.get_subnet(req, subnet_id)
             sb = Subnetwork(title=subnet["name"], id=subnet["id"], cidr=subnet["cidr"],ip_version=subnet["ip_version"])
             subnets_array.append(sb)
@@ -81,12 +92,14 @@ class Controller(base.Controller):
 
     def create(self, req, parameters, body=None):
         #FIXME(jorgesece): Body is coming from OOI resource class and is not used
-        net = self.os_helper.create_network(req, parameters)
+        attributes = self._filter_attributes(parameters)
+        net = self.os_helper.create_network(req, attributes)
         occi_network_resources = self._get_network_resources([net])
 
         return occi_network_resources[0]
 
     def delete(self, req, parameters):
-        network_id = self.os_helper.delete_network(req, parameters)
+        attributes = self._filter_attributes(parameters)
+        network_id = self.os_helper.delete_network(req, attributes)
 
         return []

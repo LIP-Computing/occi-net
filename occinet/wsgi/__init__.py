@@ -69,7 +69,7 @@ class ResourceNet(Resource):
     def _process_parameters(req):
         content = None
         param = None
-        if 'Categories' in req.headers:
+        if 'Category' in req.headers:
             param = req.get_parser().parse()
         else:
             attrs = req.get_parser().parse_attributes(req.headers)
