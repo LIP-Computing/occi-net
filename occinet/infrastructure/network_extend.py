@@ -24,8 +24,8 @@ from ooi.occi import helpers
 class Network(NetworkResource):
     attributes = attr.AttributeCollection(["occinet.network.shared",
                                            "occinet.network.adminstate",
-                                           "occinet.network.tenantid",
-                                           "occinet.network.subnets"])
+                                           "occinet.network.tenantid"
+                                           ])
     scheme = helpers.build_scheme("infrastructure/network",)
     term = "networks"
 
@@ -44,9 +44,6 @@ class Network(NetworkResource):
             "occinet.network.tenantid", tenantid)
         self.attributes["occinet.network.tenantid"] = attr.MutableAttribute(
             "occinet.network.tenantid", tenantid)
-        self.attributes["occinet.network.subnets"] = attr.MutableAttribute(
-            "occinet.network.subnets", None) #todo(jorgesece): subnets should be and Mixin class.
-
 
     @property
     def shared(self):
@@ -75,12 +72,6 @@ class Network(NetworkResource):
     @property
     def subnets(self):
         return self.attributes["occinet.network.subnets"].value
-
-    @subnets.setter
-    def subnets(self, value):
-        self.attributes["occinet.network.subnets"].value.append(value)
-
-
 
 
 #

@@ -25,9 +25,9 @@ from ooi.log import log as logging
 
 from ooi import config
 from ooi import version
-from ooi.api import query
 
 import occinet.api.network
+from occinet.api import query
 from occinet.wsgi import ResourceNet
 from occinet.wsgi import Request
 
@@ -67,10 +67,15 @@ class OCCINetworkMiddleware(object):
          # These two could be removed for total OCCI compliance
         self.mapper.connect(resource, path, controller=controller,
                             action="index",  conditions=dict(method=["GET"]))
-        self.mapper.connect(resource, path + "/{id}", controller=controller,
-                            action="show", conditions=dict(method=["GET"]))
         self.mapper.connect(resource, path, controller=controller,
                             action="create", conditions=dict(method=["POST"]))
+        #OK
+        self.mapper.connect(resource, path + "/", controller=controller,
+                            action="index",  conditions=dict(method=["GET"]))
+        self.mapper.connect(resource, path + "/", controller=controller,
+                            action="create", conditions=dict(method=["POST"]))
+        self.mapper.connect(resource, path + "/{id}", controller=controller,
+                            action="show", conditions=dict(method=["GET"]))
         self.mapper.connect(resource, path, controller=controller,
                             action="delete", conditions=dict(method=["DELETE"]))
 
@@ -78,14 +83,16 @@ class OCCINetworkMiddleware(object):
         self.mapper.redirect("", "/")
 
         self.resources["query"] = self._create_resource(query.Controller)
+
+
         self.mapper.connect("query", "/-/",
                             controller=self.resources["query"],
                             action="index")
-
         # RFC5785, OCCI section 3.6.7
         self.mapper.connect("query", "/.well-known/org/ogf/occi/-/",
                             controller=self.resources["query"],
                             action="index")
+
         self.resources["networks"] = self._create_resource(occinet.api.network.Controller)
         self._setup_resource_routes("networks", self.resources["networks"])
 

@@ -52,9 +52,11 @@ class Controller(base.Controller):
         if parameters:
             attributes = parameters.get("attributes", None)
             schemes = parameters.get("schemes", None)
-            if schemes: #fixme(jorgesece): check if it is just one element or a listo of them
-                attributes["subnet"]  = schemes.get(Subnetwork.scheme, None)
-                #isinstance(subnet, collections.Collecion
+            if schemes:
+                data  = schemes.get(Subnetwork.scheme, None)
+                if not isinstance(data, list):
+                    data = [data]
+                attributes["subnet"] = data
         else:
             attributes = None
         return attributes

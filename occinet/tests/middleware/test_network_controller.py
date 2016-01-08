@@ -118,7 +118,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
         tenant = fakes.tenants["foo"]
         app = self.get_app()
         headers = {
-            'Category': 'network; scheme="http://schema#";class="kind";'
+            'Category': 'network; scheme="http://schema#";class="kind",'
             + 'mixinID; scheme="http://schemas.openstack.org/template/os#"; class=mixin',
             'X_Occi_Attribute': 'project=%s' % tenant["id"],
         }
@@ -144,19 +144,6 @@ class TestNetworkController(test_middleware.TestMiddleware):
                 )
         self.assertDefaults(resp)
         self.assertExpectedResult(expected, resp)
-
-
-    def test_400_from_openstack(self):
-        @webob.dec.wsgify()
-        def _fake_app(req):
-            exc = webob.exc.HTTPBadRequest()
-            resp = fakes.FakeOpenStackFault(exc)
-            return resp
-
-        mdl = OCCINetworkMiddleware(_fake_app)
-        result = self._build_req("/-/", "tenant").get_response(mdl)
-        self.assertEqual(400, result.status_code)
-        self.assertDefaults(result)
 
     def test_show_networks(self):
         tenant = fakes.tenants["foo"]
