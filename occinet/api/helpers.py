@@ -21,6 +21,7 @@ import copy
 
 from ooi.api.helpers import BaseHelper
 from occinet.wsgi import parsers
+from keystone.session import KeySession
 from ooi import utils
 
 
@@ -56,21 +57,22 @@ class OpenStackNet(BaseHelper):
                              query if not specified
         :returns: a Request object
         """
-        new_req = webob.Request(copy.copy(req.environ))
+        kwargs ={}
+        kwargs["http_version"] = "HTTP/1.1"
+        kwargs["server_name"] = "127.0.0.1"
+        kwargs["server_port"] = "9696"
+
+        new_req = webob.Request.blank(path=path, environ=req.environ, base_url="/v2.0", **kwargs)
+
         new_req.script_name = self.openstack_version
         new_req.query_string = query_string
         new_req.method = method
-       # new_req.server_name = "127.0.0.1"
-       # new_req.server_port = "9696"
-        #environ ["HTTP_X-Auth-Token"]= app.auth_token
         if path is not None:
             new_req.path_info = path
         if content_type is not None:
             new_req.content_type = content_type
         if body is not None:
             new_req.body = utils.utf8(body)
-        new_req.environ["SERVER_PORT"] = "9696"
-        new_req.environ["SERVER_NAME"] = "127.0.0.1"
 
 
         return new_req
