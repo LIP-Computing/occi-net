@@ -14,21 +14,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import webob
-import collections
-
-from ooi.api import base
-from occinet.drivers.openstack.openstack_driver import OpenStackNet  # it was import ooi.api.helpers
-from ooi import exception
-from ooi.occi.core import collection
-
-
+from occinet.api.helpers import OpenStackNet  # it was import ooi.api.helpers
 from occinet.infrastructure.network_extend import Network
-from occinet.infrastructure.subnetwork import Subnetwork
-
-
-FLOATING_PREFIX = "floating"
-FIXED_PREFIX = "fixed"
+from ooi.api import base
+from ooi.occi.core import collection
 
 
 def _build_network(name, prefix=None):
@@ -51,12 +40,6 @@ class Controller(base.Controller):
     def _filter_attributes(parameters):
         if parameters:
             attributes = parameters.get("attributes", None)
-            schemes = parameters.get("schemes", None)
-            if schemes:
-                data  = schemes.get(Subnetwork.scheme, None)
-                if not isinstance(data, list):
-                    data = [data]
-                attributes["subnet"] = data
         else:
             attributes = None
         return attributes
@@ -81,14 +64,9 @@ class Controller(base.Controller):
     def show(self, req, id, parameters=None):
         # get info from server
         resp = self.os_helper.get_network(req, id)
-        state =resp["status"]
+        state = resp["status"]
         # get info from subnet
-        subnets_array = []
-        for subnet_id in resp["subnets"]:
-            subnet = self.os_helper.get_subnet(req, subnet_id)
-            sb = Subnetwork(title=subnet["name"], id=subnet["id"], cidr=subnet["cidr"],ip_version=subnet["ip_version"])
-            subnets_array.append(sb)
-        net = Network(title=resp["name"], id=resp["id"],state=state, subnets=subnets_array)
+        net = Network(title=resp["name"], id=resp["id"],state=state)
 
         return net
 

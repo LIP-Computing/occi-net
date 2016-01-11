@@ -54,11 +54,11 @@ class TestIntegrationNetwork(base.TestController):
         net = self.controller.show(self.req, self.public_network)
         self.assertEqual("public", net.title)
 
-    def test_show_network_with_subnet(self):
-        net = self.controller.show(self.req, self.public_network)
-        self.assertEqual("public", net.title)
-        self.assertEqual(1, net.mixins.__len__() )
-        self.assertEqual("public-subnet", net.mixins[0].title )
+    # def test_show_network_with_subnet(self):
+    #     net = self.controller.show(self.req, self.public_network)
+    #     self.assertEqual("public", net.title)
+    #     self.assertEqual(1, net.mixins.__len__() )
+    #     self.assertEqual("public-subnet", net.mixins[0].title )
 
     def test_create_delete_network(self):
         list1 = self.controller.index(self.req, None)

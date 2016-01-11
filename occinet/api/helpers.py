@@ -14,19 +14,17 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-from numpy.distutils.system_info import atlas_blas_info
 
-import six.moves.urllib.parse as urlparse
+import webob
 import json
+import copy
 
-from docutils.nodes import abbreviation
-
-from ooi import exception
-from occinet.drivers import base
+from ooi.api.helpers import BaseHelper
 from occinet.wsgi import parsers
+from ooi import utils
 
 
-class OpenStackNet(base.BaseHelper):
+class OpenStackNet(BaseHelper):
     """Class to interact with the neutron API."""
     translation = {"networks":{"occi.core.title":"name",
                    "occi.core.id":"network_id",
@@ -35,6 +33,47 @@ class OpenStackNet(base.BaseHelper):
                    "occi.core.title":"name"},
                    "subnet":{"occi.core.title":"name"}
                    }
+
+    def _get_req(self, req, method,
+                 path=None,
+                 content_type="application/json",
+                 body=None,
+                 query_string=""):
+        """Return a new Request object to interact with OpenStack.
+
+        This method will create a new request starting with the same WSGI
+        environment as the original request, prepared to interact with
+        OpenStack. Namely, it will override the script name to match the
+        OpenStack version. It will also override the path, content_type and
+        body of the request, if any of those keyword arguments are passed.
+
+        :param req: the original request
+        :param path: new path for the request
+        :param content_type: new content type for the request, defaults to
+                             "application/json" if not specified
+        :param body: new body for the request
+        :param query_string: query string for the request, defaults to an empty
+                             query if not specified
+        :returns: a Request object
+        """
+        new_req = webob.Request(copy.copy(req.environ))
+        new_req.script_name = self.openstack_version
+        new_req.query_string = query_string
+        new_req.method = method
+       # new_req.server_name = "127.0.0.1"
+       # new_req.server_port = "9696"
+        #environ ["HTTP_X-Auth-Token"]= app.auth_token
+        if path is not None:
+            new_req.path_info = path
+        if content_type is not None:
+            new_req.content_type = content_type
+        if body is not None:
+            new_req.body = utils.utf8(body)
+        new_req.environ["SERVER_PORT"] = "9696"
+        new_req.environ["SERVER_NAME"] = "127.0.0.1"
+
+
+        return new_req
 
     def _make_get_request(self, req, path, parameters=None):
         """Create GET request

@@ -21,7 +21,6 @@ import webob.exc
 from ooi.tests import base
 from occinet import wsgi
 from occinet.wsgi.middleware import OCCINetworkMiddleware
-from occinet.infrastructure import subnetwork
 
 
 

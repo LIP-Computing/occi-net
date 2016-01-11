@@ -22,7 +22,6 @@ from ooi.occi.core import resource
 from ooi.occi.infrastructure import templates as infra_templates
 
 from occinet.infrastructure import network_extend
-from occinet.infrastructure import subnetwork
 
 
 class Controller(base.Controller):
@@ -46,7 +45,6 @@ class Controller(base.Controller):
          # OCCI infra network
         #prueba
         l.append(infra_templates.os_tpl)
-        l.append(subnetwork.Subnetwork())
         l.append(network_extend.Network.kind)
 
         return l
