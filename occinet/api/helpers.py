@@ -21,7 +21,7 @@ import copy
 
 from ooi.api.helpers import BaseHelper
 from occinet.wsgi import parsers
-from keystone.session import KeySession
+
 from ooi import utils
 
 
@@ -57,13 +57,20 @@ class OpenStackNet(BaseHelper):
                              query if not specified
         :returns: a Request object
         """
-        kwargs ={}
-        kwargs["http_version"] = "HTTP/1.1"
-        kwargs["server_name"] = "127.0.0.1"
-        kwargs["server_port"] = "9696"
+        server = self.neutron_endpoint
+        port = "9696"
+        kwargs = {"http_version": "HTTP/1.1", "server_name": server, "server_port": port}
+        try:
+            if "HTTP_X-Auth-Token" in req.environ:
+                token = req.environ["HTTP_X-Auth-Token"]
+            else:
+                token = req.environ["keystone.token_auth"].get_auth_ref(None)['auth_token']
+            #project_id = req.environ["HTTP_X_PROJECT_ID"]
+        except Exception:
+            raise webob.exc.HTTPUnauthorized
+        environ = {"HTTP_X-Auth-Token": token} #"HTTP_X_PROJECT_ID": project_id}
 
-        new_req = webob.Request.blank(path=path, environ=req.environ, base_url="/v2.0", **kwargs)
-
+        new_req = webob.Request.blank(path=path, environ=environ,  base_url="/v2.0", **kwargs)
         new_req.script_name = self.openstack_version
         new_req.query_string = query_string
         new_req.method = method

@@ -25,6 +25,7 @@ LOG = logging.getLogger(__name__)
 
 @six.add_metaclass(abc.ABCMeta)
 class Controller(object):
-    def __init__(self, app, openstack_version):
+    def __init__(self, app, openstack_version, neutron_endpoint):
         self.app = app
         self.openstack_version = openstack_version
+        self.neutron_endpoint = neutron_endpoint

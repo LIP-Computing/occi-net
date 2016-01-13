@@ -30,10 +30,14 @@ class TestMiddleware(base.TestCase):
         self.project_id = "86bf9730b23d4817b431f4c34cc9cc8e"
         self.public_network = "cd58eade-79a1-4633-8fb7-c7d8a030c942"
         self.session = KeySession().create_keystone("admin", "stack1", self.project_id)
-        self.app = OCCINetworkMiddleware(None,openstack_version="/v2.0")
+        self.app = OCCINetworkMiddleware(None,neutron_version="/v2.0",neutron_endpoint="127.0.0.1")
 
     def test_index(self):
-        req = KeySession().create_request(self.session, path="/networks")
+        headers = {
+            #'Category': 'network; scheme="http://schema#";class="kind";',
+            "X_OCCI_Attribute": 'project=%s' % (self.project_id),
+        }
+        req = KeySession().create_request(self.session, headers=headers, path="/networks")
         result = req.get_response(self.app)
         self.assertEqual(200, result.status_code)
         self.assertIsNot("", result.text)

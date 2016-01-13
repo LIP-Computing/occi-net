@@ -33,7 +33,8 @@ class Controller(base.Controller):
         super(Controller, self).__init__(*args, **kwargs)
         self.os_helper = OpenStackNet(
             self.app,
-            self.openstack_version
+            self.openstack_version,
+            self.neutron_endpoint
         )
 
     @staticmethod

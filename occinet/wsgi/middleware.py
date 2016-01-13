@@ -50,9 +50,10 @@ class OCCINetworkMiddleware(object):
             return cls(app, **local_conf)
         return _factory
 
-    def __init__(self, application, openstack_version="/v2.1"):
-        self.application = application
-        self.openstack_version = openstack_version
+    def __init__(self, application, neutron_version="/v2.0", neutron_endpoint="0.0.0.0"):
+        self.application = None
+        self.openstack_version = neutron_version
+        self.neutron_endpoint = neutron_endpoint
 
         self.resources = {}
 
@@ -60,7 +61,7 @@ class OCCINetworkMiddleware(object):
         self._setup_routes()
 
     def _create_resource(self, controller):
-        return ResourceNet(controller(self.application, self.openstack_version))
+        return ResourceNet(controller(self.application, self.openstack_version, self.neutron_endpoint))
 
     def _setup_resource_routes(self, resource, controller):
         path = "/" + resource

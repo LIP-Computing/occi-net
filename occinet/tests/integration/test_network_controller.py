@@ -27,7 +27,7 @@ class TestIntegrationNetwork(base.TestController):
 
     def setUp(self):
         super(TestIntegrationNetwork, self).setUp()
-        self.controller = network.Controller(None, "/v2.0")
+        self.controller = network.Controller(None, "/v2.0", "127.0.0.1")
         self.project_id = "86bf9730b23d4817b431f4c34cc9cc8e"
         self.public_network = "cd58eade-79a1-4633-8fb7-c7d8a030c942"
         self.new_network_name = "networkOCCINET"

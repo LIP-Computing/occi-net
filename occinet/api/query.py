@@ -29,7 +29,8 @@ class Controller(base.Controller):
         super(Controller, self).__init__(*args, **kwargs)
         self.os_helper = ooi.api.helpers.OpenStackHelper(
             self.app,
-            self.openstack_version
+            self.openstack_version,
+            self.neutron_endpoint
         )
 
 
