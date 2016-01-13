@@ -100,10 +100,9 @@ def exception_from_response(response):
 
 class BaseHelper(object):
     """Base helper to interact with nova API."""
-    def __init__(self, app, openstack_version, neutron_endpoint):
+    def __init__(self, app, openstack_version):
         self.app = app
         self.openstack_version = openstack_version
-        self.neutron_endpoint = neutron_endpoint
 
     def _get_req(self, req, method,
                  path=None,

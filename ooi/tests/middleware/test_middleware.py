@@ -98,7 +98,7 @@ class TestMiddleware(base.TestCase):
         if self.content_type is not None:
             kwargs["content_type"] = self.content_type
 
-        environ = {"HTTP_X_PROJECT_ID": tenant_id}
+        environ = {"project": tenant_id}
 
         kwargs["base_url"] = self.application_url
 
@@ -129,18 +129,6 @@ class TestMiddleware(base.TestCase):
         result = req.get_response(self.get_app())
         self.assertEqual(404, result.status_code)
         self.assertDefaults(result)
-
-    def test_400_from_openstack(self):
-        @webob.dec.wsgify()
-        def _fake_app(req):
-            exc = webob.exc.HTTPBadRequest()
-            resp = fakes.FakeOpenStackFault(exc)
-            return resp
-
-        mdl = wsgi.OCCIMiddleware(_fake_app)
-        result = self._build_req("/-/", "tenant").get_response(mdl)
-        self.assertEqual(400, result.status_code)
-        #self.assertDefaults(result) TODO(jorgesece): this test is disable until we could manage Fake controller for it
 
 
 class TestMiddlewareTextPlain(TestMiddleware):
