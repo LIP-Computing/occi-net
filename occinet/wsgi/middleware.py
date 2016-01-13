@@ -47,11 +47,11 @@ class OCCINetworkMiddleware(object):
             LOG.debug("Factory definition")
             conf = global_conf.copy()
             conf.update(local_conf)
-            return cls(app, **local_conf)
+            return cls(None, **local_conf)
         return _factory
 
     def __init__(self, application, neutron_version="/v2.0", neutron_endpoint="0.0.0.0"):
-        self.application = None
+        self.application = application
         self.openstack_version = neutron_version
         self.neutron_endpoint = neutron_endpoint
 

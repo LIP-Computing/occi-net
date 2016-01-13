@@ -27,6 +27,11 @@ from ooi import utils
 
 class OpenStackNet(BaseHelper):
     """Class to interact with the neutron API."""
+
+    def __init__(self, app, neutron_version, neutron_endpoint):
+        super(OpenStackNet, self).__init__(app, neutron_version)
+        self.neutron_endpoint = neutron_endpoint
+
     translation = {"networks":{"occi.core.title":"name",
                    "occi.core.id":"network_id",
                    "occi.network.state":"status",

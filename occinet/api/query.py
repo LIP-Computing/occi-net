@@ -14,8 +14,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from ooi.api import base
-import ooi.api.helpers
+from occinet.api import Controller as ControlerBase #TODO(jorgesece): to merge make work with: from ooi.api import base
+from occinet.api.helpers import OpenStackNet
 from ooi.occi.core import entity
 from ooi.occi.core import link
 from ooi.occi.core import resource
@@ -24,10 +24,10 @@ from ooi.occi.infrastructure import templates as infra_templates
 from occinet.infrastructure import network_extend
 
 
-class Controller(base.Controller):
+class Controller(ControlerBase):
     def __init__(self, *args, **kwargs):
         super(Controller, self).__init__(*args, **kwargs)
-        self.os_helper = ooi.api.helpers.OpenStackHelper(
+        self.os_helper = OpenStackNet(
             self.app,
             self.openstack_version,
             self.neutron_endpoint

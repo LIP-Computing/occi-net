@@ -16,7 +16,7 @@
 
 from occinet.api.helpers import OpenStackNet  # it was import ooi.api.helpers
 from occinet.infrastructure.network_extend import Network
-from ooi.api import base
+from occinet.api import Controller as ControlerBase
 from ooi.occi.core import collection
 
 
@@ -28,7 +28,7 @@ def _build_network(name, prefix=None):
     return Network(title=name, id=network_id, state="active")
 
 
-class Controller(base.Controller):
+class Controller(ControlerBase):
     def __init__(self, *args, **kwargs):
         super(Controller, self).__init__(*args, **kwargs)
         self.os_helper = OpenStackNet(
