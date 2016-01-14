@@ -15,7 +15,6 @@
 # under the License.
 
 from ooi.occi.core import attribute as attr
-from ooi.occi.core import mixin
 from ooi.occi.core import kind
 from ooi.occi.infrastructure.network import NetworkResource
 from ooi.occi import helpers
@@ -33,9 +32,9 @@ class Network(NetworkResource):
                      location='networks/',  related=[NetworkResource.kind])
 
     def __init__(self, title=None, summary=None, id=None,vlan=None, label=None, state=None,
-                 shared=None, adminstate=None, tenantid=None, subnets=[]):
+                 shared=None, adminstate=None, tenantid=None):
         super(Network, self).__init__(title=title, summary=summary, id=id, vlan=vlan,
-                                      label=label, state=state, mixins=subnets)
+                                      label=label, state=state)
         self.attributes["occinet.network.shared"] = attr.MutableAttribute(
             "occinet.network.shared", shared)
         self.attributes["occinet.network.adminstate"] = attr.MutableAttribute(

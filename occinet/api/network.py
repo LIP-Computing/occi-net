@@ -18,6 +18,7 @@ from occinet.api.helpers import OpenStackNet  # it was import ooi.api.helpers
 from occinet.infrastructure.network_extend import Network
 from occinet.api import Controller as ControlerBase
 from ooi.occi.core import collection
+from ooi import exception
 
 
 def _build_network(name, prefix=None):
@@ -39,6 +40,9 @@ class Controller(ControlerBase):
 
     @staticmethod
     def _filter_attributes(parameters):
+        """Get attributes from request parameters
+        :param parameters: request parameters
+        """
         if parameters:
             attributes = parameters.get("attributes", None)
         else:
@@ -47,6 +51,9 @@ class Controller(ControlerBase):
 
     @staticmethod
     def _get_network_resources(networks):
+        """Create network instances from network in json format
+        :param networks: networks objects provides by the cloud infrastructure
+        """
         occi_network_resources = []
         if networks:
             for s in networks:
@@ -56,6 +63,10 @@ class Controller(ControlerBase):
         return occi_network_resources
 
     def index(self, req, parameters=None):
+        """List networks filtered by parameters
+        :param req: request object
+        :param parameters: request parameters
+        """
         attributes = self._filter_attributes(parameters)
         occi_networks = self.os_helper.index(req, attributes)
         occi_network_resources = self._get_network_resources(occi_networks)
@@ -67,20 +78,58 @@ class Controller(ControlerBase):
         resp = self.os_helper.get_network(req, id)
         state = resp["status"]
         # get info from subnet
+        # subnets = resp["subnets"] fixme(jorgesece): should we add subnet ids?
         net = Network(title=resp["name"], id=resp["id"],state=state)
 
         return net
 
-    def create(self, req, parameters, body=None):
-        #FIXME(jorgesece): Body is coming from OOI resource class and is not used
+    def create(self, req, parameters, body=None): # todo(jorgesece): manage several creation
+        """Create a network instance in the cloud
+        :param: req: request object
+        :param parameters: request parameters with the new network attributes
+        :param body: body request (not used)
+        """
+        # FIXME(jorgesece): Body is coming from OOI resource class and is not used
         attributes = self._filter_attributes(parameters)
         net = self.os_helper.create_network(req, attributes)
         occi_network_resources = self._get_network_resources([net])
 
         return occi_network_resources[0]
 
-    def delete(self, req, parameters):
+    def delete(self, req, parameters): # todo(jorgesece): manage several deletion
+        """delete networks which satisfy the parameters
+        :param parameters:
+        """
         attributes = self._filter_attributes(parameters)
         network_id = self.os_helper.delete_network(req, attributes)
 
+        return []
+
+    def run_action(self, req, id, body):
+        action = req.GET.get("action", None)
+        occi_actions = [a.term for a in Network.actions]
+
+        if action is None or action not in occi_actions:
+            raise exception.InvalidAction(action=action)
+
+        """
+        parser = req.get_parser()(req.headers, req.body)
+        obj = parser.parse()
+
+        network = self.os_helper.get_network(req, id)
+
+        if action == "stop":
+            scheme = {"category": Network.up}
+            # if network["status"] == "ACTIVE":
+
+        elif action == "start":
+            scheme = {"category": Network.down}
+        else:
+            raise exception.NotImplemented
+
+        #validator = occi_validator.Validator(obj)
+        #validator.validate(scheme)
+        """
+
+        self.os_helper.run_action(req, action, id)
         return []

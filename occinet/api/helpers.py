@@ -17,15 +17,14 @@
 
 import webob
 import json
-import copy
 
-from ooi.api.helpers import BaseHelper
-from occinet.wsgi import parsers
-
+from ooi.api import helpers
 from ooi import utils
 
+from occinet.wsgi import parsers
 
-class OpenStackNet(BaseHelper):
+
+class OpenStackNet(helpers.BaseHelper):
     """Class to interact with the neutron API."""
 
     def __init__(self, app, neutron_version, neutron_endpoint):
@@ -39,6 +38,11 @@ class OpenStackNet(BaseHelper):
                    "occi.core.title":"name"},
                    "subnet":{"occi.core.title":"name"}
                    }
+    actions_map = {"networks":{
+                   "up": {"os-stop": None},
+                   "down": {"os-start": None},
+            },
+    }
 
     def _get_req(self, req, method,
                  path=None,
@@ -122,6 +126,12 @@ class OpenStackNet(BaseHelper):
         path = "%s/%s" % (path, id)
         return self._get_req(req, path=path, method="DELETE")
 
+    def _make_action_reques(self, req, action, id):
+        path = "/networks/%s" % id
+        action = self.actions_map[action]
+        body = json.dumps(action)
+        return self._get_req(req, path=path, body=body, method="POST")
+
     def index(self, req, parameters=None):
         """Get a list of networks.
         This method retrieve a list of network to which the tenant has access.
@@ -174,3 +184,14 @@ class OpenStackNet(BaseHelper):
         req = self._make_delete_request(req, path, parameters)
         response = req.get_response(self.app)
         return response
+
+    def run_action(self, req, action, id):
+        """Run an action on a network.
+        :param req: the incoming request
+        :param action: the action to run
+        :param server_id: server id to delete
+        """
+        os_req = self._make_action_reques(req, action, id)
+        response = os_req.get_response(self.app)
+        if response.status_int != 202:
+            raise helpers.exception_from_response(response)
