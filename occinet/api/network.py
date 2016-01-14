@@ -105,31 +105,5 @@ class Controller(ControlerBase):
 
         return []
 
-    def run_action(self, req, id, body):
-        action = req.GET.get("action", None)
-        occi_actions = [a.term for a in Network.actions]
-
-        if action is None or action not in occi_actions:
-            raise exception.InvalidAction(action=action)
-
-        """
-        parser = req.get_parser()(req.headers, req.body)
-        obj = parser.parse()
-
-        network = self.os_helper.get_network(req, id)
-
-        if action == "stop":
-            scheme = {"category": Network.up}
-            # if network["status"] == "ACTIVE":
-
-        elif action == "start":
-            scheme = {"category": Network.down}
-        else:
-            raise exception.NotImplemented
-
-        #validator = occi_validator.Validator(obj)
-        #validator.validate(scheme)
-        """
-
-        self.os_helper.run_action(req, action, id)
-        return []
+    def run_action(self, req, id, body, parameters = None):
+        raise exception.NotFound()

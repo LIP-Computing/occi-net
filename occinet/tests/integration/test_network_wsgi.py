@@ -14,11 +14,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import webob
-import webob.dec
-import webob.exc
-
 from ooi.tests import base
+
 
 from occinet.wsgi.middleware import OCCINetworkMiddleware
 from keystone.session import KeySession
@@ -65,3 +62,7 @@ class TestMiddleware(base.TestCase):
         result = req.get_response(self.app)
         self.assertEqual(204, result.status_code)
 
+    def test_run_up_network(self):
+        req = KeySession().create_request(self.session, path="/networks/%s?action=up" % self.public_network, method="POST")
+        result = req.get_response(self.app)
+        self.assertEqual(404, result.status_code)

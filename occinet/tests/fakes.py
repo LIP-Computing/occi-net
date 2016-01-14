@@ -275,8 +275,15 @@ class FakeApp(object):
     def __call__(self, req):
         if req.method == "GET":
             return self._do_get(req)
-        if req.method == "POST":
+        elif req.method == "POST":
+            return self._do_post(req)
+      #  if req.method == "POST":
+      #      return self._do_create_network(req)
+
+    def _do_post(self, req):
+        if req.path_info.endswith("networks"):
             return self._do_create_network(req)
+        raise Exception
 
     def _do_create_network(self, req):
         # TODO(enolfc): this should check the json is

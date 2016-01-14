@@ -126,9 +126,9 @@ class OpenStackNet(helpers.BaseHelper):
         path = "%s/%s" % (path, id)
         return self._get_req(req, path=path, method="DELETE")
 
-    def _make_action_reques(self, req, action, id):
-        path = "/networks/%s" % id
-        action = self.actions_map[action]
+    def _make_action_request(self, req, action, id):
+        path = "/networks/%s/action" % id
+        action = self.actions_map["networks"][action]
         body = json.dumps(action)
         return self._get_req(req, path=path, body=body, method="POST")
 

@@ -159,7 +159,6 @@ class TestNetworkController(test_middleware.TestMiddleware):
             self.assertDefaults(resp)
             # self.assertExpectedResult(expected, resp) TODO(jorgesece): Create fake to control Expected result with subnet objects
 
-
 """
 {
     "network": {
