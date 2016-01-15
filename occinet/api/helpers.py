@@ -127,7 +127,6 @@ class OpenStackNet(helpers.BaseHelper):
         path = "%s/%s" % (path, id)
         return self._get_req(req, path=path, method="DELETE")
 
-
     def index(self, req, parameters=None):
         """Get a list of networks.
         This method retrieve a list of network to which the tenant has access.

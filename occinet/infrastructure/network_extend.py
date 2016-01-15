@@ -30,7 +30,6 @@ class Network(NetworkResource):
                                            ])
     scheme = helpers.build_scheme("infrastructure/network",)
     term = "networks"
-
     kind = kind.Kind(scheme, term, 'network extended', attributes=attributes,
                      location='networks/',  related=[NetworkResource.kind])
 

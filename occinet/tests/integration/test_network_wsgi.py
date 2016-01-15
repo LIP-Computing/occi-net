@@ -16,7 +16,6 @@
 
 from ooi.tests import base
 
-
 from occinet.wsgi.middleware import OCCINetworkMiddleware
 from keystone.session import KeySession
 
