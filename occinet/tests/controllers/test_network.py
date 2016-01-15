@@ -46,7 +46,7 @@ class TestNetworkController(base.TestController):
             self.assertEqual(expected, expected)
             if result.resources.__len__() > 0: #check that the object has 13 attributes,
                                                  # they belong from RESOURCE+NETWORKRESOURCE+NETWORK
-                self.assertEqual(13, result.resources[0].attributes.attributes.__len__())
+                self.assertEqual(12, result.resources[0].attributes.attributes.__len__())
             m_index.assert_called_with(None, None)
 
     @mock.patch.object(helpers.OpenStackNet, "get_network")

@@ -58,9 +58,8 @@ class Controller(ControlerBase):
         if networks:
             for s in networks:
                 if "subnet_info" in s:# fixme(jorgesece) only works with the first subnetwork
-                    s = Network(title=s["name"], id=s["id"], ip_range=s["subnet_info"]["cidr"],
-                                ip_version=s["subnet_info"]["cidr"], gateway=s["subnet_info"]["gateway_ip"],
-                                subnet_name=s["subnet_info"]["name"])
+                    s = Network(title=s["name"], id=s["id"], address=s["subnet_info"]["cidr"],
+                                ip_version=s["subnet_info"]["ip_version"], gateway=s["subnet_info"]["gateway_ip"])
                 else:
                     s = Network(title=s["name"], id=s["id"])
                 occi_network_resources.append(s)
@@ -78,14 +77,14 @@ class Controller(ControlerBase):
         return collection.Collection(resources=occi_network_resources)
 
     def show(self, req, id, parameters=None):
-        # get info from server
+        """Get network details
+        :param req: request object
+        :param id: network identification
+        :param parameters: request parameters
+        """
         resp = self.os_helper.get_network(req, id)
-        state = resp["status"]
-        # get info from subnet
-        # subnets = resp["subnets"] fixme(jorgesece): should we add subnet ids?
-        net = Network(title=resp["name"], id=resp["id"],state=state)
-
-        return net
+        occi_network_resources = self._get_network_resources([resp])
+        return occi_network_resources[0]
 
     def create(self, req, parameters, body=None): # todo(jorgesece): manage several creation
         """Create a network instance in the cloud

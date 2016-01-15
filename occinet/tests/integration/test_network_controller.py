@@ -79,7 +79,6 @@ class TestIntegrationNetwork(base.TestController):
 
     def test_create_delete_network_with_subnet(self):
         list1 = self.controller.index(self.req, None)
-        sub_name = "subnet_1"
         ip_version = 4
         cidr = "11.0.0.1/24"
         gateway = "11.0.0.3"
@@ -87,10 +86,9 @@ class TestIntegrationNetwork(base.TestController):
         param = {
                 "attributes":
                             {"occi.core.title": self.new_network_name,
-                             "occinet.subnetwork.name": sub_name,
-                             "occinet.subnetwork.ip_version": ip_version,
-                             "occinet.subnetwork.ip_range": cidr,
-                             "occinet.subnetwork.gateway": gateway,
+                             "occinet.network.ip_version": ip_version,
+                             "occinet.networkinterface.address": cidr,
+                             "occinet.networkinterface.gateway": gateway,
                              "project": self.project_id
                              }
                 }

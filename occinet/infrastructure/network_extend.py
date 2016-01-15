@@ -24,10 +24,9 @@ class Network(NetworkResource):
     attributes = attr.AttributeCollection(["occinet.network.shared",
                                            "occinet.network.adminstate",
                                            "occinet.network.tenantid",
-                                           "occinet.subnetwork.name",
-                                           "occinet.subnetwork.ip_version",
-                                           "occinet.subnetwork.ip_range",
-                                           "occinet.subnetwork.gateway",
+                                           "occinet.network.ip_version",
+                                           "occinet.networkinterface.address",
+                                           "occinet.networkinterface.gateway",
                                            ])
     scheme = helpers.build_scheme("infrastructure/network",)
     term = "networks"
@@ -36,7 +35,7 @@ class Network(NetworkResource):
                      location='networks/',  related=[NetworkResource.kind])
 
     def __init__(self, title=None, summary=None, id=None,vlan=None, label=None, state=None,
-                 shared=None, adminstate=None, tenantid=None, subnet_name=None, ip_range=None
+                 shared=None, adminstate=None, tenantid=None, address=None
                  , gateway=None, ip_version=None):
         super(Network, self).__init__(title=title, summary=summary, id=id, vlan=vlan,
                                       label=label, state=state)
@@ -47,14 +46,12 @@ class Network(NetworkResource):
         self.attributes["occinet.network.tenantid"] = attr.MutableAttribute(
             "occinet.network.tenantid", tenantid)
         #subnet
-        self.attributes["occinet.subnetwork.name"] = attr.MutableAttribute(
-            "occinet.subnetwork.name", subnet_name)
-        self.attributes["occinet.subnetwork.ip_version"] = attr.InmutableAttribute(
+        self.attributes["occinet.network.ip_version"] = attr.InmutableAttribute(
             "occinet.network.ip_version", ip_version)
-        self.attributes["occinet.subnetwork.ip_range"] = attr.InmutableAttribute(
-            "occinet.subnetwork.ip_range", ip_range)
-        self.attributes["occinet.subnetwork.gateway"] = attr.InmutableAttribute(
-            "occinet.subnetwork.gateway", gateway)
+        self.attributes["occinet.networkinterface.address"] = attr.InmutableAttribute(
+            "occinet.networkinterface.address", address)
+        self.attributes["occinet.networkinterface.gateway"] = attr.InmutableAttribute(
+            "occinet.networkinterface.gateway", gateway)
 
     @property
     def shared(self):
@@ -75,23 +72,16 @@ class Network(NetworkResource):
     @property
     def tenantid(self):
         return self.attributes["occinet.network.tenantid"].value
+
     # SUBRED
     @property
-    def subnet_name(self):
-        return self.attributes["occinet.subnetwork.name"].value
-
-    @subnet_name.setter
-    def subnet_name(self, value):
-        self.attributes["occinet.subnetwork.name"].value = value
-
-    @property
     def ip_version(self):
-        return self.attributes["occinet.subnetwork.ip_version"].value
+        return self.attributes["occinet.network.ip_version"].value
 
     @property
-    def ip_range(self):
-        return self.attributes["occinet.subnetwork.ip_range"].value
+    def address(self):
+        return self.attributes["occinet.networkinterface.address"].value
 
     @property
     def gateway(self):
-        return self.attributes["occinet.subnetwork.gateway"].value
+        return self.attributes["occinet.networkinterface.gateway"].value

@@ -38,10 +38,9 @@ class OpenStackNet(helpers.BaseHelper):
                                 "occi.core.title":"name"
                                },
                    "subnet": {"network_id":"network_id",
-                             "occinet.subnetwork.name": "name",
-                             "occinet.subnetwork.ip_version": "ip_version",
-                             "occinet.subnetwork.ip_range": "cidr",
-                             "occinet.subnetwork.gateway":"gateway_ip"
+                             "occinet.network.ip_version": "ip_version",
+                             "occinet.networkinterface.address": "cidr",
+                             "occinet.networkinterface.gateway":"gateway_ip"
                              }
                    }
 
@@ -148,10 +147,16 @@ class OpenStackNet(helpers.BaseHelper):
         path = "/networks/%s" % id
         req = self._make_get_request(req, path)
         response = req.get_response(self.app)
-        resp = self.get_from_response(response, "network", {})
-        # sub_net = todo(jorgesece) get subnet information and set to the occinetwork attributes
-        resp["status"] = parsers.network_status(resp["status"]);
-        return resp
+        net = self.get_from_response(response, "network", {})
+        # subnet
+        if net["subnets"]:
+            path = "/subnets/%s" % net["subnets"][0]
+            req_subnet = self._make_get_request(req, path)
+            response_subnet = req_subnet.get_response(self.app)
+            net["subnet_info"] = self.get_from_response(response_subnet, "subnet", {})
+
+        net["status"] = parsers.network_status(net["status"]);
+        return net
 
     def get_subnet(self, req, id):
         """Get information from a subnet.
@@ -173,7 +178,7 @@ class OpenStackNet(helpers.BaseHelper):
         response = req.get_response(self.app)
         json_response = self.get_from_response(response, "network", {})
         #subnetattributes
-        if "occinet.subnetwork.name" in parameters:# todo(jorgesece) test it
+        if "occinet.networkinterface.address" in parameters:# todo(jorgesece) test it
             parameters["network_id"] = json_response["id"]
             req_subnet= self._make_create_request(req, "subnet", parameters)
             response_subnet = req_subnet.get_response(self.app)
