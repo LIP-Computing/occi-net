@@ -81,19 +81,16 @@ class TestNetworkController(base.TestController):
     #     self.assertIsInstance(ret, Network)
 
     @mock.patch.object(helpers.OpenStackNet, "create_network")
-    def test_create_one_mixin(self, m_network):
+    def test_create(self, m_network):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         cat1 = "network1"
         cat2 = "subnetwork1"
         schema1 = network.Network.scheme
-        #schema2 = subnetwork.Subnetwork.scheme
         mixins = collections.Counter()
-       #mixins["%s%s" % (schema2, cat2)] += 1
         schemes = { schema1:cat1 }
         parameters={
                     'attributes':{'occi.core.id':1},
                     'category': "%s%s" % (schema1, cat1),
-                    'mixins': mixins,
                     'schemes': schemes
                     }
 

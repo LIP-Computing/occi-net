@@ -40,15 +40,10 @@ class OpenStackNet(helpers.BaseHelper):
                    "subnet": {"network_id":"network_id",
                              "occinet.subnetwork.name": "name",
                              "occinet.subnetwork.ip_version": "ip_version",
-                             "occinet.subnetwork.pool_start": "start",
-                             "occinet.subnetwork.pool_end": "end",
+                             "occinet.subnetwork.ip_range": "cidr",
+                             "occinet.subnetwork.gateway":"gateway_ip"
                              }
                    }
-    actions_map = {"networks":{
-                   "up": {"os-stop": None},
-                   "down": {"os-start": None},
-            },
-    }
 
     def _get_req(self, req, method,
                  path=None,
@@ -133,11 +128,6 @@ class OpenStackNet(helpers.BaseHelper):
         path = "%s/%s" % (path, id)
         return self._get_req(req, path=path, method="DELETE")
 
-    def _make_action_request(self, req, action, id):
-        path = "/networks/%s/action" % id
-        action = self.actions_map["networks"][action]
-        body = json.dumps(action)
-        return self._get_req(req, path=path, body=body, method="POST")
 
     def index(self, req, parameters=None):
         """Get a list of networks.
@@ -159,7 +149,7 @@ class OpenStackNet(helpers.BaseHelper):
         req = self._make_get_request(req, path)
         response = req.get_response(self.app)
         resp = self.get_from_response(response, "network", {})
-        # sub_net = todo(jorgesece) get subnet information and set to the occinetwork
+        # sub_net = todo(jorgesece) get subnet information and set to the occinetwork attributes
         resp["status"] = parsers.network_status(resp["status"]);
         return resp
 
@@ -184,10 +174,10 @@ class OpenStackNet(helpers.BaseHelper):
         json_response = self.get_from_response(response, "network", {})
         #subnetattributes
         if "occinet.subnetwork.name" in parameters:# todo(jorgesece) test it
-            parameters["subnet"]["network_id"] = json_response["id"]
+            parameters["network_id"] = json_response["id"]
             req_subnet= self._make_create_request(req, "subnet", parameters)
-            response_subnet = req.get_response(self.app)
-            json_response["subnets"] = self.get_from_response(response_subnet, "network", {})
+            response_subnet = req_subnet.get_response(self.app)
+            json_response["subnet_info"] = self.get_from_response(response_subnet, "subnet", {})
 
         return json_response
 
@@ -198,6 +188,7 @@ class OpenStackNet(helpers.BaseHelper):
         """
         path = "/networks"
         req = self._make_delete_request(req, path, parameters)
+        # todo(jorgesece): get subnet id from network, and delete it.
         response = req.get_response(self.app)
         return response
 

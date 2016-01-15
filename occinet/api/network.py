@@ -50,16 +50,20 @@ class Controller(ControlerBase):
         return attributes
 
     @staticmethod
-    def _get_network_resources(networks):
+    def _get_network_resources(networks):# fixme(jorgesece): those attributes should be mapped in driver to occi attr.
         """Create network instances from network in json format
         :param networks: networks objects provides by the cloud infrastructure
         """
         occi_network_resources = []
         if networks:
             for s in networks:
-                s = Network(title=s["name"], id=s["id"])
+                if "subnet_info" in s:# fixme(jorgesece) only works with the first subnetwork
+                    s = Network(title=s["name"], id=s["id"], ip_range=s["subnet_info"]["cidr"],
+                                ip_version=s["subnet_info"]["cidr"], gateway=s["subnet_info"]["gateway_ip"],
+                                subnet_name=s["subnet_info"]["name"])
+                else:
+                    s = Network(title=s["name"], id=s["id"])
                 occi_network_resources.append(s)
-
         return occi_network_resources
 
     def index(self, req, parameters=None):
