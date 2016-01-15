@@ -18,10 +18,10 @@
 from ooi.wsgi import parsers
 
 
-def make_body(parameters):
-        body = {"network":{}}
+def make_body(resource, parameters):
+        body = {resource:{}}
         for key in parameters.keys():
-            body["network"][key] = parameters[key]
+            body[resource][key] = parameters[key]
 
         return body
 

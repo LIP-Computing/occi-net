@@ -44,9 +44,9 @@ class TestNetworkController(base.TestController):
             expected = self.controller._get_network_resources(nets)
             self.assertEqual(result.resources.__len__(),result.resources.__len__())
             self.assertEqual(expected, expected)
-            if result.resources.__len__() > 0: #check that the object has 9 attributes,
+            if result.resources.__len__() > 0: #check that the object has 13 attributes,
                                                  # they belong from RESOURCE+NETWORKRESOURCE+NETWORK
-                self.assertEqual(9, result.resources[0].attributes.attributes.__len__())
+                self.assertEqual(13, result.resources[0].attributes.attributes.__len__())
             m_index.assert_called_with(None, None)
 
     @mock.patch.object(helpers.OpenStackNet, "get_network")

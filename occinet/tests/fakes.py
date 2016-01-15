@@ -283,6 +283,11 @@ class FakeApp(object):
     def _do_post(self, req):
         if req.path_info.endswith("networks"):
             return self._do_create_network(req)
+        elif req.path_info.endswith("action"):
+            body = req.json_body.copy()
+            action = body.popitem()
+            if action[0] in ["os-start", "os-stop"]:
+                return self._get_from_routes(req)
         raise Exception
 
     def _do_create_network(self, req):

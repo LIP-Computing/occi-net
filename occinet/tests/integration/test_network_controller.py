@@ -63,7 +63,6 @@ class TestIntegrationNetwork(base.TestController):
             out = e
         self.assertIsInstance(out, exception.NotFound)
 
-
     def test_create_delete_network(self):
         list1 = self.controller.index(self.req, None)
         #Create
@@ -77,6 +76,29 @@ class TestIntegrationNetwork(base.TestController):
         self.assertIsInstance(response, list)
         list3 = self.controller.index(self.req, None)
         self.assertEqual(list1.resources.__len__(), list3.resources.__len__())
+
+    # def test_create_delete_network_with_subnet(self):
+    #     list1 = self.controller.index(self.req, None)
+    #     sub_name = "subnet_1"
+    #     ip_version = 4
+    #     ip_start = "11.0.0.1"
+    #     ip_end = "11.0.0.24"
+    #     #Create
+    #     param = {
+    #             "attributes":
+    #                         {"occi.core.title": self.new_network_name,
+    #                          "occinet.subnetwork.name": sub_name,
+    #                          "occinet.subnetwork.ip_version": ip_version,
+    #                          "occinet.subnetwork.pool_start": ip_start,
+    #                          "occinet.subnetwork.pool_end": ip_end,
+    #                          "project": self.project_id
+    #                          }
+    #             }
+    #     net = self.controller.create(self.req, param)
+    #     self.assertEqual(self.new_network_name, net.title)
+    #     list2 = self.controller.index(self.req, None)
+    #     self.assertEqual(list1.resources.__len__() + 1, list2.resources.__len__())
+
 
 """
     def test_delete_network(self):

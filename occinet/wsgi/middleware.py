@@ -19,8 +19,11 @@ import routes
 import webob.dec
 
 
+from ooi.wsgi import OCCIMiddleware as OCCIMiddleware
 from ooi.wsgi import Fault
 from ooi.log import log as logging
+
+from ooi import config
 from ooi import version
 
 import occinet.api.network
@@ -76,11 +79,6 @@ class OCCINetworkMiddleware(object):
                             action="show", conditions=dict(method=["GET"]))
         self.mapper.connect(resource, path, controller=controller,
                             action="delete", conditions=dict(method=["DELETE"]))
-
-        # Actions
-        self.mapper.connect(path + "/{id}", controller=controller,
-                            action="run_action",
-                            conditions=dict(method=["POST"]))
 
     def _setup_routes(self):
         self.mapper.redirect("", "/")
