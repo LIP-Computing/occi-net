@@ -39,8 +39,8 @@ class OpenStackNet(helpers.BaseHelper):
                                },
                    "subnet": {"network_id":"network_id",
                              "occinet.network.ip_version": "ip_version",
-                             "occinet.networkinterface.address": "cidr",
-                             "occinet.networkinterface.gateway":"gateway_ip"
+                             "occi.networkinterface.address": "cidr",
+                             "occi.networkinterface.gateway":"gateway_ip"
                              }
                    }
 
@@ -105,7 +105,7 @@ class OpenStackNet(helpers.BaseHelper):
         query_string = parsers.get_query_string(param)
         return self._get_req(req, path=path, query_string=query_string, method="GET")
 
-    def _make_create_request(self, req, resource, parameters):#TODO(jorgesece): Create test for it
+    def _make_create_request(self, req, resource, parameters):#TODO(jorgesece): Create unittest for it
         """Create CREATE request
         This method create a CREATE Request instance
         :param req: the incoming request
@@ -177,7 +177,7 @@ class OpenStackNet(helpers.BaseHelper):
         response = req.get_response(self.app)
         json_response = self.get_from_response(response, "network", {})
         #subnetattributes
-        if "occinet.networkinterface.address" in parameters:# todo(jorgesece) test it
+        if "occi.networkinterface.address" in parameters:#TODO(jorgesece): Create unittest for it
             parameters["network_id"] = json_response["id"]
             req_subnet= self._make_create_request(req, "subnet", parameters)
             response_subnet = req_subnet.get_response(self.app)
@@ -192,7 +192,6 @@ class OpenStackNet(helpers.BaseHelper):
         """
         path = "/networks"
         req = self._make_delete_request(req, path, parameters)
-        # todo(jorgesece): get subnet id from network, and delete it.
         response = req.get_response(self.app)
         return response
 

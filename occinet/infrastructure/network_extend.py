@@ -25,8 +25,8 @@ class Network(NetworkResource):
                                            "occinet.network.adminstate",
                                            "occinet.network.tenantid",
                                            "occinet.network.ip_version",
-                                           "occinet.networkinterface.address",
-                                           "occinet.networkinterface.gateway",
+                                           "occi.networkinterface.address",
+                                           "occi.networkinterface.gateway",
                                            ])
     scheme = helpers.build_scheme("infrastructure/network",)
     term = "networks"
@@ -47,10 +47,10 @@ class Network(NetworkResource):
         #subnet
         self.attributes["occinet.network.ip_version"] = attr.InmutableAttribute(
             "occinet.network.ip_version", ip_version)
-        self.attributes["occinet.networkinterface.address"] = attr.InmutableAttribute(
-            "occinet.networkinterface.address", address)
-        self.attributes["occinet.networkinterface.gateway"] = attr.InmutableAttribute(
-            "occinet.networkinterface.gateway", gateway)
+        self.attributes["occi.networkinterface.address"] = attr.InmutableAttribute(
+            "occi.networkinterface.address", address)
+        self.attributes["occi.networkinterface.gateway"] = attr.InmutableAttribute(
+            "occi.networkinterface.gateway", gateway)
 
     @property
     def shared(self):
@@ -79,8 +79,8 @@ class Network(NetworkResource):
 
     @property
     def address(self):
-        return self.attributes["occinet.networkinterface.address"].value
+        return self.attributes["occi.networkinterface.address"].value
 
     @property
     def gateway(self):
-        return self.attributes["occinet.networkinterface.gateway"].value
+        return self.attributes["occi.networkinterface.gateway"].value
