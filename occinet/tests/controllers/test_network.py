@@ -13,16 +13,13 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
-import  collections
-
 import mock
 
-from occinet.api import network, helpers
+from ooi.tests import base
 
+from occinet.api import network, helpers
 from occinet.infrastructure.network_extend import Network
 from occinet.tests import fakes
-from ooi.tests import base
 
 
 class TestNetworkController(base.TestController):
@@ -44,8 +41,8 @@ class TestNetworkController(base.TestController):
             expected = self.controller._get_network_resources(nets)
             self.assertEqual(result.resources.__len__(),result.resources.__len__())
             self.assertEqual(expected, expected)
-            if result.resources.__len__() > 0: #check that the object has 13 attributes,
-                                                 # they belong from RESOURCE+NETWORKRESOURCE+NETWORK
+            if result.resources.__len__() > 0: # check that the object has 13 attributes,
+                                               # they belong from RESOURCE+NETWORKRESOURCE+NETWORK
                 self.assertEqual(12, result.resources[0].attributes.attributes.__len__())
             m_index.assert_called_with(None, None)
 
@@ -96,12 +93,19 @@ class TestNetworkController(base.TestController):
         for net_ret in ret:
             self.assertIsInstance(net_ret,Network)
 
-    #_filter_attributes
+    def test_filter_attributes(self):
+        attr_dic = {'attr1':0, 'attr2':1, 'attr3':2}
+        parameters = {
+                    'attributes':attr_dic,
+                    'category': "anycategory"
+                    }
+        ret = self.controller._filter_attributes(parameters=parameters)
+        self.assertIsNotNone(ret)
+        self.assertEqual(attr_dic,ret)
 
-
-#    @mock.patch.object(openstack_driver.OpenStackNet, "index")
-#    def test_list_by_tenant(self, m_index): #TODO(jorgesece): the fake driver should be improved to make parametriced query tests
-#        list = self.controller.index(None, {"tenant_id" : "foo", "name" : "public"})
-
-#        self.assertIsInstance(list.resources[0], Network)
-#        self.assertEqual("public", list.resources[0].title)
+    def test_filter_attributes_empty(self):
+        parameters = {
+                    'category': "anycategory"
+                    }
+        attributes = self.controller._filter_attributes(parameters=parameters)
+        self.assertIsNone(attributes)
