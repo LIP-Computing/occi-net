@@ -59,7 +59,7 @@ def build_occi_network(network):
             'occi.core.id="%s"' % network_id,
             'occi.core.title="%s"' % name,
             'occi.network.state="%s"' % status,
-            'occinet.network.subnets=[%s]' % subnet_id,
+            'occi.network.subnets=[%s]' % subnet_id,
             ]
 
     result = []

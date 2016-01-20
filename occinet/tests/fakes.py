@@ -56,39 +56,37 @@ tenants = {
 #       ...
 #  }
 
-subnets = {
-        1: {
+subnets = [
+        {
             "id": 1,
             "name": "private-subnet",
-            "cidr": "0000000000001",
-            "ip_version": "4",
+            "cidr": "33.0.0.1/24",
+            "ip_version": "IPv4",
+            "gateway_ip": "33.0.0.1",
         },
-        2: {
-            "id": 1,
+        {
+            "id": 2,
             "name": "public-subnet",
-            "cidr": "0000000000002",
-            "ip_version": "4",
+            "cidr": "44.0.0.1/24",
+            "ip_version": "IPv4",
+            "gateway_ip": "44.0.0.1",
         },
-}
+]
 
-networks = {
-    tenants["foo"]["id"]: [
+networks = [
         {
             "id": uuid.uuid4().hex,
             "name": "foo",
-            "subnets": [subnets[1]["id"]],
+            "subnets": [subnets[0]["id"]],
             "status": "ACTIVE",
         },
         {
             "id": uuid.uuid4().hex,
             "name": "bar",
-            "subnets": [subnets[2]["id"]],
+            "subnets": [subnets[1]["id"]],
             "status": "SHUTOFF",
         },
-
-    ],
-    tenants["bar"]["id"]: [],
-}
+]
 
 
 def fake_query_results():

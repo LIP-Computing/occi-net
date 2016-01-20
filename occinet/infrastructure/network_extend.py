@@ -21,10 +21,10 @@ from ooi.occi import helpers
 
 
 class Network(NetworkResource):
-    attributes = attr.AttributeCollection(["occinet.network.shared",
-                                           "occinet.network.adminstate",
-                                           "occinet.network.tenantid",
-                                           "occinet.network.ip_version",
+    attributes = attr.AttributeCollection(["occi.network.shared",
+                                           "occi.network.adminstate",
+                                           "occi.network.tenantid",
+                                           "occi.network.ip_version",
                                            "occi.networkinterface.address",
                                            "occi.networkinterface.gateway",
                                            ])
@@ -38,15 +38,15 @@ class Network(NetworkResource):
                  , gateway=None, ip_version=None):
         super(Network, self).__init__(title=title, summary=summary, id=id, vlan=vlan,
                                       label=label, state=state)
-        self.attributes["occinet.network.shared"] = attr.MutableAttribute(
-            "occinet.network.shared", shared)
-        self.attributes["occinet.network.adminstate"] = attr.MutableAttribute(
-            "occinet.network.adminstate", adminstate)
-        self.attributes["occinet.network.tenantid"] = attr.MutableAttribute(
-            "occinet.network.tenantid", tenantid)
+        self.attributes["occi.network.shared"] = attr.MutableAttribute(
+            "occi.network.shared", shared)
+        self.attributes["occi.network.adminstate"] = attr.MutableAttribute(
+            "occi.network.adminstate", adminstate)
+        self.attributes["occi.network.tenantid"] = attr.MutableAttribute(
+            "occi.network.tenantid", tenantid)
         #subnet
-        self.attributes["occinet.network.ip_version"] = attr.InmutableAttribute(
-            "occinet.network.ip_version", ip_version)
+        self.attributes["occi.network.ip_version"] = attr.InmutableAttribute(
+            "occi.network.ip_version", ip_version)
         self.attributes["occi.networkinterface.address"] = attr.InmutableAttribute(
             "occi.networkinterface.address", address)
         self.attributes["occi.networkinterface.gateway"] = attr.InmutableAttribute(
@@ -54,28 +54,28 @@ class Network(NetworkResource):
 
     @property
     def shared(self):
-        return self.attributes["occinet.network.shared"].value
+        return self.attributes["occi.network.shared"].value
 
     @shared.setter
     def shared(self, value):
-        self.attributes["occinet.network.shared"].value = value
+        self.attributes["occi.network.shared"].value = value
 
     @property
     def adminstate(self):
-        return self.attributes["occinet.network.adminstate"].value
+        return self.attributes["occi.network.adminstate"].value
 
     @adminstate.setter
     def adminstate(self, value):
-        self.attributes["occinet.network.adminstate"].value = value
+        self.attributes["occi.network.adminstate"].value = value
 
     @property
     def tenantid(self):
-        return self.attributes["occinet.network.tenantid"].value
+        return self.attributes["occi.network.tenantid"].value
 
     # SUBRED
     @property
     def ip_version(self):
-        return self.attributes["occinet.network.ip_version"].value
+        return self.attributes["occi.network.ip_version"].value
 
     @property
     def address(self):

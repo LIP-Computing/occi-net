@@ -38,7 +38,7 @@ class OpenStackNet(helpers.BaseHelper):
                                 "occi.core.title":"name"
                                },
                    "subnet": {"network_id":"network_id",
-                             "occinet.network.ip_version": "ip_version",
+                             "occi.network.ip_version": "ip_version",
                              "occi.networkinterface.address": "cidr",
                              "occi.networkinterface.gateway":"gateway_ip"
                              }
@@ -188,7 +188,7 @@ class OpenStackNet(helpers.BaseHelper):
     def delete_network(self, req, parameters):
         """Delete network. It returns empty array
         :param req: the incoming network
-        :param id: net identification
+        :param parameters:
         """
         path = "/networks"
         req = self._make_delete_request(req, path, parameters)

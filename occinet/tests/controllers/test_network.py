@@ -35,7 +35,7 @@ class TestNetworkController(base.TestController):
     def test_index(self, m_index):
         test_networks = [
             [],
-            fakes.networks[fakes.tenants["foo"]["id"]]
+            fakes.networks
         ]
 
         for nets in test_networks:
@@ -51,51 +51,52 @@ class TestNetworkController(base.TestController):
 
     @mock.patch.object(helpers.OpenStackNet, "get_network")
     def test_show(self, m_network):
-        test_networks = fakes.networks[fakes.tenants["foo"]["id"]
-        ]
+        test_networks = fakes.networks
         for net in test_networks:
             ret = self.controller.show(None, net["id"])
             self.assertIsInstance(ret, Network)
 
-    # @mock.patch.object(helpers.OpenStackNet, "create_network")
-    # def test_create(self, m_network):
-    #     test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
-    #     cat1 = "network1"
-    #     cat2 = "subnetwork1"
-    #     cat3 = "subnetwork2"
-    #     schema1 = network.Network.scheme
-    #     schema2 = subnetwork.Subnetwork.scheme
-    #     mixins = collections.Counter()
-    #     mixins["%s%s" % (schema2, cat2)] += 1
-    #     mixins["%s%s" % (schema2, cat3)] += 1
-    #     schemes = {schema1:cat1, schema2: [cat2,cat3] }
-    #     parameters={
-    #                 'attributes':{'occi.core.id':1},
-    #                 'category': "%s%s" % (schema1, cat1),
-    #                 'mixins': mixins,
-    #                 'schemes': schemes
-    #                 }
-    #
-    #
-    #     ret = self.controller.create(None, parameters=parameters)
-    #     self.assertIsInstance(ret, Network)
-
     @mock.patch.object(helpers.OpenStackNet, "create_network")
     def test_create(self, m_network):
-        test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
-        cat1 = "network1"
-        cat2 = "subnetwork1"
+        test_networks = fakes.networks
         schema1 = network.Network.scheme
-        mixins = collections.Counter()
-        schemes = { schema1:cat1 }
-        parameters={
+        for net in test_networks:
+            schemes = {schema1:net}
+            parameters={
                     'attributes':{'occi.core.id':1},
-                    'category': "%s%s" % (schema1, cat1),
+                    'category': "%s%s" % (schema1, net),
                     'schemes': schemes
                     }
+            ret = self.controller.create(None, parameters=parameters)
+            self.assertIsInstance(ret, Network)
 
-        ret = self.controller.create(None, parameters=parameters)
-        self.assertIsInstance(ret, Network)
+    @mock.patch.object(helpers.OpenStackNet, "delete_network")
+    def test_delete(self, m_network):
+        test_networks = fakes.networks
+        schema1 = network.Network.scheme
+        for net in test_networks:
+            schemes = {schema1:net}
+            parameters={
+                    'attributes':{'occi.core.id':1},
+                    'category': "%s%s" % (schema1, net),
+                    'schemes': schemes
+                    }
+            ret = self.controller.delete(None, parameters=parameters)
+            self.assertIsInstance(ret, list)
+            self.assertEqual(ret.__len__(), 0)
+
+    def test_get_network_resources(self):
+        test_networks = fakes.networks
+        subnet = fakes.subnets
+        for net in test_networks:
+            net["subnet_info"] = subnet[0]
+        ret = self.controller._get_network_resources(test_networks)
+        self.assertIsInstance(ret, list)
+        self.assertIsNot(ret.__len__(), 0)
+        for net_ret in ret:
+            self.assertIsInstance(net_ret,Network)
+
+    #_filter_attributes
 
 
 #    @mock.patch.object(openstack_driver.OpenStackNet, "index")

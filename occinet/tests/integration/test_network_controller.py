@@ -86,9 +86,9 @@ class TestIntegrationNetwork(base.TestController):
         param = {
                 "attributes":
                             {"occi.core.title": self.new_network_name,
-                             "occinet.network.ip_version": ip_version,
-                             "occinet.networkinterface.address": cidr,
-                             "occinet.networkinterface.gateway": gateway,
+                             "occi.network.ip_version": ip_version,
+                             "occi.networkinterface.address": cidr,
+                             "occi.networkinterface.gateway": gateway,
                              "project": self.project_id
                              }
                 }
