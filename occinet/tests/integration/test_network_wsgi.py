@@ -18,14 +18,11 @@ from ooi.tests import base
 
 from occinet.wsgi.middleware import OCCINetworkMiddleware
 from keystone.session import KeySession
+from occinet.tests.integration import  TestIntegration
 
-
-class TestMiddleware(base.TestCase):
+class TestMiddleware(TestIntegration):
     def setUp(self):
         super(TestMiddleware, self).setUp()
-        self.project_id = "86bf9730b23d4817b431f4c34cc9cc8e"
-        self.public_network = "cd58eade-79a1-4633-8fb7-c7d8a030c942"
-        self.session = KeySession().create_keystone("admin", "stack1", self.project_id)
         self.app = OCCINetworkMiddleware(None,neutron_version="/v2.0",neutron_endpoint="127.0.0.1")
 
     def test_index(self):

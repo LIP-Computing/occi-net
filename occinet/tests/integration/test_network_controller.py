@@ -22,16 +22,14 @@ from ooi import exception
 
 from occinet.api import network
 from occinet.infrastructure import network_extend
+from occinet.tests.integration import  TestIntegration
 
-class TestIntegrationNetwork(base.TestController):
+class TestIntegrationNetwork(TestIntegration):
 
     def setUp(self):
         super(TestIntegrationNetwork, self).setUp()
+        self.req = KeySession().create_request(self.session, path="/", environ={}, headers=None)
         self.controller = network.Controller(None, "/v2.0", "127.0.0.1")
-        self.project_id = "484d3a7eeb4f4462b329c1d0463cf324"
-        self.public_network = "cd58eade-79a1-4633-8fb7-c7d8a030c942"
-        self.new_network_name = "networkOCCINET"
-        self.req = KeySession().create_request_conection("admin", "stack1", self.project_id)
 
     def test_list(self):
         list = self.controller.index(self.req, None)
@@ -40,7 +38,6 @@ class TestIntegrationNetwork(base.TestController):
         self.assertEqual("public", sortedList[0].title)
 
     def test_list_by_tenant(self):
-        tenant_id = self.req.environ["HTTP_X_PROJECT_ID"]
         list = self.controller.index(self.req, {"attributes": {"project": self.project_id}})
         sortedList = sorted(list.resources, key=lambda Network: Network.title, reverse=True)
         self.assertIsInstance(sortedList[0], network_extend.Network)
