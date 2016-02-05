@@ -30,11 +30,13 @@ def _build_network(name, prefix=None):
 
 
 class Controller(ControlerBase):
-    def __init__(self, *args, **kwargs):
-        super(Controller, self).__init__(*args, **kwargs)
+    def __init__(self, app, neutron_version, neutron_endpoint):
+        super(Controller, self).__init__(app=app,openstack_version=neutron_version)
+        self.neutron_endpoint = neutron_endpoint
+        self.neutron_version = neutron_version
         self.os_helper = OpenStackNet(
-            self.app,
-            self.openstack_version,
+            self.app, #fixme(jorgesece):we can put app = none in the controller creation instead of here
+            self.neutron_version,
             self.neutron_endpoint
         )
 

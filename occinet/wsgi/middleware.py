@@ -33,7 +33,6 @@ LOG = logging.getLogger(__name__)
 
 class OCCINetworkMiddleware(OCCIMiddleware):
 
-
     def __init__(self, application, neutron_version="/v2.0", neutron_endpoint="0.0.0.0"):
         super(OCCINetworkMiddleware, self).__init__(application, openstack_version="/v2.1")
         self.neutron_version = neutron_version
@@ -62,12 +61,12 @@ class OCCINetworkMiddleware(OCCIMiddleware):
 
     def _setup_net_routes(self):
         self.mapper.redirect("", "/")
-        self.resources["query"] = self._create_net_resource(query.Controller)
-        self.mapper.connect("query", "/-/", controller=self.resources["query"],
-                            action="index")
-        # RFC5785, OCCI section 3.6.7
-        self.mapper.connect("query", "/.well-known/org/ogf/occi/-/", controller=self.resources["query"],
-                            action="index")
+        # self.resources["query"] = self._create_net_resource(query.Controller)
+        # self.mapper.connect("query", "/-/", controller=self.resources["query"],
+        #                     action="index")
+        # # RFC5785, OCCI section 3.6.7
+        # self.mapper.connect("query", "/.well-known/org/ogf/occi/-/", controller=self.resources["query"],
+        #                     action="index")
 
         self.resources["networks"] = self._create_net_resource(occinet.api.network.Controller)
         self._setup_net_resources_routes("networks", self.resources["networks"])
