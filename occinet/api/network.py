@@ -35,7 +35,7 @@ class Controller(ControlerBase):
         self.neutron_endpoint = neutron_endpoint
         self.neutron_version = neutron_version
         self.os_helper = OpenStackNet(
-            self.app, #fixme(jorgesece):we can put app = none in the controller creation instead of here
+            self.app,
             self.neutron_version,
             self.neutron_endpoint
         )

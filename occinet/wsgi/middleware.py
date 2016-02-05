@@ -39,8 +39,8 @@ class OCCINetworkMiddleware(OCCIMiddleware):
         self.neutron_endpoint = neutron_endpoint
         self._setup_net_routes()
 
-    def _create_net_resource(self, controller):
-        return ResourceNet(controller(self.application, self.neutron_version, self.neutron_endpoint))
+    def _create_net_resource(self, controller): #fixme(jorgesece): wsgi unitttest do not work, it is not using FakeApp
+        return ResourceNet(controller(None, self.neutron_version, self.neutron_endpoint))
 
     def _setup_net_resources_routes(self, resource, controller):
         path = "/" + resource
