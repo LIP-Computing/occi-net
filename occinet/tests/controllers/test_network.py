@@ -31,8 +31,8 @@ class TestNetworkController(base.TestController):
     @mock.patch.object(helpers.OpenStackNet, "index")
     def test_index(self, m_index):
         test_networks = [
-            [],
-            fakes.networks
+            fakes.networks[fakes.tenants["bar"]["id"]],
+            fakes.networks[fakes.tenants["foo"]["id"]]
         ]
 
         for nets in test_networks:
@@ -48,14 +48,14 @@ class TestNetworkController(base.TestController):
 
     @mock.patch.object(helpers.OpenStackNet, "get_network")
     def test_show(self, m_network):
-        test_networks = fakes.networks
+        test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         for net in test_networks:
             ret = self.controller.show(None, net["id"])
             self.assertIsInstance(ret, Network)
 
     @mock.patch.object(helpers.OpenStackNet, "create_network")
     def test_create(self, m_network):
-        test_networks = fakes.networks
+        test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         schema1 = network.Network.scheme
         for net in test_networks:
             schemes = {schema1:net}
@@ -69,7 +69,7 @@ class TestNetworkController(base.TestController):
 
     @mock.patch.object(helpers.OpenStackNet, "delete_network")
     def test_delete(self, m_network):
-        test_networks = fakes.networks
+        test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         schema1 = network.Network.scheme
         for net in test_networks:
             schemes = {schema1:net}
@@ -83,7 +83,7 @@ class TestNetworkController(base.TestController):
             self.assertEqual(ret.__len__(), 0)
 
     def test_get_network_resources(self):
-        test_networks = fakes.networks
+        test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         subnet = fakes.subnets
         for net in test_networks:
             net["subnet_info"] = subnet[0]

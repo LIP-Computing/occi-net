@@ -22,6 +22,7 @@ import webob.dec
 from ooi.wsgi import Fault
 from ooi.log import log as logging
 from ooi import version
+from ooi.wsgi import OCCIMiddleware
 import occinet.api.network
 from occinet.api import query
 from occinet.wsgi import ResourceNet
@@ -30,36 +31,19 @@ from occinet.wsgi import Request
 LOG = logging.getLogger(__name__)
 
 
-class OCCINetworkMiddleware(object):
+class OCCINetworkMiddleware(OCCIMiddleware):
 
-    occi_version = "1.1"
-    occi_string = "OCCI/%s" % occi_version
-
-    @classmethod
-    def factory(cls, global_conf, **local_conf):
-        """Factory method for paste.deploy."""
-
-        def _factory(app):
-            LOG.debug("Factory definition")
-            conf = global_conf.copy()
-            conf.update(local_conf)
-            return cls(None, **local_conf)
-        return _factory
 
     def __init__(self, application, neutron_version="/v2.0", neutron_endpoint="0.0.0.0"):
-        self.application = application
-        self.openstack_version = neutron_version
+        super(OCCINetworkMiddleware, self).__init__(application, openstack_version="/v2.1")
+        self.neutron_version = neutron_version
         self.neutron_endpoint = neutron_endpoint
+        self._setup_net_routes()
 
-        self.resources = {}
+    def _create_net_resource(self, controller):
+        return ResourceNet(controller(self.application, self.neutron_version, self.neutron_endpoint))
 
-        self.mapper = routes.Mapper()
-        self._setup_routes()
-
-    def _create_resource(self, controller):
-        return ResourceNet(controller(self.application, self.openstack_version, self.neutron_endpoint))
-
-    def _setup_resource_routes(self, resource, controller):
+    def _setup_net_resources_routes(self, resource, controller):
         path = "/" + resource
          # These two could be removed for total OCCI compliance
         self.mapper.connect(resource, path, controller=controller,
@@ -76,24 +60,24 @@ class OCCINetworkMiddleware(object):
         self.mapper.connect(resource, path, controller=controller,
                             action="delete", conditions=dict(method=["DELETE"]))
 
-    def _setup_routes(self):
+    def _setup_net_routes(self):
         self.mapper.redirect("", "/")
-        self.resources["query"] = self._create_resource(query.Controller)
-        self.mapper.connect("query", "/-/",controller=self.resources["query"],
+        self.resources["query"] = self._create_net_resource(query.Controller)
+        self.mapper.connect("query", "/-/", controller=self.resources["query"],
                             action="index")
         # RFC5785, OCCI section 3.6.7
         self.mapper.connect("query", "/.well-known/org/ogf/occi/-/", controller=self.resources["query"],
                             action="index")
 
-        self.resources["networks"] = self._create_resource(occinet.api.network.Controller)
-        self._setup_resource_routes("networks", self.resources["networks"])
+        self.resources["networks"] = self._create_net_resource(occinet.api.network.Controller)
+        self._setup_net_resources_routes("networks", self.resources["networks"])
 
     def process_response(self, response):
         """Process a response by adding our headers."""
         network_string = "ooi/%s %s" % (version.version_string,
                                         self.occi_string)
 
-        headers = (("network", network_string),)
+        headers = (("network", network_string),) #fixme(jorgesece): it should come from a paremeter (server/network)
         if isinstance(response, Fault):
             for key, val in headers:
                 response.wrapped_exc.headers.add(key, val)
@@ -102,22 +86,8 @@ class OCCINetworkMiddleware(object):
                 response.headers.add(key, val)
         return response
 
-    def process_request(self, req):
-        if req.user_agent:
 
-            match = re.search(r"\bOCCI/\d\.\d\b", req.user_agent)
-            if match and self.occi_string != match.group():
-                return Fault(webob.exc.HTTPNotImplemented(
-                             explanation="%s not supported" % match.group()))
-
-        match = self.mapper.match(req.path_info, req.environ)
-
-        if not match:
-            return Fault(webob.exc.HTTPNotFound())
-        method = match["controller"]
-        return method(req, match)
-
-    @webob.dec.wsgify(RequestClass=Request)
+    @webob.dec.wsgify(RequestClass=Request) #fixme(jorgesece): Move parameters and parser from Request to driver
     def __call__(self, req):
         response = self.process_request(req)
         if not response:

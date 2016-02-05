@@ -60,9 +60,10 @@ class TestMiddleware(testmi.TestMiddleware):
 
         return webob.Request.blank(path, environ=environ, **kwargs)
 
-    def test_query(self):
-        tenant_id = fakes.tenants["bar"]["id"]
-        result = self._build_req("/-/", tenant_id).get_response(self.get_app())
-        self.assertDefaults(result)
-       # self.assertExpectedResult(fakes.fake_query_results(), result)
-        self.assertEqual(200, result.status_code)
+    # def test_query(self):
+    #     tenant_id = fakes.tenants["bar"]["id"]
+    #     req = self._build_req("/-/", tenant_id)
+    #     result = req.get_response(self.get_app())
+    #     self.assertDefaults(result)
+    #    # self.assertExpectedResult(fakes.fake_query_results(), result)
+    #     self.assertEqual(200, result.status_code)
