@@ -32,10 +32,14 @@ LOG = logging.getLogger(__name__)
 occi_opts = [
     config.cfg.StrOpt('neutron_endpoint',
                       default="127.0.0.1",
-                      help='The IP address on which the OCCI (ooi) API '
+                      help='Neutron end point which access to the Neutron Resfult API '
+                      'will listen.'),
+    config.cfg.StrOpt('neutron_version',
+                      default="/v2.0",
+                      help='Neutron Resfult API version '
                       'will listen.'),
     config.cfg.IntOpt('occinet_listen_port',
-                      default=8786,
+                      default=8787,
                       help='The port on which the OCCI (ooi) API '
                       'will listen.'),
     config.cfg.IntOpt('occinet_workers',
