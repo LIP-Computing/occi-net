@@ -73,7 +73,9 @@ subnets = [
         },
 ]
 
-networks = [
+networks = {
+    tenants["bar"]["id"]: [],
+    tenants["foo"]["id"]: [
         {
             "id": uuid.uuid4().hex,
             "name": "foo",
@@ -86,7 +88,8 @@ networks = [
             "subnets": [subnets[1]["id"]],
             "status": "SHUTOFF",
         },
-]
+    ]
+}
 
 
 def fake_query_results():
@@ -237,10 +240,7 @@ class FakeApp(object):
 
         for tenant in tenants.values():
             path = ""
-
-            #self._populate(path, "networks", networks[tenant["id"]], objs_path="networks/?tenant_id=%s" % tenant["id"], actions=True)
             self._populate(path, "network", networks[tenant["id"]],tenant_id=tenant["id"], actions=True)
-            self._populate(path, "subnet", list(subnets.values()), tenant_id=tenant["id"])
 
     def _populate(self, path_base, obj_name, obj_list, tenant_id,
                   objs_path=None, actions=[]):

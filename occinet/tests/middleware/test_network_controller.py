@@ -150,7 +150,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
         app = self.get_app()
 
         for network in fakes.networks[tenant["id"]]:
-            req = self._build_req("/networks/%s" % network["id"],
+            req = self._build_req("/networks?network_id=%s" % network["id"],
                                   tenant["id"], method="GET")
 
             resp = req.get_response(app)

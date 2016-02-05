@@ -19,13 +19,9 @@ import routes
 import webob.dec
 
 
-from ooi.wsgi import OCCIMiddleware as OCCIMiddleware
 from ooi.wsgi import Fault
 from ooi.log import log as logging
-
-from ooi import config
 from ooi import version
-
 import occinet.api.network
 from occinet.api import query
 from occinet.wsgi import ResourceNet
