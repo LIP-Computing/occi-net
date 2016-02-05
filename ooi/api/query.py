@@ -29,6 +29,8 @@ from ooi.openstack import contextualization
 from ooi.openstack import network as os_network
 from ooi.openstack import templates
 
+#from occinet.infrastructure import network_extend
+
 
 class Controller(base.Controller):
     def __init__(self, *args, **kwargs):
@@ -105,4 +107,7 @@ class Controller(base.Controller):
 
         # OpenStack Floating IP Pools
         l.extend(self._ip_pools(req))
+
+        #Openstack networks todo(jorgesece): un-comment this part
+       # l.append(network_extend.Network.kind)
         return l

@@ -56,17 +56,14 @@ CONF = config.cfg.CONF
 CONF.register_opts(occi_opts)
 
 
-class Request(RequestOOI):
-
-    def __init__(self, environ):
-        super(Request,self).__init__(environ)
-        self.parser = ParserNet(self.headers, None)
-
-    def get_parser(self):
-        return self.parser
-
-    def get_parameter_list(self):
-        return self.parser.get_attributes_from_headers()
+# class Request(RequestOOI):
+#
+#     def __init__(self, environ):
+#         super(Request,self).__init__(environ)
+#         self.parser = HeaderParser(self.headers, None)
+#
+#     def get_parser(self):
+#         return self.parser
 
 
 class ResourceNet(Resource):
@@ -77,10 +74,11 @@ class ResourceNet(Resource):
     def _process_parameters(req):
         content = None
         param = None
+        parser = req.get_parser()(req.headers, req.body)
         if 'Category' in req.headers:
-            param = req.get_parser().parse()
+            param = parser.parse()
         else:
-            attrs = req.get_parser().parse_attributes(req.headers)
+            attrs = parser.parse_attributes(req.headers)
             if attrs.__len__():
                 param = {"attributes": attrs}
         if param:

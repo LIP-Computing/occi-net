@@ -16,7 +16,7 @@
 
 from occinet.api.helpers import OpenStackNet  # it was import ooi.api.helpers
 from occinet.infrastructure.network_extend import Network
-from occinet.api import Controller as ControlerBase
+from ooi.api.base import Controller as ControlerBase
 from ooi.occi.core import collection
 from ooi import exception
 

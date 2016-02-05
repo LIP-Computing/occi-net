@@ -92,6 +92,7 @@ class TestMiddleware(base.TestCase):
         headers = {
             "Content-Type": "text/occi",
             'X-OCCI-Attribute': 'tenant_id=t1, network_id=n1',
+            'Category': 'network; scheme="http://schema/resource#";class="kind"'
         }
         result = webob.Request.blank("/foos/id890234",
                                      method="GET", headers=headers).get_response(self.app)

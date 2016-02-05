@@ -24,9 +24,8 @@ from ooi.log import log as logging
 from ooi import version
 from ooi.wsgi import OCCIMiddleware
 import occinet.api.network
-from occinet.api import query
 from occinet.wsgi import ResourceNet
-from occinet.wsgi import Request
+from ooi.wsgi import Request
 
 LOG = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ class OCCINetworkMiddleware(OCCIMiddleware):
         self._setup_net_routes()
 
     def _create_net_resource(self, controller): #fixme(jorgesece): wsgi unitttest do not work, it is not using FakeApp
-        return ResourceNet(controller(None, self.neutron_version, self.neutron_endpoint))
+        return ResourceNet(controller(self.application, self.neutron_version, self.neutron_endpoint))
 
     def _setup_net_resources_routes(self, resource, controller):
         path = "/" + resource
