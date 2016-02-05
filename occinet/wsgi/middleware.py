@@ -60,38 +60,31 @@ class OCCINetworkMiddleware(OCCIMiddleware):
 
     def _setup_net_routes(self):
         self.mapper.redirect("", "/")
-        # self.resources["query"] = self._create_net_resource(query.Controller)
-        # self.mapper.connect("query", "/-/", controller=self.resources["query"],
-        #                     action="index")
-        # # RFC5785, OCCI section 3.6.7
-        # self.mapper.connect("query", "/.well-known/org/ogf/occi/-/", controller=self.resources["query"],
-        #                     action="index")
-
         self.resources["networks"] = self._create_net_resource(occinet.api.network.Controller)
         self._setup_net_resources_routes("networks", self.resources["networks"])
 
-    def process_response(self, response):
-        """Process a response by adding our headers."""
-        network_string = "ooi/%s %s" % (version.version_string,
-                                        self.occi_string)
-
-        headers = (("network", network_string),) #fixme(jorgesece): it should come from a paremeter (server/network)
-        if isinstance(response, Fault):
-            for key, val in headers:
-                response.wrapped_exc.headers.add(key, val)
-        else:
-            for key, val in headers:
-                response.headers.add(key, val)
-        return response
-
-
-    @webob.dec.wsgify(RequestClass=Request) #fixme(jorgesece): Move parameters and parser from Request to driver
-    def __call__(self, req):
-        response = self.process_request(req)
-        if not response:
-            response = req.get_response(self.application)
-
-        return self.process_response(response)
+    # def process_response(self, response):
+    #     """Process a response by adding our headers."""
+    #     network_string = "ooi/%s %s" % (version.version_string,
+    #                                     self.occi_string)
+    #
+    #     headers = (("network", network_string),) #fixme(jorgesece): it should come from a paremeter (server/network)
+    #     if isinstance(response, Fault):
+    #         for key, val in headers:
+    #             response.wrapped_exc.headers.add(key, val)
+    #     else:
+    #         for key, val in headers:
+    #             response.headers.add(key, val)
+    #     return response
+    #
+    #
+    # @webob.dec.wsgify(RequestClass=Request) #fixme(jorgesece): Move parameters and parser from Request to driver
+    # def __call__(self, req):
+    #     response = self.process_request(req)
+    #     if not response:
+    #         response = req.get_response(self.application)
+    #
+    #     return self.process_response(response)
 
 
 

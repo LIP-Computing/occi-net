@@ -26,7 +26,7 @@ class TestNetworkController(base.TestController):
 
     def setUp(self):
         super(TestNetworkController, self).setUp()
-        self.controller = network.Controller(mock.MagicMock(), None)
+        self.controller = network.Controller(mock.MagicMock(), None,None)
 
     @mock.patch.object(helpers.OpenStackNet, "index")
     def test_index(self, m_index):
