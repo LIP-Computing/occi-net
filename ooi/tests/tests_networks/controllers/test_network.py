@@ -15,11 +15,11 @@
 # under the License.
 import mock
 
-from occinet.tests import fakes
-from ooi.api.networks import network
 from ooi.api.networks import helpers
+from ooi.api.networks import network
 from ooi.infrastructure.network_extend import Network
 from ooi.tests import base
+from ooi.tests.tests_networks import fakes
 
 
 class TestNetworkController(base.TestController):

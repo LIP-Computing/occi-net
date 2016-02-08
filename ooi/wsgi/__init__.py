@@ -52,6 +52,15 @@ occi_opts = [
                       help='Number of workers for OCCI (ooi) API service. '
                       'The default will be equal to the number of CPUs '
                       'available.'),
+    #NEUTRON
+    config.cfg.StrOpt('neutron_endpoint',
+                      default="127.0.0.1",
+                      help='Neutron end point which access to the Neutron Resfult API '
+                      'will listen.'),
+    config.cfg.StrOpt('neutron_version',
+                      default="/v2.0",
+                      help='Neutron Resfult API version '
+                      'will listen.'),
 ]
 
 CONF = config.cfg.CONF

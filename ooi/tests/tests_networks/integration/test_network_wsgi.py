@@ -14,8 +14,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from occinet.tests.integration import  TestIntegration
-from occinet.tests.keystone.session import KeySession
+from ooi.tests.tests_networks.integration import TestIntegration
+
+from ooi.tests.tests_networks.keystone.session import KeySession
 from ooi.wsgi.networks.middleware import OCCINetworkMiddleware
 
 

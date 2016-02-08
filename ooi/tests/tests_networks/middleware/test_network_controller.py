@@ -14,9 +14,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from occinet.tests import fakes
-from occinet.tests.middleware import test_middleware
+from ooi.tests.tests_networks import fakes
+
 from ooi import utils
+from ooi.tests.tests_networks.middleware import test_middleware
 
 
 def build_occi_network(network):

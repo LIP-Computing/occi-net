@@ -14,8 +14,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from occinet.tests.keystone.session import KeySession
 from ooi.tests import base
+from ooi.tests.tests_networks.keystone.session import KeySession
 
 
 class TestIntegration(base.TestController):

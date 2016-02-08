@@ -15,11 +15,12 @@
 # under the License.
 
 
-from occinet.tests.integration import  TestIntegration
-from occinet.tests.keystone.session import KeySession
+from ooi.tests.tests_networks.integration import  TestIntegration
+
 from ooi import exception
 from ooi.api.networks import network
 from ooi.infrastructure import network_extend
+from ooi.tests.tests_networks.keystone.session import KeySession
 
 
 class TestIntegrationNetwork(TestIntegration):
