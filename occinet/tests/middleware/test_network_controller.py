@@ -14,15 +14,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import uuid
-import webob
-
-from ooi import utils
-
 from occinet.tests import fakes
 from occinet.tests.middleware import test_middleware
-
-from occinet.wsgi.middleware import OCCINetworkMiddleware
+from ooi import utils
 
 
 def build_occi_network(network):

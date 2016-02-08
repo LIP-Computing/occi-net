@@ -14,21 +14,41 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import re
-import routes
-import webob.dec
-
-
-from ooi.wsgi import Fault
+from ooi.wsgi import Resource, OCCIMiddleware
 from ooi.log import log as logging
-from ooi import version
-from ooi.wsgi import OCCIMiddleware
-import occinet.api.network
-from occinet.wsgi import ResourceNet
-from ooi.wsgi import Request
+#from ooi.wsgi import OCCIMiddleware
+#from ooi.wsgi import Resource
+from ooi.api.networks.network import Controller
 
 LOG = logging.getLogger(__name__)
 
+
+class ResourceNet(Resource):
+    def __init__(self, controller):
+        super(ResourceNet, self).__init__(controller)
+
+    @staticmethod
+    def _process_parameters(req):
+        content = None
+        param = None
+        parser = req.get_parser()(req.headers, req.body)
+        if 'Category' in req.headers:
+            param = parser.parse()
+        else:
+            attrs = parser.parse_attributes(req.headers)
+            if attrs.__len__():
+                param = {"attributes": attrs}
+        if param:
+            content = {"parameters": param}
+        return content
+
+    def __call__(self, request, args):
+        """Control the method dispatch."""
+        parameters = self._process_parameters(request)
+        if parameters:
+            args.update(parameters)
+
+        return super(ResourceNet,self).__call__(request,args)
 
 class OCCINetworkMiddleware(OCCIMiddleware):
 
@@ -59,8 +79,7 @@ class OCCINetworkMiddleware(OCCIMiddleware):
                             action="delete", conditions=dict(method=["DELETE"]))
 
     def _setup_net_routes(self):
-        self.mapper.redirect("", "/")
-        self.resources["networks"] = self._create_net_resource(occinet.api.network.Controller)
+        self.resources["networks"] = self._create_net_resource(Controller)
         self._setup_net_resources_routes("networks", self.resources["networks"])
 
     # def process_response(self, response):

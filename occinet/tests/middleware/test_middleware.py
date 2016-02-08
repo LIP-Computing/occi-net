@@ -18,12 +18,9 @@ import webob
 import webob.dec
 import webob.exc
 
-from ooi.tests import base
 from occinet.tests import fakes
 from ooi.tests.middleware import test_middleware as testmi
-
-from occinet.wsgi.middleware import OCCINetworkMiddleware
-
+from ooi.wsgi.network_middleware import OCCINetworkMiddleware
 
 
 class TestMiddleware(testmi.TestMiddleware):

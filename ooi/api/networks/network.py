@@ -14,11 +14,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from occinet.api.helpers import OpenStackNet  # it was import ooi.api.helpers
-from occinet.infrastructure.network_extend import Network
-from ooi.api.base import Controller as ControlerBase
-from ooi.occi.core import collection
 from ooi import exception
+from ooi.api.base import Controller as ControlerBase
+from ooi.api.networks.helpers import OpenStackNet  # it was import ooi.api.helpers
+from ooi.infrastructure.network_extend import Network
+from ooi.occi.core import collection
 
 
 def _build_network(name, prefix=None):

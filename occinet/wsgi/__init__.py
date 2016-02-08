@@ -66,29 +66,29 @@ CONF.register_opts(occi_opts)
 #         return self.parser
 
 
-class ResourceNet(Resource):
-    def __init__(self, controller):
-        super(ResourceNet, self).__init__(controller)
-
-    @staticmethod
-    def _process_parameters(req):
-        content = None
-        param = None
-        parser = req.get_parser()(req.headers, req.body)
-        if 'Category' in req.headers:
-            param = parser.parse()
-        else:
-            attrs = parser.parse_attributes(req.headers)
-            if attrs.__len__():
-                param = {"attributes": attrs}
-        if param:
-            content = {"parameters": param}
-        return content
-
-    def __call__(self, request, args):
-        """Control the method dispatch."""
-        parameters = self._process_parameters(request)
-        if parameters:
-            args.update(parameters)
-
-        return super(ResourceNet,self).__call__(request,args)
+# class ResourceNet(Resource):
+#     def __init__(self, controller):
+#         super(ResourceNet, self).__init__(controller)
+#
+#     @staticmethod
+#     def _process_parameters(req):
+#         content = None
+#         param = None
+#         parser = req.get_parser()(req.headers, req.body)
+#         if 'Category' in req.headers:
+#             param = parser.parse()
+#         else:
+#             attrs = parser.parse_attributes(req.headers)
+#             if attrs.__len__():
+#                 param = {"attributes": attrs}
+#         if param:
+#             content = {"parameters": param}
+#         return content
+#
+#     def __call__(self, request, args):
+#         """Control the method dispatch."""
+#         parameters = self._process_parameters(request)
+#         if parameters:
+#             args.update(parameters)
+#
+#         return super(ResourceNet,self).__call__(request,args)

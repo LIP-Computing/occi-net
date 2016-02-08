@@ -18,10 +18,9 @@ import webob
 import webob.dec
 import webob.exc
 
-from ooi.tests import base
 from occinet import wsgi
-from occinet.wsgi.middleware import OCCINetworkMiddleware
-
+from ooi.tests import base
+from ooi.wsgi.network_middleware import OCCINetworkMiddleware, ResourceNet
 
 
 @webob.dec.wsgify
@@ -49,7 +48,7 @@ class FakeController(object):
 
 class FakeMiddleware(OCCINetworkMiddleware):
     def _setup_routes(self):
-        self.resources["foo"] = wsgi.ResourceNet(FakeController())
+        self.resources["foo"] = ResourceNet(FakeController())
         self.mapper.resource("foo", "foos",
                              controller=self.resources["foo"])
 
