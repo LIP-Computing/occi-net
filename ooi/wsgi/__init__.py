@@ -35,7 +35,7 @@ from ooi.wsgi import parsers
 from ooi.wsgi import serializers
 
 
-#from ooi.wsgi.network_middleware import OCCINetworkMiddleware
+#from ooi.wsgi.networks.middleware import OCCINetworkMiddleware
 
 LOG = logging.getLogger(__name__)
 
