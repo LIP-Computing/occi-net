@@ -16,7 +16,7 @@
 
 from occinet.tests.integration import  TestIntegration
 from occinet.tests.keystone.session import KeySession
-from ooi.wsgi.network_middleware import OCCINetworkMiddleware
+from ooi.wsgi.networks.middleware import OCCINetworkMiddleware
 
 
 class TestMiddleware(TestIntegration):

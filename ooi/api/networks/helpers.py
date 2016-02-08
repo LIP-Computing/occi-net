@@ -15,13 +15,13 @@
 # under the License.
 #
 
-import webob
 import json
 
-from ooi.api import helpers
-from ooi import utils
+import webob
 
-from occinet.wsgi import parsers
+from ooi import utils
+from ooi.api import helpers
+from ooi.wsgi.networks import parsers
 
 
 class OpenStackNet(helpers.BaseHelper):
@@ -101,7 +101,7 @@ class OpenStackNet(helpers.BaseHelper):
         :param parameters: parameters to filter results
         """
         resource = "network"
-        param = parsers.translate_parameters(self.translation[resource],parameters)
+        param = parsers.translate_parameters(self.translation[resource], parameters)
         query_string = parsers.get_query_string(param)
         return self._get_req(req, path=path, query_string=query_string, method="GET")
 

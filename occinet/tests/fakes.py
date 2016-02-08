@@ -15,17 +15,13 @@
 # under the License.
 
 import json
-import re
 import uuid
 
 import webob.dec
 import webob.exc
 
-from ooi import utils
 import ooi.wsgi
-
-from occinet.wsgi import parsers
-
+from ooi import utils
 
 application_url = "https://foo.example.org:8774/ooiv1"
 

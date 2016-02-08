@@ -20,7 +20,7 @@ import webob.exc
 
 from occinet import wsgi
 from ooi.tests import base
-from ooi.wsgi.network_middleware import OCCINetworkMiddleware, ResourceNet
+from ooi.wsgi.networks.middleware import OCCINetworkMiddleware, ResourceNet
 
 
 @webob.dec.wsgify
