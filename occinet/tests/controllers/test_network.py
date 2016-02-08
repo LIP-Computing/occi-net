@@ -15,18 +15,18 @@
 # under the License.
 import mock
 
-from ooi.tests import base
-
-from occinet.api import network, helpers
-from occinet.infrastructure.network_extend import Network
 from occinet.tests import fakes
+from ooi.api.networks import network
+from ooi.api.networks import helpers
+from ooi.infrastructure.network_extend import Network
+from ooi.tests import base
 
 
 class TestNetworkController(base.TestController):
 
     def setUp(self):
         super(TestNetworkController, self).setUp()
-        self.controller = network.Controller(mock.MagicMock(), None)
+        self.controller = network.Controller(mock.MagicMock(), None,None)
 
     @mock.patch.object(helpers.OpenStackNet, "index")
     def test_index(self, m_index):

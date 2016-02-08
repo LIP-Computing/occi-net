@@ -34,6 +34,9 @@ from ooi import version
 from ooi.wsgi import parsers
 from ooi.wsgi import serializers
 
+
+#from ooi.wsgi.network_middleware import OCCINetworkMiddleware
+
 LOG = logging.getLogger(__name__)
 
 occi_opts = [
@@ -112,6 +115,9 @@ class OCCIMiddleware(object):
 
         self.mapper = routes.Mapper()
         self._setup_routes()
+
+        ##OCCINET
+        #OCCINetworkMiddleware(application, neutron_endpoint="1270.0.0.1"). setup_net_routes(self.resources, self.mapper)
 
     def _create_resource(self, controller):
         return Resource(controller(self.application, self.openstack_version))
@@ -235,7 +241,7 @@ class OCCIMiddleware(object):
         method = match["controller"]
         return method(req, match)
 
-    def process_response(self, response):
+    def process_response(self, response): #fixme(jorgesece): it should come from a paremeter (server/network)
         """Process a response by adding our headers."""
         server_string = "ooi/%s %s" % (version.version_string,
                                        self.occi_string)

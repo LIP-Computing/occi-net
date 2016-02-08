@@ -14,11 +14,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from ooi.tests import base
-
-from occinet.wsgi.middleware import OCCINetworkMiddleware
-from keystone.session import KeySession
 from occinet.tests.integration import  TestIntegration
+from occinet.tests.keystone.session import KeySession
+from ooi.wsgi.network_middleware import OCCINetworkMiddleware
+
 
 class TestMiddleware(TestIntegration):
     def setUp(self):
