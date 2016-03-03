@@ -24,8 +24,8 @@ class Network(network.NetworkResource):
     attributes = attr.AttributeCollection(["org.openstack.network.shared",
                                            "org.openstack.network.tenantid",
                                            "org.openstack.network.ip_version",
-                                           "org.openstack.network.address",
-                                           "org.openstack.network.gateway",
+                                           "occi.network.address",
+                                           "occi.network.gateway",
                                            ])
     scheme = helpers.build_scheme("infrastructure/network",)
     term = "networks"
@@ -49,12 +49,12 @@ class Network(network.NetworkResource):
         self.attributes["org.openstack.network.ip_version"] = (
             attr.InmutableAttribute(
                 "org.openstack.network.ip_version", ip_version))
-        self.attributes["org.openstack.network.address"] = (
+        self.attributes["occi.network.address"] = (
             attr.InmutableAttribute(
-                "org.openstack.network.address", address))
-        self.attributes["org.openstack.network.gateway"] = (
+                "occi.network.address", address))
+        self.attributes["occi.network.gateway"] = (
             attr.InmutableAttribute(
-                "org.openstack.network.gateway", gateway))
+                "occi.network.gateway", gateway))
 
 
     @property
@@ -76,8 +76,8 @@ class Network(network.NetworkResource):
 
     @property
     def address(self):
-        return self.attributes["org.openstack.network.address"].value
+        return self.attributes["occi.network.address"].value
 
     @property
     def gateway(self):
-        return self.attributes["org.openstack.network.gateway"].value
+        return self.attributes["occi.network.gateway"].value

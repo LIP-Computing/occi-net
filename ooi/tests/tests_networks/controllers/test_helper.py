@@ -35,8 +35,8 @@ class TestNetOpenStackHelper(base.TestCase):
                                         },
                             "subnet": {"occi.core.id": "network_id",
                                        "org.openstack.network.ip_version": "ip_version",
-                                       "org.openstack.network.address": "cidr",
-                                       "org.openstack.network.gateway":
+                                       "occi.network.address": "cidr",
+                                       "occi.network.gateway":
                                            "gateway_ip"
                                        }
                             }
@@ -193,8 +193,8 @@ class TestNetOpenStackHelper(base.TestCase):
                       "occi.network.state": state,
                       "X_PROJECT_ID": project,
                       "org.openstack.network.ip_version": ip_version,
-                      "org.openstack.network.address": cidr,
-                      "org.openstack.network.gateway": gate_way
+                      "occi.network.address": cidr,
+                      "occi.network.gateway": gate_way
                       }
         resp = fakes.create_fake_json_resp(
             {"network": {"id": net_id},

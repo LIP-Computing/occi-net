@@ -38,13 +38,13 @@ class OpenStackNet(helpers.BaseHelper):
                                },
                    "subnet": {"occi.core.id": "network_id",
                               "org.openstack.network.ip_version": "ip_version",
-                              "org.openstack.network.address": "cidr",
-                              "org.openstack.network.gateway": "gateway_ip"
+                              "occi.network.address": "cidr",
+                              "occi.network.gateway": "gateway_ip"
                               }
                    }
     required = {"network": {"occi.core.title": "name",
                             "org.openstack.network.ip_version": "ip_version",
-                            "org.openstack.network.address": "cidr",
+                            "occi.network.address": "cidr",
                             }
                 }
 
