@@ -385,7 +385,7 @@ class TestOpenStackHelper(TestBaseHelper):
         m.return_value = req_mock
         server_uuid = uuid.uuid4().hex
         ret = self.helper.delete(None, server_uuid)
-        self.assertEqual(None, ret)
+        self.assertIsNone(ret)
         m.assert_called_with(None, server_uuid)
 
     @mock.patch("ooi.api.helpers.exception_from_response")
@@ -413,7 +413,7 @@ class TestOpenStackHelper(TestBaseHelper):
         m.return_value = req_mock
         vol_uuid = uuid.uuid4().hex
         ret = self.helper.volume_delete(None, vol_uuid)
-        self.assertEqual(None, ret)
+        self.assertIsNone(ret)
         m.assert_called_with(None, vol_uuid)
 
     @mock.patch("ooi.api.helpers.exception_from_response")
@@ -442,7 +442,7 @@ class TestOpenStackHelper(TestBaseHelper):
         server_uuid = uuid.uuid4().hex
         action = "start"
         ret = self.helper.run_action(None, action, server_uuid)
-        self.assertEqual(None, ret)
+        self.assertIsNone(ret)
         m.assert_called_with(None, action, server_uuid)
 
     @mock.patch("ooi.api.helpers.exception_from_response")
@@ -615,12 +615,14 @@ class TestOpenStackHelper(TestBaseHelper):
         flavor = uuid.uuid4().hex
         user_data = "foo"
         key_name = "wtfoo"
+        bdm = []
         ret = self.helper.create_server(None, name, image, flavor,
                                         user_data=user_data,
-                                        key_name=key_name)
+                                        key_name=key_name,
+                                        block_device_mapping_v2=bdm)
         self.assertEqual("FOO", ret)
         m.assert_called_with(None, name, image, flavor, user_data=user_data,
-                             key_name=key_name)
+                             key_name=key_name, block_device_mapping_v2=bdm)
 
     @mock.patch("ooi.api.helpers.exception_from_response")
     @mock.patch.object(helpers.OpenStackHelper, "_get_create_server_req")
@@ -635,6 +637,7 @@ class TestOpenStackHelper(TestBaseHelper):
         flavor = uuid.uuid4().hex
         user_data = "foo"
         key_name = "wtfoo"
+        bdm = []
         m_exc.return_value = webob.exc.HTTPInternalServerError()
         self.assertRaises(webob.exc.HTTPInternalServerError,
                           self.helper.create_server,
@@ -643,9 +646,10 @@ class TestOpenStackHelper(TestBaseHelper):
                           image,
                           flavor,
                           user_data=user_data,
-                          key_name=key_name)
+                          key_name=key_name,
+                          block_device_mapping_v2=bdm)
         m.assert_called_with(None, name, image, flavor, user_data=user_data,
-                             key_name=key_name)
+                             key_name=key_name, block_device_mapping_v2=bdm)
         m_exc.assert_called_with(resp)
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_volume_create_req")
@@ -728,7 +732,7 @@ class TestOpenStackHelper(TestBaseHelper):
         ret = self.helper.delete_server_volumes_link(None,
                                                      server_uuid,
                                                      vol_uuid)
-        self.assertEqual(None, ret)
+        self.assertIsNone(ret)
         m.assert_called_with(None, server_uuid, vol_uuid)
 
     @mock.patch.object(helpers.OpenStackHelper,
@@ -768,7 +772,7 @@ class TestOpenStackHelper(TestBaseHelper):
         m.return_value = req_mock
         ip_uuid = uuid.uuid4().hex
         ret = self.helper.release_floating_ip(None, ip_uuid)
-        self.assertEqual(None, ret)
+        self.assertIsNone(ret)
         m.assert_called_with(None, ip_uuid)
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_floating_ip_release_req")
@@ -795,7 +799,7 @@ class TestOpenStackHelper(TestBaseHelper):
         ip = "192.168.0.20"
         server = uuid.uuid4().hex
         ret = self.helper.associate_floating_ip(None, server, ip)
-        self.assertEqual(None, ret)
+        self.assertIsNone(ret)
         m.assert_called_with(None, server, ip)
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_remove_floating_ip_req")
@@ -807,7 +811,7 @@ class TestOpenStackHelper(TestBaseHelper):
         ip = "192.168.0.20"
         server = uuid.uuid4().hex
         ret = self.helper.remove_floating_ip(None, server, ip)
-        self.assertEqual(None, ret)
+        self.assertIsNone(ret)
         m.assert_called_with(None, server, ip)
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_remove_floating_ip_req")

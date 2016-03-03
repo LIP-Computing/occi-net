@@ -19,30 +19,34 @@ import json
 
 import webob
 
-from ooi import utils
 from ooi.api import helpers
-from ooi.wsgi.networks import parsers
+from ooi.api.networks import parsers
+from ooi import utils
 
 
 class OpenStackNet(helpers.BaseHelper):
     """Class to interact with the neutron API."""
 
-    def __init__(self, app, neutron_version, neutron_endpoint):
-        super(OpenStackNet, self).__init__(app, neutron_version)
+    def __init__(self, neutron_endpoint):
+        super(OpenStackNet, self).__init__(None, None)
         self.neutron_endpoint = neutron_endpoint
 
-    translation = {"network": {"occi.core.title":"name",
-                                "occi.core.id":"network_id",
-                                "occi.network.state":"status",
-                                "project":"tenant_id",
-                                "occi.core.title":"name"
+    translation = {"network": {"occi.core.title": "name",
+                               "occi.core.id": "network_id",
+                               "occi.network.state": "status",
+                               "X_PROJECT_ID": "tenant_id",
                                },
-                   "subnet": {"network_id":"network_id",
-                             "occi.network.ip_version": "ip_version",
-                             "occi.networkinterface.address": "cidr",
-                             "occi.networkinterface.gateway":"gateway_ip"
-                             }
+                   "subnet": {"occi.core.id": "network_id",
+                              "occi.network.ip_version": "ip_version",
+                              "occi.networkinterface.address": "cidr",
+                              "occi.networkinterface.gateway": "gateway_ip"
+                              }
                    }
+    required = {"network": {"occi.core.title": "name",
+                            "occi.network.ip_version": "ip_version",
+                            "occi.networkinterface.address": "cidr",
+                            }
+                }
 
     def _get_req(self, req, method,
                  path=None,
@@ -67,20 +71,21 @@ class OpenStackNet(helpers.BaseHelper):
         :returns: a Request object
         """
         server = self.neutron_endpoint
-        port = "9696"
-        kwargs = {"http_version": "HTTP/1.1", "server_name": server, "server_port": port}
         try:
             if "HTTP_X-Auth-Token" in req.environ:
                 token = req.environ["HTTP_X-Auth-Token"]
             else:
-                token = req.environ["keystone.token_auth"].get_auth_ref(None)['auth_token']
-            #project_id = req.environ["HTTP_X_PROJECT_ID"]
+                env_token = req.environ["keystone.token_auth"]
+                token = env_token.get_auth_ref(None)['auth_token']
+
+            # project_id = req.environ["HTTP_X_PROJECT_ID"]
         except Exception:
             raise webob.exc.HTTPUnauthorized
-        environ = {"HTTP_X-Auth-Token": token} #"HTTP_X_PROJECT_ID": project_id}
+        environ = {"HTTP_X-Auth-Token": token}
+        # "HTTP_X_PROJECT_ID": project_id}
 
-        new_req = webob.Request.blank(path=path, environ=environ,  base_url="/v2.0", **kwargs)
-        new_req.script_name = self.openstack_version
+        new_req = webob.Request.blank(path=path,
+                                      environ=environ, base_url=server)
         new_req.query_string = query_string
         new_req.method = method
         if path is not None:
@@ -90,118 +95,151 @@ class OpenStackNet(helpers.BaseHelper):
         if body is not None:
             new_req.body = utils.utf8(body)
 
-
         return new_req
 
     def _make_get_request(self, req, path, parameters=None):
         """Create GET request
+
         This method create a GET Request instance
+
         :param req: the incoming request
         :param path: element location
         :param parameters: parameters to filter results
         """
         resource = "network"
-        param = parsers.translate_parameters(self.translation[resource], parameters)
+        param = parsers.translate_parameters(
+            self.translation[resource], parameters)
         query_string = parsers.get_query_string(param)
-        return self._get_req(req, path=path, query_string=query_string, method="GET")
+        return self._get_req(req, path=path,
+                             query_string=query_string, method="GET")
 
-    def _make_create_request(self, req, resource, parameters):#TODO(jorgesece): Create unittest for it
+    def _make_create_request(self, req, resource, parameters):
         """Create CREATE request
+
         This method create a CREATE Request instance
+
         :param req: the incoming request
         :param parameters: parameters with values
         """
         path = "/%ss" % resource
-        param = parsers.translate_parameters(self.translation[resource], parameters)
+        param = parsers.translate_parameters(
+            self.translation[resource], parameters)
         body = parsers.make_body(resource, param)
-        return self._get_req(req, path=path, content_type="application/json", body=json.dumps(body), method="POST")
+        return self._get_req(req, path=path,
+                             content_type="application/json",
+                             body=json.dumps(body), method="POST")
 
     def _make_delete_request(self, req, path, parameters):
         """Create DELETE request
+
         This method create a DELETE Request instance
+
         :param req: the incoming request
         :param path: element location
         """
-        param = parsers.translate_parameters(self.translation["network"], parameters)
+        param = parsers.translate_parameters(
+            self.translation["network"], parameters)
         id = param["network_id"]
         path = "%s/%s" % (path, id)
         return self._get_req(req, path=path, method="DELETE")
 
     def index(self, req, parameters=None):
         """Get a list of networks.
+
         This method retrieve a list of network to which the tenant has access.
+
         :param req: the incoming request
         :param parameters: parameters to filter results
         """
         path = "/networks"
         os_req = self._make_get_request(req, path, parameters)
-        response = os_req.get_response(self.app)
+        response = os_req.get_response()
         return self.get_from_response(response, "networks", [])
 
     def get_network(self, req, id):
-        """Get info from a network. It returns json code from the server
+        """Get info from a network.
+
+        It returns json code from the server
+
         :param req: the incoming network
         :param id: net identification
         """
         path = "/networks/%s" % id
         req = self._make_get_request(req, path)
-        response = req.get_response(self.app)
+        response = req.get_response()
         net = self.get_from_response(response, "network", {})
         # subnet
-        if net["subnets"]:
+        if "subnets" in net:
             path = "/subnets/%s" % net["subnets"][0]
             req_subnet = self._make_get_request(req, path)
-            response_subnet = req_subnet.get_response(self.app)
-            net["subnet_info"] = self.get_from_response(response_subnet, "subnet", {})
+            response_subnet = req_subnet.get_response()
+            net["subnet_info"] = self.get_from_response(
+                response_subnet, "subnet", {})
 
-        net["status"] = parsers.network_status(net["status"]);
         return net
 
     def get_subnet(self, req, id):
         """Get information from a subnet.
+
         :param req: the incoming request
         :param id: subnet identification
         """
         path = "/subnets/%s" % id
         req = self._make_get_request(req, path)
-        response = req.get_response(self.app)
+        response = req.get_response()
 
         return self.get_from_response(response, "subnet", {})
 
     def create_network(self, req, parameters):
         """Create a server.
+
         :param req: the incoming request
         :param parameters: parameters with values for the new network
         """
         req = self._make_create_request(req, "network", parameters)
-        response = req.get_response(self.app)
+        response = req.get_response()
         json_response = self.get_from_response(response, "network", {})
-        #subnetattributes
-        if "occi.networkinterface.address" in parameters:#TODO(jorgesece): Create unittest for it
-            parameters["network_id"] = json_response["id"]
-            req_subnet= self._make_create_request(req, "subnet", parameters)
-            response_subnet = req_subnet.get_response(self.app)
-            json_response["subnet_info"] = self.get_from_response(response_subnet, "subnet", {})
+        # subnetattributes
+        # if "occi.networkinterface.address" in parameters:
+        #     parameters["network_id"] = json_response["id"]
+        #     req_subnet= self._make_create_request(req, "subnet", parameters)
+        #     response_subnet = req_subnet.get_response()
+        #     json_response["subnet_info"] = self.get_from_response(
+        # response_subnet, "subnet", {})
 
+        return json_response
+
+    def create_subnet(self, req, parameters):
+        """Create a server.
+
+        :param req: the incoming request
+        :param parameters: parameters with values for the new network
+        """
+        req_subnet = self._make_create_request(req, "subnet", parameters)
+        response_subnet = req_subnet.get_response()
+        json_response = self.get_from_response(
+            response_subnet, "subnet", {})
         return json_response
 
     def delete_network(self, req, parameters):
         """Delete network. It returns empty array
+
         :param req: the incoming network
         :param parameters:
         """
         path = "/networks"
         req = self._make_delete_request(req, path, parameters)
-        response = req.get_response(self.app)
+        response = req.get_response()
         return response
 
     def run_action(self, req, action, id):
         """Run an action on a network.
+
         :param req: the incoming request
         :param action: the action to run
-        :param server_id: server id to delete
+        :param id: server id to delete
         """
         os_req = self._make_action_reques(req, action, id)
-        response = os_req.get_response(self.app)
+        response = os_req.get_response()
         if response.status_int != 202:
             raise helpers.exception_from_response(response)

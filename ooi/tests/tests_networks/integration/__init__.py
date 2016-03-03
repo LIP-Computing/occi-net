@@ -15,14 +15,14 @@
 # under the License.
 
 from ooi.tests import base
-from ooi.tests.tests_networks.keystone.session import KeySession
+from ooi.tests.tests_networks.integration.keystone.session import KeySession
 
 
 class TestIntegration(base.TestController):
 
     def setUp(self):
         super(TestIntegration, self).setUp()
-        self.project_id = "fc0dd0a3c65f4c7c90d3e6dae2aa5a85"
-        self.public_network = "160300ca-36a6-4448-b1b1-1728f588b87f"
+        self.project_id = "6a7f9cdcdcc049b1b9ca849b9b678255"
+        self.public_network = "cd58eade-79a1-4633-8fb7-c7d8a030c942"
         self.new_network_name = "networkOCCINET"
         self.session = KeySession().create_keystone("admin", "stack1", self.project_id)

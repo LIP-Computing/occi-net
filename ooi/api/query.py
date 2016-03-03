@@ -21,6 +21,7 @@ from ooi.occi.core import link
 from ooi.occi.core import resource
 from ooi.occi.infrastructure import compute
 from ooi.occi.infrastructure import network
+from ooi.occi.infrastructure import network_extend
 from ooi.occi.infrastructure import network_link
 from ooi.occi.infrastructure import storage
 from ooi.occi.infrastructure import storage_link
@@ -28,8 +29,6 @@ from ooi.occi.infrastructure import templates as infra_templates
 from ooi.openstack import contextualization
 from ooi.openstack import network as os_network
 from ooi.openstack import templates
-
-#from occinet.infrastructure import network_extend
 
 
 class Controller(base.Controller):
@@ -86,6 +85,9 @@ class Controller(base.Controller):
         l.append(storage_link.StorageLink.kind)
         l.extend(storage.StorageResource.actions)
 
+        # OCCI infra Networks Management:
+        l.append(network_extend.Network.kind)
+
         # OCCI infra network
         l.append(network.NetworkResource.kind)
         l.extend(network.NetworkResource.actions)
@@ -108,6 +110,4 @@ class Controller(base.Controller):
         # OpenStack Floating IP Pools
         l.extend(self._ip_pools(req))
 
-        #Openstack networks todo(jorgesece): un-comment this part
-       # l.append(network_extend.Network.kind)
         return l

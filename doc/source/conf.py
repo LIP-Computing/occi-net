@@ -36,8 +36,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'occinet'
-copyright = u'2015-present, CSIC - LIP'
+project = u'ooi'
+copyright = u'2014-present, Spanish National Research Council - CSIC'
 
 from ooi.version import version_info
 # The full version, including alpha/beta/rc tags.

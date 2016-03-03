@@ -13,3 +13,6 @@
 # Number of workers for OCCI (ooi) API service. The default will be equal to
 # the number of CPUs available. (integer value)
 #ooi_workers = <None>
+
+# Neutron end point which access to the Neutron Restful API.
+# neutron_endpoint =  http://127.0.0.1:9696/v2.0

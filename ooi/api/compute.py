@@ -102,6 +102,36 @@ class Controller(ooi.api.base.Controller):
         self.os_helper.run_action(req, action, id)
         return []
 
+    def _build_block_mapping(self, req, obj):
+        mappings = []
+        for l in obj.get("links", {}).values():
+            if l["rel"] == storage.StorageResource.kind.type_id:
+                _, vol_id = ooi.api.helpers.get_id_with_kind(
+                    req,
+                    l.get("occi.core.target"),
+                    storage.StorageResource.kind)
+                mapping = {
+                    "source_type": "volume",
+                    "uuid": vol_id,
+                    "delete_on_termination": False,
+                }
+                try:
+                    mapping['device_name'] = l['occi.storagelink.deviceid']
+                except KeyError:
+                    pass
+                mappings.append(mapping)
+        # this needs to be there if we have a mapping
+        if mappings:
+            image = obj["schemes"][templates.OpenStackOSTemplate.scheme][0]
+            mappings.insert(0, {
+                "source_type": "image",
+                "destination_type": "local",
+                "boot_index": 0,
+                "delete_on_termination": True,
+                "uuid": image,
+            })
+        return mappings
+
     def create(self, req, body):
         parser = req.get_parser()(req.headers, req.body)
         scheme = {
@@ -113,7 +143,11 @@ class Controller(ooi.api.base.Controller):
             "optional_mixins": [
                 contextualization.user_data,
                 contextualization.public_key,
+            ],
+            "optional_links": [
+                storage.StorageResource.kind,
             ]
+
         }
         obj = parser.parse()
         validator = occi_validator.Validator(obj)
@@ -146,9 +180,16 @@ class Controller(ooi.api.base.Controller):
                 self.os_helper.keypair_create(req, key_name,
                                               public_key=key_data)
 
-        server = self.os_helper.create_server(req, name, image, flavor,
-                                              user_data=user_data,
-                                              key_name=key_name)
+        block_device_mapping_v2 = self._build_block_mapping(req, obj)
+
+        server = self.os_helper.create_server(
+            req,
+            name,
+            image,
+            flavor,
+            user_data=user_data,
+            key_name=key_name,
+            block_device_mapping_v2=block_device_mapping_v2)
         # The returned JSON does not contain the server name
         server["name"] = name
         occi_compute_resources = self._get_compute_resources([server])
@@ -207,8 +248,31 @@ class Controller(ooi.api.base.Controller):
 
         return [comp]
 
+    def _get_server_floating_ips(self, req, server_id):
+        s = self.os_helper.get_server(req, server_id)
+        addresses = s.get("addresses", {})
+        floating_ips = []
+        if addresses:
+            for addr_set in addresses.values():
+                for addr in addr_set:
+                    if addr["OS-EXT-IPS:type"] == "floating":
+                        floating_ips.append(addr["addr"])
+        return floating_ips
+
+    def _release_floating_ips(self, req, server_id):
+        server_ips = self._get_server_floating_ips(req, server_id)
+        if server_ips:
+            floating_ips = self.os_helper.get_floating_ips(req)
+            for server_ip in server_ips:
+                for ip in floating_ips:
+                    if server_ip == ip["ip"]:
+                        self.os_helper.remove_floating_ip(req, server_id,
+                                                          ip["ip"])
+                        self.os_helper.release_floating_ip(req, ip["id"])
+
     def _delete(self, req, server_ids):
         for server_id in server_ids:
+            self._release_floating_ips(req, server_id)
             self.os_helper.delete(req, server_id)
         return []
 

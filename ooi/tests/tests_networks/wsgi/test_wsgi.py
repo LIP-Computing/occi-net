@@ -18,9 +18,8 @@ import webob
 import webob.dec
 import webob.exc
 
-from occinet import wsgi
 from ooi.tests import base
-from ooi.wsgi.networks.middleware import OCCINetworkMiddleware, ResourceNet
+from ooi import wsgi
 
 
 @webob.dec.wsgify
@@ -39,16 +38,19 @@ class FakeController(object):
     def delete(self, req, id):
         raise webob.exc.HTTPNotImplemented()
 
-    def show(self, req, id, parameters):
+    def show(self, req, id):
         # Returning a ResponseObject should stop the pipepline
         # so the application won't be called.
         resp = wsgi.ResponseObject([])
         return resp
 
 
-class FakeMiddleware(OCCINetworkMiddleware):
+class FakeMiddleware(wsgi.OCCIMiddleware):
+    def __int__(self, application):
+        super(FakeMiddleware, self).__init__(application)
+
     def _setup_routes(self):
-        self.resources["foo"] = ResourceNet(FakeController())
+        self.resources["foo"] = wsgi.Resource(FakeController())
         self.mapper.resource("foo", "foos",
                              controller=self.resources["foo"])
 
@@ -56,7 +58,6 @@ class FakeMiddleware(OCCINetworkMiddleware):
 class TestMiddleware(base.TestCase):
     def setUp(self):
         super(TestMiddleware, self).setUp()
-
         self.app = FakeMiddleware(fake_app)
 
     def test_index(self):
@@ -68,22 +69,26 @@ class TestMiddleware(base.TestCase):
     def test_show(self):
         headers = {
             "Content-Type": "text/occi",
-            'Category': 'network; scheme="http://schema/resource#";class="kind",' +
+            'Category': 'network;'
+                        ' scheme="http://schema/resource#";class="kind",' +
             'subnet11; scheme="http://schema/mixin#";class="mixin", ' +
             'subnet33; scheme="http://schema/mixin#";class="mixin";',
         }
         result = webob.Request.blank("/foos/id890234",
-                                     method="GET", headers=headers).get_response(self.app)
+                                     method="GET",
+                                     headers=headers).get_response(self.app)
         self.assertEqual(204, result.status_code)
         self.assertEqual("", result.text)
 
     def test_show_no_mixin(self):
         headers = {
             "Content-Type": "text/occi",
-            'Category': 'network; scheme="http://schema/resource#";class="kind"'
+            'Category': 'network;'
+                        ' scheme="http://schema/resource#";class="kind"'
         }
         result = webob.Request.blank("/foos/id890234",
-                                     method="GET", headers=headers).get_response(self.app)
+                                     method="GET",
+                                     headers=headers).get_response(self.app)
         self.assertEqual(204, result.status_code)
         self.assertEqual("", result.text)
 
@@ -91,9 +96,11 @@ class TestMiddleware(base.TestCase):
         headers = {
             "Content-Type": "text/occi",
             'X-OCCI-Attribute': 'tenant_id=t1, network_id=n1',
-            'Category': 'network; scheme="http://schema/resource#";class="kind"'
+            'Category': 'network;'
+                        ' scheme="http://schema/resource#";class="kind"'
         }
         result = webob.Request.blank("/foos/id890234",
-                                     method="GET", headers=headers).get_response(self.app)
+                                     method="GET",
+                                     headers=headers).get_response(self.app)
         self.assertEqual(204, result.status_code)
         self.assertEqual("", result.text)

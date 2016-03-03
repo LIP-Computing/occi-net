@@ -16,19 +16,19 @@
 
 from ooi.tests.tests_networks.integration import TestIntegration
 
-from ooi.tests.tests_networks.keystone.session import KeySession
-from ooi.wsgi.networks.middleware import OCCINetworkMiddleware
+from ooi.tests.tests_networks.integration.keystone.session import KeySession
+from ooi.wsgi import OCCIMiddleware
 
 
 class TestMiddleware(TestIntegration):
     def setUp(self):
         super(TestMiddleware, self).setUp()
-        self.app = OCCINetworkMiddleware(None,neutron_version="/v2.0",neutron_endpoint="127.0.0.1")
+        self.app = OCCIMiddleware(None, neutron_endpoint="http://127.0.0.1:9696/v2.0")
 
     def test_index(self):
         headers = {
             #'Category': 'network; scheme="http://schema#";class="kind";',
-            "X_OCCI_Attribute": 'project=%s' % (self.project_id),
+            "X_PROJECT_ID": self.project_id,
         }
         req = KeySession().create_request(self.session, headers=headers, path="/networks")
         result = req.get_response(self.app)
@@ -44,17 +44,18 @@ class TestMiddleware(TestIntegration):
     def test_create_delete_network(self):
         headers = {
             #'Category': 'network; scheme="http://schema#";class="kind";',
-            "X_OCCI_Attribute": 'project=%s, occi.core.title= pruebas' % (self.project_id),
+            "X_OCCI_Attribute": 'occi.core.title= pruebas, occi.network.ip_version=4, occi.networkinterface.address="10.1.0.1/10"',
+            "X_PROJECT_ID": self.project_id,
         }
         req = KeySession().create_request(self.session, path="/networks", headers=headers, method="POST")
         result = req.get_response(self.app)
         self.assertEqual(200, result.status_code)
 
-        net_id = result.text.split('\n')[2].split('=')[1];
+        net_id = result.text.split('\n')[5].split('=')[1].replace('"', '').strip()
         headers_delete = {
              "X_OCCI_Attribute": 'occi.core.id=%s' % net_id,
         }
-        req = KeySession().create_request(self.session, path="/networks", headers=headers_delete, method="DELETE")
+        req = KeySession().create_request(self.session, path="/networks/%s" % net_id, headers=headers_delete, method="DELETE")
         result = req.get_response(self.app)
         self.assertEqual(204, result.status_code)
 

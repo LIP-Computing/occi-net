@@ -14,6 +14,4 @@ Juno, the code will still work, but there are some dependencies that may be in
 conflict with the existing Python modules in your system, as long as missing
 dependencies (``oslo.log`` is not available in Juno)::
 
-    $ git clone https://github.com/LIP-Computing/occi-net.git
-    $ cd occinet
-    $ pip install .
+    $ pip install ooi
