@@ -112,7 +112,7 @@ class OCCIMiddleware(object):
         return _factory
 
     def __init__(self, application, openstack_version="/v2.1",
-                 neutron_endpoint="0.0.0.0"):
+                 neutron_endpoint="http://127.0.0.1:9696/v2.0"):
         self.application = application
         self.openstack_version = openstack_version
 
@@ -513,45 +513,11 @@ class Fault(webob.exc.HTTPException):
 
 
 #########################
-# NETWORK #########
+# NETWORK ##############
 ########################
-# class ResourceNet(Resource):
-#     def __init__(self, controller):
-#         super(ResourceNet, self).__init__(controller)
-#
-#     @staticmethod
-#     def _process_parameters(req):
-#         content = None
-#         param = None
-#         parser = req.get_parser()(req.headers, req.body)
-#         try:
-#             if 'Category' in req.headers:
-#                 param = parser.parse()
-#             else:
-#                 attrs = parser.parse_attributes(req.headers)
-#                 if attrs.__len__():
-#                     param = {"attributes": attrs}
-#         except:
-#             raise exception.Invalid
-#         if param:
-#             content = {"parameters": param}
-#         return content
-
-    # def __call__(self, request, args):
-    #     """Control the method dispatch."""
-    #     try:
-    #         with ResourceExceptionHandler():
-    #             parameters = self._process_parameters(request)
-    #     except Fault as ex:
-    #         return ex
-    #     if parameters:
-    #         args.update(parameters)
-    #     return super(ResourceNet,self).__call__(request,args)
-
-
 class OCCINetworkMiddleware(object):
 
-    def __init__(self, neutron_endpoint="0.0.0.0"):
+    def __init__(self, neutron_endpoint):
         super(OCCINetworkMiddleware, self).__init__()
         self.neutron_endpoint = neutron_endpoint
 

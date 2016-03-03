@@ -18,7 +18,7 @@ import json
 import mock
 
 from ooi.api.networks import helpers
-from ooi.api.networks import parsers
+from ooi.api.networks import utils
 from ooi.tests import base
 from ooi.tests.tests_networks import fakes
 
@@ -34,9 +34,9 @@ class TestNetOpenStackHelper(base.TestCase):
                                         "X_PROJECT_ID": "tenant_id",
                                         },
                             "subnet": {"occi.core.id": "network_id",
-                                       "occi.network.ip_version": "ip_version",
-                                       "occi.networkinterface.address": "cidr",
-                                       "occi.networkinterface.gateway":
+                                       "org.openstack.network.ip_version": "ip_version",
+                                       "org.openstack.network.address": "cidr",
+                                       "org.openstack.network.gateway":
                                            "gateway_ip"
                                        }
                             }
@@ -192,9 +192,9 @@ class TestNetOpenStackHelper(base.TestCase):
                       "occi.core.id": net_id,
                       "occi.network.state": state,
                       "X_PROJECT_ID": project,
-                      "occi.network.ip_version": ip_version,
-                      "occi.networkinterface.address": cidr,
-                      "occi.networkinterface.gateway": gate_way
+                      "org.openstack.network.ip_version": ip_version,
+                      "org.openstack.network.address": cidr,
+                      "org.openstack.network.gateway": gate_way
                       }
         resp = fakes.create_fake_json_resp(
             {"network": {"id": net_id},
@@ -207,12 +207,12 @@ class TestNetOpenStackHelper(base.TestCase):
         self.assertEqual(net_id, ret["id"])
         ret2 = self.helper.create_subnet(None, parameters)
         self.assertEqual(subnet_id, ret2["id"])
-        param = parsers.translate_parameters(
+        param = utils.translate_parameters(
             self.translation["subnet"], parameters)
         m.assert_called_with(None,
                              path="/subnets",
                              content_type="application/json",
-                             body=json.dumps(parsers.make_body(
+                             body=json.dumps(utils.make_body(
                                  "subnet", param)),
                              method="POST")
 

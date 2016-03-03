@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from ooi.api.networks import parsers
+from ooi.api.networks import utils
 from ooi.tests import base
 from ooi.wsgi import parsers as parse_header
 
@@ -29,7 +29,7 @@ class TestParser(base.TestCase):
     def test_query_string(self):
         # TODO(jorgesece): the fake driver should be improved
         # to make parametriced query tests
-        query = parsers.get_query_string({"tenant_id": "foo",
+        query = utils.get_query_string({"tenant_id": "foo",
                                           "name": "public"})
 
         self.assertEqual(25, query.__len__())
@@ -72,7 +72,7 @@ class TestParser(base.TestCase):
 
     def test_make_body(self):
         parameters = {"tenant_id": "foo", "name": "public"}
-        body = parsers.make_body("network", parameters)
+        body = utils.make_body("network", parameters)
 
         self.assertIsNotNone(body["network"])
         self.assertEqual(2, body["network"].__len__())

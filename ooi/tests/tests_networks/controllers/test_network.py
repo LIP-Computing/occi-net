@@ -61,8 +61,8 @@ class TestNetworkController(base.TestController):
         for net in test_networks:
             schemes = {schema1: net}
             parameters = {"occi.core.title": "name",
-                          "occi.network.ip_version": 4,
-                          "occi.networkinterface.address": "0.0.0.0",
+                          "org.openstack.network.ip_version": 4,
+                          "org.openstack.network.address": "0.0.0.0",
                           }
             req = fakes.create_req_test(parameters, schemes)
             ret = self.controller.create(req)

@@ -20,8 +20,8 @@ import json
 import webob
 
 from ooi.api import helpers
-from ooi.api.networks import parsers
-from ooi import utils
+from ooi.api.networks import utils
+#from ooi import utils
 
 
 class OpenStackNet(helpers.BaseHelper):
@@ -37,14 +37,14 @@ class OpenStackNet(helpers.BaseHelper):
                                "X_PROJECT_ID": "tenant_id",
                                },
                    "subnet": {"occi.core.id": "network_id",
-                              "occi.network.ip_version": "ip_version",
-                              "occi.networkinterface.address": "cidr",
-                              "occi.networkinterface.gateway": "gateway_ip"
+                              "org.openstack.network.ip_version": "ip_version",
+                              "org.openstack.network.address": "cidr",
+                              "org.openstack.network.gateway": "gateway_ip"
                               }
                    }
     required = {"network": {"occi.core.title": "name",
-                            "occi.network.ip_version": "ip_version",
-                            "occi.networkinterface.address": "cidr",
+                            "org.openstack.network.ip_version": "ip_version",
+                            "org.openstack.network.address": "cidr",
                             }
                 }
 
@@ -107,9 +107,9 @@ class OpenStackNet(helpers.BaseHelper):
         :param parameters: parameters to filter results
         """
         resource = "network"
-        param = parsers.translate_parameters(
+        param = utils.translate_parameters(
             self.translation[resource], parameters)
-        query_string = parsers.get_query_string(param)
+        query_string = utils.get_query_string(param)
         return self._get_req(req, path=path,
                              query_string=query_string, method="GET")
 
@@ -122,9 +122,9 @@ class OpenStackNet(helpers.BaseHelper):
         :param parameters: parameters with values
         """
         path = "/%ss" % resource
-        param = parsers.translate_parameters(
+        param = utils.translate_parameters(
             self.translation[resource], parameters)
-        body = parsers.make_body(resource, param)
+        body = utils.make_body(resource, param)
         return self._get_req(req, path=path,
                              content_type="application/json",
                              body=json.dumps(body), method="POST")
@@ -137,7 +137,7 @@ class OpenStackNet(helpers.BaseHelper):
         :param req: the incoming request
         :param path: element location
         """
-        param = parsers.translate_parameters(
+        param = utils.translate_parameters(
             self.translation["network"], parameters)
         id = param["network_id"]
         path = "%s/%s" % (path, id)

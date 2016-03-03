@@ -55,9 +55,9 @@ def build_occi_network(network):
         'occi.core.id="%s"' % network_id,
         'occi.core.title="%s"' % name,
         'occi.network.state="%s"' % status,
-        'occi.network.ip_version="%s"' % subnet_info["ip_version"],
-        'occi.networkinterface.address="%s"' % subnet_info["cidr"],
-        'occi.networkinterface.gateway="%s"' % subnet_info["gateway_ip"],
+        'org.openstack.network.ip_version="%s"' % subnet_info["ip_version"],
+        'org.openstack.network.address="%s"' % subnet_info["cidr"],
+        'org.openstack.network.gateway="%s"' % subnet_info["gateway_ip"],
         ]
     result = []
     for c in cats:

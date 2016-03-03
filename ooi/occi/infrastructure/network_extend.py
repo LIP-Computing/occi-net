@@ -21,12 +21,11 @@ from ooi.occi.infrastructure import network
 
 
 class Network(network.NetworkResource):
-    attributes = attr.AttributeCollection(["occi.network.shared",
-                                           "occi.network.adminstate",
-                                           "occi.network.tenantid",
-                                           "occi.network.ip_version",
-                                           "occi.networkinterface.address",
-                                           "occi.networkinterface.gateway",
+    attributes = attr.AttributeCollection(["org.openstack.network.shared",
+                                           "org.openstack.network.tenantid",
+                                           "org.openstack.network.ip_version",
+                                           "org.openstack.network.address",
+                                           "org.openstack.network.gateway",
                                            ])
     scheme = helpers.build_scheme("infrastructure/network",)
     term = "networks"
@@ -36,57 +35,49 @@ class Network(network.NetworkResource):
 
     def __init__(self, title=None, summary=None,
                  id=None, vlan=None, label=None, state=None,
-                 shared=None, adminstate=None, tenantid=None,
+                 shared=None, tenantid=None,
                  address=None, gateway=None, ip_version=None):
+
         super(Network, self).__init__(title=title,
                                       summary=summary, id=id, vlan=vlan,
                                       label=label, state=state)
-        self.attributes["occi.network.shared"] = attr.MutableAttribute(
-            "occi.network.shared", shared)
-        self.attributes["occi.network.adminstate"] = attr.MutableAttribute(
-            "occi.network.adminstate", adminstate)
-        self.attributes["occi.network.tenantid"] = attr.MutableAttribute(
-            "occi.network.tenantid", tenantid)
+        self.attributes["org.openstack.network.shared"] = attr.MutableAttribute(
+            "org.openstack.network.shared", shared)
+        self.attributes["org.openstack.network.tenantid"] = attr.MutableAttribute(
+            "org.openstack.network.tenantid", tenantid)
         # subnet
-        self.attributes["occi.network.ip_version"] = (
+        self.attributes["org.openstack.network.ip_version"] = (
             attr.InmutableAttribute(
-                "occi.network.ip_version", ip_version))
-        self.attributes["occi.networkinterface.address"] = (
+                "org.openstack.network.ip_version", ip_version))
+        self.attributes["org.openstack.network.address"] = (
             attr.InmutableAttribute(
-                "occi.networkinterface.address", address))
-        self.attributes["occi.networkinterface.gateway"] = (
+                "org.openstack.network.address", address))
+        self.attributes["org.openstack.network.gateway"] = (
             attr.InmutableAttribute(
-                "occi.networkinterface.gateway", gateway))
+                "org.openstack.network.gateway", gateway))
+
 
     @property
     def shared(self):
-        return self.attributes["occi.network.shared"].value
+        return self.attributes["org.openstack.network.shared"].value
 
     @shared.setter
     def shared(self, value):
-        self.attributes["occi.network.shared"].value = value
-
-    @property
-    def adminstate(self):
-        return self.attributes["occi.network.adminstate"].value
-
-    @adminstate.setter
-    def adminstate(self, value):
-        self.attributes["occi.network.adminstate"].value = value
+        self.attributes["org.openstack.network.shared"].value = value
 
     @property
     def tenantid(self):
-        return self.attributes["occi.network.tenantid"].value
+        return self.attributes["org.openstack.network.tenantid"].value
 
     # SUBRED
     @property
     def ip_version(self):
-        return self.attributes["occi.network.ip_version"].value
+        return self.attributes["org.openstack.network.ip_version"].value
 
     @property
     def address(self):
-        return self.attributes["occi.networkinterface.address"].value
+        return self.attributes["org.openstack.network.address"].value
 
     @property
     def gateway(self):
-        return self.attributes["occi.networkinterface.gateway"].value
+        return self.attributes["org.openstack.network.gateway"].value

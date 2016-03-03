@@ -16,7 +16,7 @@
 
 import ooi.api.base
 from ooi.api.networks import helpers
-from ooi.api.networks import parsers
+from ooi.api.networks import utils
 from ooi import exception
 from ooi.occi.core import collection
 from ooi.occi.infrastructure import network_extend
@@ -44,7 +44,7 @@ class Controller(ooi.api.base.Controller):
         :param req: request
         """
         try:
-            parameters = parsers.process_parameters(req)
+            parameters = utils.process_parameters(req)
             if not parameters:
                 return None
             if "attributes" in parameters:
@@ -80,7 +80,7 @@ class Controller(ooi.api.base.Controller):
         occi_network_resources = []
         if networks_list:
             for s in networks_list:
-                s["status"] = parsers.network_status(s["status"])
+                s["status"] = utils.network_status(s["status"])
                 n_id = s["id"]
                 n_status = s["status"]
                 n_name = s["name"]
