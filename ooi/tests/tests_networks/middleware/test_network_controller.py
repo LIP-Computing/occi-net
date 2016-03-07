@@ -41,6 +41,12 @@ def build_occi_network(network):
                 ' rel='
                 '"http://schemas.ogf.org/occi/infrastructure#network";'
                 ' location="%s/networks/"' % app_url)
+    cats.append('%s; '
+            'scheme="http://schemas.openstack.org/template/os#"; '
+            'class="mixin"; title="%s"; '
+            'rel="http://schemas.ogf.org/occi/infrastructure#os_tpl"; '
+            'location="%s/os_tpl/%s"'
+            % (subnet_info["cidr"], subnet_info["gateway_ip"], app_url, image_id)),
     links = []
     links.append('<%s/networks/%s?action=up>; '
                  'rel="http://schemas.ogf.org/occi/'
@@ -56,9 +62,9 @@ def build_occi_network(network):
         'occi.core.title="%s"' % name,
         'occi.network.state="%s"' % status,
         'org.openstack.network.ip_version="%s"' % subnet_info["ip_version"],
-        'occi.network.address="%s"' % subnet_info["cidr"],
-        'occi.network.gateway="%s"' % subnet_info["gateway_ip"],
         ]
+    attrs_ip = ['occi.network.address="%s"' % subnet_info["cidr"],
+                'occi.network.gateway="%s"' % subnet_info["gateway_ip"],]
     result = []
     for c in cats:
         result.append(("Category", c))
@@ -108,7 +114,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
         tenant = fakes.tenants["foo"]
         m.return_value = collection.Collection(
             create_occi_results(fakes.networks[tenant['id']]))
-        req = self._build_req("/networks", method="GET")
+        req = self._build_req("/networkmanagement", method="GET")
         resp = req.get_response(self.app)
 
         self.assertEqual(200, resp.status_code)
@@ -117,7 +123,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
             expected.append(
                 ("X-OCCI-Location",
                  utils.join_url(self.application_url + "/",
-                                "networks/%s" % s["id"]))
+                                "networkmanagement/%s" % s["id"]))
             )
         self.assertDefaults(resp)
         self.assertExpectedResult(expected, resp)
@@ -143,7 +149,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
 
         for n in fakes.networks[tenant["id"]]:
             m.return_value = create_occi_results([n])[0]
-            req = self._build_req("/networks/%s" % n["id"],
+            req = self._build_req("/networkmanagement/%s" % n["id"],
                                   method="GET")
             resp = req.get_response(self.app)
             expected = build_occi_network(n)

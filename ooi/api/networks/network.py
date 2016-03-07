@@ -15,11 +15,11 @@
 # under the License.
 
 import ooi.api.base
+from ooi import exception
 from ooi.api.networks import helpers
 from ooi.api.networks import utils
-from ooi import exception
 from ooi.occi.core import collection
-from ooi.occi.infrastructure import network_extend
+from ooi.occi.infrastructure.network_management import network_extend
 
 
 def _build_network(name, prefix=None):
@@ -89,11 +89,12 @@ class Controller(ooi.api.base.Controller):
                     n_cidr = s["subnet_info"]["cidr"]
                     n_ip_version = s["subnet_info"]["ip_version"]
                     n_gateway = s["subnet_info"]["gateway_ip"]
+                    n_ip = network_extend.NetworkIP(address=n_cidr, gateway=n_gateway)
                     s = network_extend.Network(title=n_name,
                                                id=n_id, state=n_status,
-                                               address=n_cidr,
                                                ip_version=n_ip_version,
-                                               gateway=n_gateway)
+                                               mixins=[n_ip]
+                                               )
                 else:
                     s = network_extend.Network(title=n_name,
                                                id=n_id, state=n_status)

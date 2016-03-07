@@ -15,10 +15,10 @@
 # under the License.
 import mock
 
+from ooi import exception
 from ooi.api.networks import helpers
 from ooi.api.networks import network
-from ooi import exception
-from ooi.occi.infrastructure import network_extend
+from ooi.occi.infrastructure.network_management import network_extend
 from ooi.tests import base
 from ooi.tests.tests_networks import fakes
 
