@@ -83,9 +83,9 @@ class TestIntegrationNetwork(TestIntegration):
         gateway = "11.0.0.3"
         #Create
         parameters ={"occi.core.title": self.new_network_name,
-                    "occi.network.ip_version": ip_version,
-                    "occi.networkinterface.address": cidr,
-                    "occi.networkinterface.gateway": gateway,
+                    "org.openstack.network.ip_version": ip_version,
+                    "occi.network.address": cidr,
+                    "occi.network.gateway": gateway,
                      }
         self.req.headers = fakes.create_header(parameters,None,self.project_id)
         net = self.controller.create(self.req)

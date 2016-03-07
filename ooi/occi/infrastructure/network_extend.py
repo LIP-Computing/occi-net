@@ -28,9 +28,9 @@ class Network(network.NetworkResource):
                                            "occi.network.gateway",
                                            ])
     scheme = helpers.build_scheme("infrastructure/network",)
-    term = "networks"
+    term = "networkmanagement"
     kind = kind.Kind(scheme, term, 'network extended', attributes=attributes,
-                     location='networks/',
+                     location="networkmanagement/",
                      related=[network.NetworkResource.kind])
 
     def __init__(self, title=None, summary=None,
@@ -47,13 +47,13 @@ class Network(network.NetworkResource):
             "org.openstack.network.tenantid", tenantid)
         # subnet
         self.attributes["org.openstack.network.ip_version"] = (
-            attr.InmutableAttribute(
+            attr.MutableAttribute(
                 "org.openstack.network.ip_version", ip_version))
         self.attributes["occi.network.address"] = (
-            attr.InmutableAttribute(
+            attr.MutableAttribute(
                 "occi.network.address", address))
         self.attributes["occi.network.gateway"] = (
-            attr.InmutableAttribute(
+            attr.MutableAttribute(
                 "occi.network.gateway", gateway))
 
 
@@ -69,15 +69,31 @@ class Network(network.NetworkResource):
     def tenantid(self):
         return self.attributes["org.openstack.network.tenantid"].value
 
+    @property
+    def tenantid(self, value):
+        self.attributes["org.openstack.network.tenantid"].value = value
+
     # SUBRED
     @property
     def ip_version(self):
         return self.attributes["org.openstack.network.ip_version"].value
 
+    @ip_version.setter
+    def ip_version(self, value):
+        self.attributes["org.openstack.network.ip_version"].value = value
+
     @property
     def address(self):
         return self.attributes["occi.network.address"].value
 
+    @address.setter
+    def address(self, value):
+        self.attributes["occi.network.address"].value = value
+
     @property
     def gateway(self):
         return self.attributes["occi.network.gateway"].value
+
+    @gateway.setter
+    def gateway(self,value):
+        self.attributes["occi.network.gateway"].value = value

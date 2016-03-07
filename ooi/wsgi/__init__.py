@@ -543,6 +543,6 @@ class OCCINetworkMiddleware(object):
                        action="delete", conditions=dict(method=["DELETE"]))
 
     def setup_net_routes(self, mapper, resources):
-        resources["networks"] = self._create_net_resource(
+        resources["networkmanagement"] = self._create_net_resource(
             ooi.api.networks.network.Controller)
-        self._setup_net_resources_routes("networks", resources["networks"], mapper)
+        self._setup_net_resources_routes("networkmanagement", resources["networkmanagement"], mapper)

@@ -15,7 +15,7 @@
 # under the License.
 
 from ooi.tests import base
-from ooi.wsgi.networks import parsers
+from ooi.api.networks import utils
 from  ooi.wsgi.parsers import HeaderParser
 
 
@@ -27,7 +27,7 @@ class TestParser(base.TestCase):
        # self.driver = OpenStackNet
 
     def test_query_string(self): #TODO(jorgesece): the fake driver should be improved to make parametriced query tests
-        query = parsers.get_query_string({"tenant_id" : "foo", "name" : "public"})
+        query = utils.get_query_string({"tenant_id" : "foo", "name" : "public"})
 
         self.assertEqual(25, query.__len__())
 
@@ -64,7 +64,7 @@ class TestParser(base.TestCase):
 
     def test_make_body(self):
         parameters = {"tenant_id" : "foo", "name" : "public"}
-        body = parsers.make_body("network", parameters)
+        body = utils.make_body("network", parameters)
 
         self.assertIsNotNone(body["network"])
         self.assertEqual(2, body["network"].__len__())

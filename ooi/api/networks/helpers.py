@@ -20,9 +20,8 @@ import json
 import webob
 
 from ooi.api import helpers
-from ooi.api.networks import utils
-#from ooi import utils
-
+from ooi.api.networks import utils as ooi_utils
+from ooi import utils
 
 class OpenStackNet(helpers.BaseHelper):
     """Class to interact with the neutron API."""
@@ -107,9 +106,9 @@ class OpenStackNet(helpers.BaseHelper):
         :param parameters: parameters to filter results
         """
         resource = "network"
-        param = utils.translate_parameters(
+        param = ooi_utils.translate_parameters(
             self.translation[resource], parameters)
-        query_string = utils.get_query_string(param)
+        query_string = ooi_utils.get_query_string(param)
         return self._get_req(req, path=path,
                              query_string=query_string, method="GET")
 
@@ -122,9 +121,9 @@ class OpenStackNet(helpers.BaseHelper):
         :param parameters: parameters with values
         """
         path = "/%ss" % resource
-        param = utils.translate_parameters(
+        param = ooi_utils.translate_parameters(
             self.translation[resource], parameters)
-        body = utils.make_body(resource, param)
+        body = ooi_utils.make_body(resource, param)
         return self._get_req(req, path=path,
                              content_type="application/json",
                              body=json.dumps(body), method="POST")
@@ -137,7 +136,7 @@ class OpenStackNet(helpers.BaseHelper):
         :param req: the incoming request
         :param path: element location
         """
-        param = utils.translate_parameters(
+        param = ooi_utils.translate_parameters(
             self.translation["network"], parameters)
         id = param["network_id"]
         path = "%s/%s" % (path, id)
