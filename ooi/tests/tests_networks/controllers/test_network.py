@@ -16,9 +16,9 @@
 import mock
 
 from ooi.api.networks import helpers
-from ooi.api.networks import network
+from ooi.api.networks import network as network
 from ooi import exception
-from ooi.occi.infrastructure import network_extend
+from ooi.occi.infrastructure import network as occi_network
 from ooi.tests import base
 from ooi.tests.tests_networks import fakes
 
@@ -50,13 +50,13 @@ class TestNetworkController(base.TestController):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         for net in test_networks:
             ret = self.controller.show(None, net["id"])
-            self.assertIsInstance(ret, network_extend.Network)
+            self.assertIsInstance(ret, occi_network.NetworkResource)
 
     @mock.patch.object(helpers.OpenStackNet, "create_network")
     @mock.patch.object(helpers.OpenStackNet, "create_subnet")
     def test_create(self, m_sub, m_network):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
-        schema1 = network_extend.Network.scheme
+        schema1 = occi_network.NetworkResource.kind.scheme
         # m_network.return_value = {"id":"xxx"}
         for net in test_networks:
             schemes = {schema1: net}
@@ -66,13 +66,13 @@ class TestNetworkController(base.TestController):
                           }
             req = fakes.create_req_test(parameters, schemes)
             ret = self.controller.create(req)
-            self.assertIsInstance(ret, network_extend.Network)
+            self.assertIsInstance(ret, occi_network.NetworkResource)
 
     @mock.patch.object(helpers.OpenStackNet, "create_network")
     @mock.patch.object(helpers.OpenStackNet, "create_subnet")
     def test_create_Error(self, m_sub, m_network):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
-        schema1 = network_extend.Network.scheme
+        schema1 = occi_network.NetworkResource.kind.scheme
         net = test_networks[0]
         schemes = {schema1: net}
         parameters = {"occi.core.title": "name",
@@ -99,7 +99,7 @@ class TestNetworkController(base.TestController):
         self.assertIsInstance(ret, list)
         self.assertIsNot(ret.__len__(), 0)
         for net_ret in ret:
-            self.assertIsInstance(net_ret, network_extend.Network)
+            self.assertIsInstance(net_ret, occi_network.NetworkResource)
 
     def test_filter_attributes(self):
         attr_dic = {'attr1': '0', 'attr2': '1', 'attr3': '2'}

@@ -22,6 +22,7 @@ from ooi.tests.tests_networks.middleware import test_middleware
 from ooi import utils
 
 
+
 def build_occi_network(network):
     name = network["name"]
     network_id = network["id"]
@@ -34,19 +35,28 @@ def build_occi_network(network):
 
     app_url = fakes.application_url
     cats = []
-    cats.append('networkmanagement; '
+    cats.append('network; '
                 'scheme='
-                '"http://schemas.ogf.org/occi/infrastructure/network#";'
-                ' class="kind"; title="network extended";'
+                '"http://schemas.ogf.org/occi/infrastructure#";'
+                ' class="kind"; title="network resource";'
                 ' rel='
-                '"http://schemas.ogf.org/occi/infrastructure#network";'
-                ' location="%s/networkmanagement/"' % app_url)
+                '"http://schemas.ogf.org/occi/core#resource";'
+                ' location="%s/network/"' % app_url)
+    cats.append('osnetwork; '
+                'scheme='
+                '"http://schemas.openstack.org/infrastructure/network#";'
+                ' class="mixin"; title="openstack network"')
+    cats.append('ipnetwork; '
+                'scheme='
+                '"http://schemas.openstack.org/infrastructure/network#";'
+                ' class="mixin"; title="IP Networking Mixin"')
+
     links = []
-    links.append('<%s/networkmanagement/%s?action=up>; '
+    links.append('<%s/network/%s?action=up>; '
                  'rel="http://schemas.ogf.org/occi/'
                  'infrastructure/network/action#up"' %
                  (fakes.application_url, network_id))
-    links.append('<%s/networkmanagement/%s?action=down>; '
+    links.append('<%s/network/%s?action=down>; '
                  'rel="http://schemas.ogf.org/occi/'
                  'infrastructure/network/action#down"' %
                  (fakes.application_url, network_id))
@@ -92,7 +102,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
             'Category': 'network; scheme="http://schema#";class="kind";',
             'X_OCCI_Attribute': 'project=%s' % tenant["id"],
         }
-        url = "/networkmanagement"
+        url = "/network"
         req = self._build_req(url, method="GET",
                               headers=headers, content_type="text/occi")
         m.return_value = collection.Collection(
@@ -108,7 +118,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
         tenant = fakes.tenants["foo"]
         m.return_value = collection.Collection(
             create_occi_results(fakes.networks[tenant['id']]))
-        req = self._build_req("/networkmanagement", method="GET")
+        req = self._build_req("/network", method="GET")
         resp = req.get_response(self.app)
 
         self.assertEqual(200, resp.status_code)
@@ -117,7 +127,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
             expected.append(
                 ("X-OCCI-Location",
                  utils.join_url(self.application_url + "/",
-                                "networkmanagement/%s" % s["id"]))
+                                "network/%s" % s["id"]))
             )
         self.assertDefaults(resp)
         self.assertExpectedResult(expected, resp)
@@ -126,13 +136,13 @@ class TestNetworkController(test_middleware.TestMiddleware):
     def test_create(self, m):
         tenant = fakes.tenants["foo"]
         headers = {
-            'Category': 'networkmanagement; scheme="http://schema#";class="kind",' +
+            'Category': 'network; scheme="http://schema#";class="kind",' +
                         'mixinID;'
                         'scheme="http://schemas.openstack.org/template/os#";'
                         ' class=mixin',
             'X_Occi_Attribute': 'project=%s' % tenant["id"],
         }
-        req = self._build_req("/networkmanagement", method="POST", headers=headers)
+        req = self._build_req("/network", method="POST", headers=headers)
         m.return_value = create_occi_results(fakes.networks[tenant['id']])
         resp = req.get_response(self.app)
         self.assertEqual(200, resp.status_code)
@@ -143,7 +153,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
 
         for n in fakes.networks[tenant["id"]]:
             m.return_value = create_occi_results([n])[0]
-            req = self._build_req("/networkmanagement/%s" % n["id"],
+            req = self._build_req("/network/%s" % n["id"],
                                   method="GET")
             resp = req.get_response(self.app)
             expected = build_occi_network(n)
@@ -156,7 +166,7 @@ class TestNetworkController(test_middleware.TestMiddleware):
         tenant = fakes.tenants["foo"]
         for n in fakes.networks[tenant["id"]]:
             m.return_value = create_occi_results([])
-            req = self._build_req("/networkmanagement/%s" % n["id"],
+            req = self._build_req("/network/%s" % n["id"],
                                   method="DELETE")
             resp = req.get_response(self.app)
             self.assertEqual(204, resp.status_code)

@@ -217,10 +217,10 @@ class OCCIMiddleware(object):
         self._setup_resource_routes("networklink",
                                     self.resources["networklink"])
 
-        self.resources["network"] = self._create_resource(
-            ooi.api.network.Controller)
-        self._setup_resource_routes("network",
-                                    self.resources["network"])
+        # self.resources["network"] = self._create_resource(
+        #     ooi.api.network.Controller)
+        # self._setup_resource_routes("network",
+        #                             self.resources["network"])
 
     @webob.dec.wsgify(RequestClass=Request)
     def __call__(self, req):
@@ -543,6 +543,6 @@ class OCCINetworkMiddleware(object):
                        action="delete", conditions=dict(method=["DELETE"]))
 
     def setup_net_routes(self, mapper, resources):
-        resources["networkmanagement"] = self._create_net_resource(
+        resources["network"] = self._create_net_resource(
             ooi.api.networks.network.Controller)
-        self._setup_net_resources_routes("networkmanagement", resources["networkmanagement"], mapper)
+        self._setup_net_resources_routes("network", resources["network"], mapper)

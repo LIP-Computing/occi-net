@@ -19,15 +19,15 @@ from ooi.api.networks import helpers
 from ooi.api.networks import utils
 from ooi import exception
 from ooi.occi.core import collection
-from ooi.occi.infrastructure import network_extend
-
+from ooi.openstack import network as os_network
+from ooi.occi.infrastructure import network
 
 def _build_network(name, prefix=None):
     if prefix:
         network_id = '/'.join([prefix, name])
     else:
         network_id = name
-    return network_extend.Network(title=name, id=network_id, state="active")
+    return network.Network(title=name, id=network_id, state="active")
 
 
 class Controller(ooi.api.base.Controller):
@@ -89,13 +89,13 @@ class Controller(ooi.api.base.Controller):
                     n_cidr = s["subnet_info"]["cidr"]
                     n_ip_version = s["subnet_info"]["ip_version"]
                     n_gateway = s["subnet_info"]["gateway_ip"]
-                    s = network_extend.Network(title=n_name,
-                                               id=n_id, state=n_status,
-                                               address=n_cidr,
-                                               ip_version=n_ip_version,
-                                               gateway=n_gateway)
+                    os_net = os_network.OSNetwork(ip_version=n_ip_version)
+                    os_ip_net = os_network.OSIPNetwork(address=n_cidr, gateway=n_gateway)
+                    s = network.NetworkResource(title=n_name,
+                                                id=n_id, state=n_status,
+                                                mixins=[os_net,os_ip_net])
                 else:
-                    s = network_extend.Network(title=n_name,
+                    s = network.NetworkResource(title=n_name,
                                                id=n_id, state=n_status)
                 occi_network_resources.append(s)
         return occi_network_resources

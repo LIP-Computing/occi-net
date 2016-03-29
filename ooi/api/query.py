@@ -85,15 +85,15 @@ class Controller(base.Controller):
         l.append(storage_link.StorageLink.kind)
         l.extend(storage.StorageResource.actions)
 
-        # OCCI infra Networks Management:
-        l.append(network_extend.Network.kind)
 
         # OCCI infra network
         l.append(network.NetworkResource.kind)
         l.extend(network.NetworkResource.actions)
         l.append(network.ip_network)
+        l.append(os_network.OSNetwork)
         l.append(network_link.NetworkInterface.kind)
         l.append(network_link.ip_network_interface)
+
 
         # OCCI infra compute mixins
         l.append(infra_templates.os_tpl)

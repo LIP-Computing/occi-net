@@ -91,6 +91,7 @@ class TestQueryController(base.TestController):
             network.up,
             network.down,
             network.ip_network,
+            os_network.OSNetwork,
             network_link.NetworkInterface.kind,
             network_link.ip_network_interface,
 
