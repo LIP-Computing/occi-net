@@ -17,6 +17,7 @@
 from ooi.occi.core import attribute as attr
 from ooi.occi.core import mixin
 from ooi.occi.infrastructure import network_link
+from ooi.occi.infrastructure import network
 from ooi.openstack import helpers
 
 
@@ -72,3 +73,71 @@ class OSNetworkInterface(network_link.NetworkInterface):
     @allocation.setter
     def allocation(self, value):
         self.attributes["occi.networkinterface.allocation"].value = value
+
+
+class OSNetwork(mixin.Mixin):
+    scheme = helpers.build_scheme("infrastructure/network")
+
+    def __init__(self, shared, ip_version, external_gateway=None):
+        attrs = [
+            attr.InmutableAttribute("org.openstack.network.shared", shared),
+            attr.InmutableAttribute("org.openstack.network.ip_version", ip_version),
+            attr.InmutableAttribute("org.openstack.network.external_gateway", external_gateway),
+        ]
+        attrs = attr.AttributeCollection({a.name: a for a in attrs})
+
+        scheme = helpers.build_scheme("infrastructure/network")
+        term = "osnetwork"
+        title = "openstack network"
+
+        super(OSNetwork, self).__init__(
+            scheme=scheme,
+            term=term,
+            title=title,
+            attributes=attrs
+            )
+
+    @property
+    def shared(self):
+        return self.attributes["org.openstack.network.shared"].value
+
+    @property
+    def ip_version(self):
+        return self.attributes["org.openstack.network.ip_version"].value
+
+    @property
+    def external_gateway(self):
+        return self.attributes["org.openstack.network.external_gateway"].value
+
+
+class OSIPNetwork(network.ip_network):
+
+
+    def __init__(self, address, gateway, allocation=None):
+        attrs = [
+            attr.InmutableAttribute("occi.network.address", address),
+            attr.InmutableAttribute("occi.network.gateway", gateway),
+            attr.InmutableAttribute("occi.network.allocation", allocation),
+        ]
+        attrs = attr.AttributeCollection({a.name: a for a in attrs})
+
+        scheme = helpers.build_scheme("infrastructure/network")
+        term = "osnetwork"
+        title = "openstack network"
+
+        super(OSIPNetwork, self).__init__(
+            scheme=helpers.build_scheme("infrastructure/network"),
+            term="ipnetwork", title="IP Networking Mixin",
+            attributes=attrs)
+
+    @property
+    def address(self):
+        return self.attributes["oocci.network.network.address"].value
+
+    @property
+    def gateway(self):
+        return self.attributes["oocci.network.network.gateway"].value
+
+    @property
+    def allocation(self):
+        return self.attributes["occi.network.network.allocation"].value

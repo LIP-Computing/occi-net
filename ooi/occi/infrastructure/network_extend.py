@@ -20,7 +20,7 @@ from ooi.occi import helpers
 from ooi.occi.infrastructure import network
 
 
-class Network(network.NetworkResource):
+class Network2(network.NetworkResource):
     attributes = attr.AttributeCollection(["org.openstack.network.shared",
                                            "org.openstack.network.tenantid",
                                            "org.openstack.network.ip_version",
