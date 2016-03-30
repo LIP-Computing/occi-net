@@ -78,11 +78,11 @@ class OSNetworkInterface(network_link.NetworkInterface):
 class OSNetwork(mixin.Mixin):
     scheme = helpers.build_scheme("infrastructure/network")
 
-    def __init__(self, shared=None, ip_version=None, external_gateway=None):
+    def __init__(self, ip_version, shared=False, public=False):
         attrs = [
             attr.InmutableAttribute("org.openstack.network.shared", shared),
-            attr.InmutableAttribute("org.openstack.network.ip_version", ip_version),
-            attr.InmutableAttribute("org.openstack.network.external_gateway", external_gateway),
+            attr.InmutableAttribute("org.openstack.network.public", public),
+            attr.InmutableAttribute("org.openstack.network.ip_version", ip_version)
         ]
         attrs = attr.AttributeCollection({a.name: a for a in attrs})
 
@@ -102,12 +102,13 @@ class OSNetwork(mixin.Mixin):
         return self.attributes["org.openstack.network.shared"].value
 
     @property
+    def shared(self):
+        return self.attributes["org.openstack.network.public"].value
+
+    @property
     def ip_version(self):
         return self.attributes["org.openstack.network.ip_version"].value
 
-    @property
-    def external_gateway(self):
-        return self.attributes["org.openstack.network.external_gateway"].value
 
 
 class OSIPNetwork(mixin.Mixin):

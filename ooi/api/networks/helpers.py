@@ -33,6 +33,8 @@ class OpenStackNet(helpers.BaseHelper):
     translation = {"network": {"occi.core.title": "name",
                                "occi.core.id": "network_id",
                                "occi.network.state": "status",
+                               "org.openstack.network.public": "router:external",
+                               "org.openstack.network.shared": "shared",
                                "X_PROJECT_ID": "tenant_id",
                                },
                    "subnet": {"occi.core.id": "network_id",

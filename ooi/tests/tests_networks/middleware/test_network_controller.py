@@ -22,7 +22,6 @@ from ooi.tests.tests_networks.middleware import test_middleware
 from ooi import utils
 
 
-
 def build_occi_network(network):
     name = network["name"]
     network_id = network["id"]
@@ -66,6 +65,8 @@ def build_occi_network(network):
         'occi.core.title="%s"' % name,
         'occi.network.state="%s"' % status,
         'org.openstack.network.ip_version="%s"' % subnet_info["ip_version"],
+        'org.openstack.network.public="false"',
+        'org.openstack.network.shared="false"',
         'occi.network.address="%s"' % subnet_info["cidr"],
         'occi.network.gateway="%s"' % subnet_info["gateway_ip"],
         ]
