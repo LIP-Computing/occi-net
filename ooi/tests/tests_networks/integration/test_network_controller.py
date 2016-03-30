@@ -19,8 +19,8 @@ from ooi.tests.tests_networks.integration import  TestIntegration
 
 from ooi import exception
 from ooi.wsgi import Request
-from ooi.api.networks import network
-from ooi.occi.infrastructure import network_extend
+from ooi.api.networks import network as net_controler
+from ooi.occi.infrastructure import network
 from ooi.tests.tests_networks.integration.keystone.session import KeySession
 from ooi.tests.tests_networks import fakes
 
@@ -32,11 +32,11 @@ class TestIntegrationNetwork(TestIntegration):
         super(TestIntegrationNetwork, self).setUp()
         self.req = Request(KeySession().create_request(self.session, path="/", environ={}, headers=None).environ)
 
-        self.controller = network.Controller("http://127.0.0.1:9696/v2.0")
+        self.controller = net_controler.Controller("http://127.0.0.1:9696/v2.0")
 
     def test_list(self):
         list = self.controller.index(self.req)
-        self.assertIsInstance(list.resources[0], network_extend.Network)
+        self.assertIsInstance(list.resources[0], network.NetworkResource)
         sortedList = sorted(list.resources, key=lambda Network: Network.title, reverse=True)
         self.assertEqual("public", sortedList[0].title)
 
@@ -44,7 +44,7 @@ class TestIntegrationNetwork(TestIntegration):
         self.req.headers = fakes.create_header(None,None, self.project_id)
         list = self.controller.index(self.req)
         sortedList = sorted(list.resources, key=lambda Network: Network.title, reverse=True)
-        self.assertIsInstance(sortedList[0], network_extend.Network)
+        self.assertIsInstance(sortedList[0], network.NetworkResource)
       #  self.assertEqual("public", sortedList[0].title)
 
     def test_list_by_tenant_error(self):

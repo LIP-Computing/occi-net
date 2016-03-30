@@ -30,13 +30,13 @@ class TestMiddleware(TestIntegration):
             #'Category': 'network; scheme="http://schema#";class="kind";',
             "X_PROJECT_ID": self.project_id,
         }
-        req = KeySession().create_request(self.session, headers=headers, path="/networkmanagement")
+        req = KeySession().create_request(self.session, headers=headers, path="/network")
         result = req.get_response(self.app)
         self.assertEqual(200, result.status_code)
         self.assertIsNot("", result.text)
 
     def test_show(self):
-        req = KeySession().create_request(self.session, path="/networkmanagement/%s" % self.public_network, method="GET")
+        req = KeySession().create_request(self.session, path="/network/%s" % self.public_network, method="GET")
         result = req.get_response(self.app)
         self.assertEqual(200, result.status_code)
         self.assertIsNot("", result.text)
@@ -50,7 +50,7 @@ class TestMiddleware(TestIntegration):
                                 'occi.network.address="%s", occi.network.gateway="%s"' % (cidr, gateway),
             "X_PROJECT_ID": self.project_id,
         }
-        req = KeySession().create_request(self.session, path="/networkmanagement", headers=headers, method="POST")
+        req = KeySession().create_request(self.session, path="/network", headers=headers, method="POST")
         result = req.get_response(self.app)
         self.assertEqual(200, result.status_code)
 
@@ -58,11 +58,11 @@ class TestMiddleware(TestIntegration):
         headers_delete = {
              "X_OCCI_Attribute": 'occi.core.id=%s' % net_id,
         }
-        req = KeySession().create_request(self.session, path="/networkmanagement/%s" % net_id, headers=headers_delete, method="DELETE")
+        req = KeySession().create_request(self.session, path="/network/%s" % net_id, headers=headers_delete, method="DELETE")
         result = req.get_response(self.app)
         self.assertEqual(204, result.status_code)
 
     def test_run_up_network(self):
-        req = KeySession().create_request(self.session, path="/networkmanagement/%s?action=up" % self.public_network, method="POST")
+        req = KeySession().create_request(self.session, path="/network/%s?action=up" % self.public_network, method="POST")
         result = req.get_response(self.app)
         self.assertEqual(404, result.status_code)
