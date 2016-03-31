@@ -17,11 +17,10 @@ import json
 
 import mock
 
-from ooi.api.networks import helpers
-from ooi.api.networks import utils
+from ooi.api import helpers
 from ooi.tests import base
 from ooi.tests.tests_networks import fakes
-
+from ooi import utils
 
 class TestNetOpenStackHelper(base.TestCase):
     def setUp(self):

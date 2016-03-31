@@ -35,10 +35,12 @@ class Controller(base.Controller):
         )
 
     def index(self, req):
+        # FIXME(jorgesece): include every IP linked with VMs
         floating_ips = self.os_helper.get_floating_ips(req)
         occi_link_resources = []
         for ip in floating_ips:
             if ip["instance_id"]:
+                # FIXME(jorgesece): create the full network
                 n = network.NetworkResource(title="network",
                                             id=network_api.FLOATING_PREFIX)
                 c = compute.ComputeResource(title="Compute",
@@ -56,6 +58,8 @@ class Controller(base.Controller):
             net_id = network_api.FIXED_PREFIX
         else:
             net_id = network_api.FLOATING_PREFIX
+            # FIXME(jorgesece): include every IP linked with VMs
+            # TODO(jorgesece):  get server from id, an then network
             floating_ips = self.os_helper.get_floating_ips(req)
             for ip in floating_ips:
                 if addr["addr"] == ip["ip"]:
@@ -67,6 +71,7 @@ class Controller(base.Controller):
         c = compute.ComputeResource(title="Compute", id=server_id)
         n = network.NetworkResource(title="network", id=net_id)
         # TODO(enolfc): get the MAC?
+        # FIXME(jorgesece): create the full network
         return os_network.OSNetworkInterface(c, n, "mac", addr["addr"],
                                              ip_id, pool)
 
@@ -121,6 +126,9 @@ class Controller(base.Controller):
         ip = self.os_helper.allocate_floating_ip(req, pool_name)
 
         # Add it to server
+        # FIXME(jorgesece): include FIXED IP linked with VMs
+        # TODO(jorgesece):  get server from id, an then network
+        # FIXME(jorgesece): create the full network
         self.os_helper.associate_floating_ip(req, server_id, ip["ip"])
         n = network.NetworkResource(title="network", id=net_id)
         c = compute.ComputeResource(title="Compute", id=server_id)
@@ -134,6 +142,7 @@ class Controller(base.Controller):
 
         # remove floating IP
         server = iface.source.id
+        # FIXME(jorgesece): include FIXED IP linked with VMs
         self.os_helper.remove_floating_ip(req, server, iface.address)
 
         # release IP

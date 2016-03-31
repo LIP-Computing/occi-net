@@ -15,19 +15,48 @@
 # under the License.
 
 import ooi.api.base
-from ooi.api.networks import helpers
-from ooi.api.networks import utils
+from ooi.api import helpers
 from ooi import exception
 from ooi.occi.core import collection
 from ooi.openstack import network as os_network
 from ooi.occi.infrastructure import network
 
-def _build_network(name, prefix=None):
+
+def build_network(name, prefix=None):
     if prefix:
         network_id = '/'.join([prefix, name])
     else:
         network_id = name
     return network.Network(title=name, id=network_id, state="active")
+
+
+def network_status(neutron_status):
+    if neutron_status == "ACTIVE":
+        return "active"
+    elif neutron_status == "SUSPENDED":
+        return "suspended"
+    else:
+        return "inactive"
+
+
+def process_parameters(req):
+    param = None
+    parser = req.get_parser()(req.headers, req.body)
+    if 'Category' in req.headers:
+        param = parser.parse()
+    else:
+        attrs = parser.parse_attributes(req.headers)
+        if attrs.__len__():
+            param = {"attributes": attrs}
+    if 'X_PROJECT_ID' in req.headers:
+        project_id = req.headers["X_PROJECT_ID"]
+        if param:
+            param["attributes"]["X_PROJECT_ID"] = (
+                project_id)
+        else:
+            param = {"attributes": {"X_PROJECT_ID": project_id}
+                     }
+    return param
 
 
 class Controller(ooi.api.base.Controller):
@@ -44,7 +73,7 @@ class Controller(ooi.api.base.Controller):
         :param req: request
         """
         try:
-            parameters = utils.process_parameters(req)
+            parameters = process_parameters(req)
             if not parameters:
                 return None
             if "attributes" in parameters:
@@ -80,7 +109,7 @@ class Controller(ooi.api.base.Controller):
         occi_network_resources = []
         if networks_list:
             for s in networks_list:
-                s["status"] = utils.network_status(s["status"])
+                s["status"] = network_status(s["status"])
                 n_id = s["id"]
                 n_status = s["status"]
                 n_name = s["name"]

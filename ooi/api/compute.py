@@ -39,12 +39,14 @@ def _create_network_link(addr, comp):
         net_id = network_api.FLOATING_PREFIX
     else:
         net_id = network_api.FIXED_PREFIX
+    # FIXME(jorgesece): create the full network addresses give the name:
+    # (addresses[{"net_name":{OS-EX-IP...}}])
     net = network.NetworkResource(title="network", id=net_id)
     return os_network.OSNetworkInterface(comp, net,
                                          addr["OS-EXT-IPS-MAC:mac_addr"],
                                          addr["addr"])
 
-
+0
 class Controller(ooi.api.base.Controller):
     def __init__(self, *args, **kwargs):
         super(Controller, self).__init__(*args, **kwargs)

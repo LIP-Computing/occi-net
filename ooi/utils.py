@@ -47,3 +47,34 @@ def join_url(base, parts):
             p = p[1:]
         url = urlparse.urljoin(url, p)
     return url
+
+
+def make_body(resource, parameters):
+        body = {resource: {}}
+        for key in parameters.keys():
+            body[resource][key] = parameters[key]
+
+        return body
+
+
+def get_query_string(parameters):
+        query_string = ""
+        if parameters is None:
+            return None
+
+        for key in parameters.keys():
+            query_string = ("%s%s=%s&" %
+                            (query_string, key, parameters[key]))
+
+        # delete last character
+        return query_string[:-1]
+
+
+def translate_parameters(translation, parameters):
+    if not parameters:
+        return parameters
+    out = {}
+    for key in parameters.keys():
+        if key in translation:
+            out[translation[key]] = parameters[key]
+    return out

@@ -130,12 +130,12 @@ class EntityRenderer(HeaderRenderer):
     @staticmethod
     def _render_attributes(attrs):
         ret = []
-        for a in attrs:
-            # FIXME(aloga): I dont like this test here
-            if attrs[a].value is None:
-                continue
-            r = AttributeRenderer(attrs[a])
-            ret.extend(r.render())
+        if attrs is not None:
+            for a in attrs:
+                # FIXME(aloga): I dont like this test here
+                if attrs[a].value is not None:
+                    r = AttributeRenderer(attrs[a])
+                    ret.extend(r.render())
         return ret
 
     def render(self, env={}):

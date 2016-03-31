@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from ooi.api.networks import utils
+from ooi import utils
 from ooi.tests import base
 from ooi.wsgi import parsers as parse_header
 
