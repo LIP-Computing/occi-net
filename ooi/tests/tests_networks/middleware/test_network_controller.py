@@ -15,7 +15,7 @@
 # under the License.
 import mock
 
-from ooi.api.networks import network
+from ooi.api import network
 from ooi.occi.core import collection
 from ooi.tests.tests_networks import fakes
 from ooi.tests.tests_networks.middleware import test_middleware

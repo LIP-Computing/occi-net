@@ -242,7 +242,7 @@ class OCCIMiddleware(object):
 
         # FIXME(jorgesece): control and improved it
         self.resources["network"] = Resource(
-            ooi.api.networks.network.Controller(self.neutron_endpoint))
+            ooi.api.network.Controller(self.neutron_endpoint))
         self._setup_neutron_resources_routes("network", self.resources["network"])
 
     @webob.dec.wsgify(RequestClass=Request)

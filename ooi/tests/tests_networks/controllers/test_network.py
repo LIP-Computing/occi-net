@@ -16,7 +16,7 @@
 import mock
 
 from ooi.api import helpers
-from ooi.api.networks import network as network
+from ooi.api import network
 from ooi import exception
 from ooi.occi.infrastructure import network as occi_network
 from ooi.tests import base
