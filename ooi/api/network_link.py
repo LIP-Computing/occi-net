@@ -27,12 +27,37 @@ from ooi.openstack import network as os_network
 
 
 class Controller(base.Controller):
-    def __init__(self, *args, **kwargs):
-        super(Controller, self).__init__(*args, **kwargs)
+    def __init__(self, app, openstack_version, neutron_endpoint):
+        super(Controller, self).__init__(app, openstack_version)
         self.os_helper = helpers.OpenStackHelper(
             self.app,
             self.openstack_version
         )
+        self.os_neutron_helper = helpers.OpenStackNet(
+            neutron_endpoint
+        )
+
+    def index2(self, req):
+        floating_ips = self.os_helper.get_floating_ips(req)
+        occi_link_resources = []
+        for ip in floating_ips:
+            parameters = {'devide_id=%s' % ip['instance_id']}
+            ports = self.os_neutron_helper.get_ports(req, parameters)
+            if ports.__len__() > 0:
+                net_id = ports[0]["network_id"]
+                n = network.NetworkResource(title="network",
+                                            id=net_id)
+                c = compute.ComputeResource(title="Compute",
+                                            id=ip["instance_id"])
+                # TODO(enolfc): get the MAC?
+                iface = os_network.OSNetworkInterface(c, n, "mac", ip["ip"],
+                                                      pool=ip["pool"])
+# {"ports": [{"status": "ACTIVE", "binding:host_id": "ubuntu", "allowed_address_pairs": [], "extra_dhcp_opts": [],
+#  "device_owner": "compute:nova", "binding:profile": {}, "fixed_ips": [{"subnet_id": "4bebdd47-215c-44a7-9a15-4f0ffdd7897d", "ip_address": "11.0.0.5"}],
+#  "id": "838781e8-693d-40e7-b3f5-f698985a6ac0", "security_groups": ["8830f4f5-e18a-48af-a5ba-0543ca699938"],
+#  "device_id": "1226a4c0-4190-46f6-a674-763c196ea18d", "name": "", "admin_state_up": true, "network_id": "2c9868b4-f71a-45d2-ba8c-dbf42f0b3120",
+#  "tenant_id": "86bf9730b23d4817b431f4c34cc9cc8e", "binding:vif_details": {"port_filter": true, "ovs_hybrid_plug": true}, "binding:vnic_type": "normal",
+#   "binding:vif_type": "ovs", "mac_address": "fa:16:3e:65:f3:6d"}]}
 
     def index(self, req):
         # FIXME(jorgesece): include every IP linked with VMs

@@ -144,9 +144,6 @@ class EntityRenderer(HeaderRenderer):
         for m in self.obj.mixins:
             ret.extend(MixinRenderer(m).render(env=env))
         ret.extend(self._render_attributes(self.obj.attributes))
-        for m in self.obj.mixins:
-        # FIXME(jorgesece): test mixing attribute rendering
-            ret.extend(self._render_attributes(m.attributes))
         return ret
 
 

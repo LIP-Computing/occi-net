@@ -23,7 +23,6 @@ import webob.dec
 import ooi.api.compute
 import ooi.api.network
 import ooi.api.network_link
-import ooi.api.networks.network
 from ooi.api import query
 import ooi.api.storage
 import ooi.api.storage_link
@@ -115,16 +114,20 @@ class OCCIMiddleware(object):
                  neutron_endpoint="http://127.0.0.1:9696/v2.0"):
         self.application = application
         self.openstack_version = openstack_version
-
+        self.neutron_endpoint = neutron_endpoint
         self.resources = {}
 
         self.mapper = routes.Mapper()
         self._setup_routes()
-        OCCINetworkMiddleware(neutron_endpoint).setup_net_routes(
-            mapper=self.mapper, resources=self.resources)
+        # OCCINetworkMiddleware(neutron_endpoint).setup_net_routes(
+        #     mapper=self.mapper, resources=self.resources)
 
     def _create_resource(self, controller):
         return Resource(controller(self.application, self.openstack_version))
+
+    def _create_net_resource(self, controller):
+        # fixme(jorgesece): wsgi unitttest do not work, it is not using FakeApp
+        return Resource(controller(self.neutron_endpoint))
 
     def _setup_resource_routes(self, resource, controller):
         path = "/" + resource
@@ -154,6 +157,23 @@ class OCCIMiddleware(object):
         self.mapper.connect(path + "/{id}", controller=controller,
                             action="run_action",
                             conditions=dict(method=["POST"]))
+
+    def _setup_neutron_resources_routes(self, resource, controller):
+        path = "/" + resource
+        # These two could be removed for total OCCI compliance
+        self.mapper.connect(resource, path, controller=controller,
+                       action="index", conditions=dict(method=["GET"]))
+        self.mapper.connect(resource, path, controller=controller,
+                       action="create", conditions=dict(method=["POST"]))
+        # OK
+        self.mapper.connect(resource, path + "/", controller=controller,
+                       action="index", conditions=dict(method=["GET"]))
+        self.mapper.connect(resource, path + "/", controller=controller,
+                       action="create", conditions=dict(method=["POST"]))
+        self.mapper.connect(resource, path + "/{id}", controller=controller,
+                       action="show", conditions=dict(method=["GET"]))
+        self.mapper.connect(resource, path + "/{id}", controller=controller,
+                       action="delete", conditions=dict(method=["DELETE"]))
 
     def _setup_routes(self):
         """Setup the mapper routes.
@@ -212,15 +232,18 @@ class OCCIMiddleware(object):
         self._setup_resource_routes("storagelink",
                                     self.resources["storagelink"])
 
-        self.resources["networklink"] = self._create_resource(
-            ooi.api.network_link.Controller)
+        # FIXME(jorgesece): control and improved it
+        self.resources["networklink"] = Resource(
+            ooi.api.network_link.Controller(self.application,
+                                            self.openstack_version,
+                                            self.neutron_endpoint))
         self._setup_resource_routes("networklink",
                                     self.resources["networklink"])
 
-        # self.resources["network"] = self._create_resource(
-        #     ooi.api.network.Controller)
-        # self._setup_resource_routes("network",
-        #                             self.resources["network"])
+        # FIXME(jorgesece): control and improved it
+        self.resources["network"] = Resource(
+            ooi.api.networks.network.Controller(self.neutron_endpoint))
+        self._setup_neutron_resources_routes("network", self.resources["network"])
 
     @webob.dec.wsgify(RequestClass=Request)
     def __call__(self, req):
@@ -512,37 +535,3 @@ class Fault(webob.exc.HTTPException):
         return self.wrapped_exc.__str__()
 
 
-#########################
-# NETWORK ##############
-########################
-class OCCINetworkMiddleware(object):
-
-    def __init__(self, neutron_endpoint):
-        super(OCCINetworkMiddleware, self).__init__()
-        self.neutron_endpoint = neutron_endpoint
-
-    def _create_net_resource(self, controller):
-        # fixme(jorgesece): wsgi unitttest do not work, it is not using FakeApp
-        return Resource(controller(self.neutron_endpoint))
-
-    def _setup_net_resources_routes(self, resource, controller, mapper):
-        path = "/" + resource
-        # These two could be removed for total OCCI compliance
-        mapper.connect(resource, path, controller=controller,
-                       action="index", conditions=dict(method=["GET"]))
-        mapper.connect(resource, path, controller=controller,
-                       action="create", conditions=dict(method=["POST"]))
-        # OK
-        mapper.connect(resource, path + "/", controller=controller,
-                       action="index", conditions=dict(method=["GET"]))
-        mapper.connect(resource, path + "/", controller=controller,
-                       action="create", conditions=dict(method=["POST"]))
-        mapper.connect(resource, path + "/{id}", controller=controller,
-                       action="show", conditions=dict(method=["GET"]))
-        mapper.connect(resource, path + "/{id}", controller=controller,
-                       action="delete", conditions=dict(method=["DELETE"]))
-
-    def setup_net_routes(self, mapper, resources):
-        resources["network"] = self._create_net_resource(
-            ooi.api.networks.network.Controller)
-        self._setup_net_resources_routes("network", resources["network"], mapper)

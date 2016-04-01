@@ -118,12 +118,13 @@ class Controller(ooi.api.base.Controller):
                     n_cidr = s["subnet_info"]["cidr"]
                     n_ip_version = s["subnet_info"]["ip_version"]
                     n_gateway = s["subnet_info"]["gateway_ip"]
-                    os_net = os_network.OSNetwork(ip_version=n_ip_version)
-                    os_ip_net = os_network.OSIPNetwork(address=n_cidr, gateway=n_gateway)
-                    s = network.NetworkResource(title=n_name,
-                                                id=n_id, state=n_status,
-                                                mixins=[os_net,os_ip_net])
+                    s = os_network.OSNetworkResource(title=n_name,
+                                                     id=n_id, state=n_status,
+                                                     ip_version=n_ip_version,
+                                                     address=n_cidr,
+                                                     gateway=n_gateway)
                 else:
+                    # FIXME(jorgesece): raise exception.NotFound()
                     s = network.NetworkResource(title=n_name,
                                                id=n_id, state=n_status)
                 occi_network_resources.append(s)

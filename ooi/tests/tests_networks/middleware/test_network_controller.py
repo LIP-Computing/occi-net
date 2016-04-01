@@ -41,14 +41,14 @@ def build_occi_network(network):
                 ' rel='
                 '"http://schemas.ogf.org/occi/core#resource";'
                 ' location="%s/network/"' % app_url)
+    cats.append('ipnetwork; '
+                'scheme='
+                '"http://schemas.ogf.org/occi/infrastructure/network#";'
+                ' class="mixin"; title="IP Networking Mixin"')
     cats.append('osnetwork; '
                 'scheme='
                 '"http://schemas.openstack.org/infrastructure/network#";'
                 ' class="mixin"; title="openstack network"')
-    cats.append('ipnetwork; '
-                'scheme='
-                '"http://schemas.openstack.org/infrastructure/network#";'
-                ' class="mixin"; title="IP Networking Mixin"')
 
     links = []
     links.append('<%s/network/%s?action=up>; '
