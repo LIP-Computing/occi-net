@@ -23,7 +23,6 @@ from ooi.occi.core import link
 from ooi.occi.core import resource
 from ooi.occi.infrastructure import compute
 from ooi.occi.infrastructure import network
-from ooi.occi.infrastructure import network_extend
 from ooi.occi.infrastructure import network_link
 from ooi.occi.infrastructure import storage
 from ooi.occi.infrastructure import storage_link
@@ -82,9 +81,6 @@ class TestQueryController(base.TestController):
             storage.backup,
             storage.snapshot,
             storage.resize,
-
-            # OCCI infra Networks Management:
-            network_extend.Network.kind,
 
             # OCCI infra network
             network.NetworkResource.kind,
