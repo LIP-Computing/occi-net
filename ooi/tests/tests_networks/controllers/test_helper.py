@@ -27,12 +27,12 @@ class TestNetOpenStackHelper(base.TestCase):
         super(TestNetOpenStackHelper, self).setUp()
         self.version = "version foo bar baz"
         self.helper = helpers.OpenStackNet(self.version)
-        self.translation = {"network": {"occi.core.title": "name",
+        self.translation = {"networks": {"occi.core.title": "name",
                                         "occi.core.id": "network_id",
                                         "occi.network.state": "status",
                                         "X_PROJECT_ID": "tenant_id",
                                         },
-                            "subnet": {"occi.core.id": "network_id",
+                            "subnets": {"occi.core.id": "network_id",
                                        "org.openstack.network.ip_version": "ip_version",
                                        "occi.network.address": "cidr",
                                        "occi.network.gateway":
@@ -46,7 +46,7 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.index(None, None)
+        ret = self.helper.list_resources(None,'networks', None)
         self.assertEqual(["FOO"], ret)
         m.assert_called_with(None, "/networks", None)
 
@@ -56,7 +56,7 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.index(None, None)
+        ret = self.helper.list_resources(None,'networks', None)
         self.assertEqual(["FOO"], ret)
         m.assert_called_with(None, method="GET",
                              path="/networks", query_string=None)
@@ -68,7 +68,7 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.get_network(None, 1)
+        ret = self.helper.get_network_details(None, 1)
         self.assertEqual("ACTIVE", ret["status"])
         m.assert_called_with(None, "/networks/%s" % 1)
 
@@ -79,7 +79,7 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.get_network(None, 1)
+        ret = self.helper.get_network_details(None, 1)
         self.assertEqual("ACTIVE", ret["status"])
         m.assert_called_with(None, method="GET",
                              path="/networks/1", query_string=None)
@@ -91,7 +91,7 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.get_subnet(None, 1)
+        ret = self.helper.get_resource(None, 'subnets', 1)
         self.assertEqual(["FOO"], ret)
         m.assert_called_with(None, "/subnets/%s" % 1)
 
@@ -104,7 +104,7 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.get_network(None, 1)
+        ret = self.helper.get_network_details(None, 1)
         self.assertEqual("ACTIVE", ret["status"])
         self.assertEqual([2], ret["subnets"])
         self.assertEqual(["FOO"], ret["subnet_info"])
@@ -119,7 +119,7 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.get_network(None, 1)
+        ret = self.helper.get_network_details(None, 1)
         self.assertEqual("ACTIVE", ret["status"])
         self.assertEqual([2], ret["subnets"])
         self.assertEqual(["FOO"], ret["subnet_info"])
@@ -142,9 +142,9 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.create_network(None, parameters)
+        ret = self.helper.create_resource(None, 'networks', parameters)
         self.assertEqual(net_id, ret["network_id"])
-        m.assert_called_with(None, "network", parameters)
+        m.assert_called_with(None, "networks", parameters)
 
     @mock.patch.object(helpers.OpenStackNet, "_make_create_request")
     def test_create_full_network(self, m):
@@ -171,11 +171,11 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.create_network(None, parameters)
+        ret = self.helper.create_resource(None,'networks', parameters)
         self.assertEqual(net_id, ret["id"])
-        ret2 = self.helper.create_subnet(None, parameters)
+        ret2 = self.helper.create_resource(None,'subnets', parameters)
         self.assertEqual(subnet_id, ret2["id"])
-        m.assert_called_with(None, "subnet", parameters)
+        m.assert_called_with(None, "subnets", parameters)
 
     @mock.patch.object(helpers.OpenStackNet, "_get_req")
     def test_create_full_network_2(self, m):
@@ -202,12 +202,12 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.create_network(None, parameters)
+        ret = self.helper.create_resource(None,'networks', parameters)
         self.assertEqual(net_id, ret["id"])
-        ret2 = self.helper.create_subnet(None, parameters)
+        ret2 = self.helper.create_resource(None,'subnets', parameters)
         self.assertEqual(subnet_id, ret2["id"])
         param = utils.translate_parameters(
-            self.translation["subnet"], parameters)
+            self.translation["subnets"], parameters)
         m.assert_called_with(None,
                              path="/subnets",
                              content_type="application/json",
@@ -221,7 +221,7 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.delete_network(None, 1)
+        ret = self.helper.delete_resource(None,'networks', 1)
         self.assertEqual(ret.status_int, 204)
         m.assert_called_with(None, "/networks", 1)
 
@@ -231,8 +231,8 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        parameters = {"occi.core.id": 1}
-        ret = self.helper.delete_network(None, parameters)
+        id = 1
+        ret = self.helper.delete_resource(None,'networks', id)
         self.assertEqual(ret.status_int, 204)
         m.assert_called_with(None, method="DELETE",
                              path="/networks/1")

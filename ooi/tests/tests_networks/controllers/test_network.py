@@ -29,7 +29,7 @@ class TestNetworkController(base.TestController):
         super(TestNetworkController, self).setUp()
         self.controller = network.Controller(None)
 
-    @mock.patch.object(helpers.OpenStackNet, "index")
+    @mock.patch.object(helpers.OpenStackNet, "list_resources")
     def test_index(self, m_index):
         test_networks = [
             fakes.networks[fakes.tenants["bar"]["id"]],
@@ -43,18 +43,17 @@ class TestNetworkController(base.TestController):
             self.assertEqual(result.resources.__len__(),
                              expected.__len__())
             # self.assertEqual(result.resources, expected)
-            m_index.assert_called_with(req, None)
+            m_index.assert_called_with(req, 'networks', None)
 
-    @mock.patch.object(helpers.OpenStackNet, "get_network")
+    @mock.patch.object(helpers.OpenStackNet, "get_network_details")
     def test_show(self, m_network):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         for net in test_networks:
             ret = self.controller.show(None, net["id"])
             self.assertIsInstance(ret, occi_network.NetworkResource)
 
-    @mock.patch.object(helpers.OpenStackNet, "create_network")
-    @mock.patch.object(helpers.OpenStackNet, "create_subnet")
-    def test_create(self, m_sub, m_network):
+    @mock.patch.object(helpers.OpenStackNet, "create_resource")
+    def test_create(self, m):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         schema1 = occi_network.NetworkResource.kind.scheme
         # m_network.return_value = {"id":"xxx"}
@@ -68,9 +67,8 @@ class TestNetworkController(base.TestController):
             ret = self.controller.create(req)
             self.assertIsInstance(ret, occi_network.NetworkResource)
 
-    @mock.patch.object(helpers.OpenStackNet, "create_network")
-    @mock.patch.object(helpers.OpenStackNet, "create_subnet")
-    def test_create_Error(self, m_sub, m_network):
+    @mock.patch.object(helpers.OpenStackNet, "create_resource")
+    def test_create_Error(self, m):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         schema1 = occi_network.NetworkResource.kind.scheme
         net = test_networks[0]
@@ -81,7 +79,7 @@ class TestNetworkController(base.TestController):
 
         self.assertRaises(exception.Invalid, self.controller.create, req)
 
-    @mock.patch.object(helpers.OpenStackNet, "delete_network")
+    @mock.patch.object(helpers.OpenStackNet, "delete_resource")
     def test_delete(self, m_network):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         # schema1 = network.Network.scheme

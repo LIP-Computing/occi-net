@@ -72,7 +72,7 @@ def get_query_string(parameters):
 
 def translate_parameters(translation, parameters):
     if not parameters:
-        return parameters
+        return None
     out = {}
     for key in parameters.keys():
         if key in translation:

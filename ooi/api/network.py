@@ -126,6 +126,7 @@ class Controller(ooi.api.base.Controller):
                                                      gateway=n_gateway)
                 else:
                     # FIXME(jorgesece): raise exception.NotFound()
+                    # CHANGE IN TESTS
                     s = network.NetworkResource(title=n_name,
                                                id=n_id, state=n_status)
                 occi_network_resources.append(s)
@@ -137,7 +138,9 @@ class Controller(ooi.api.base.Controller):
         :param req: request object
         """
         attributes = self._filter_attributes(req)
-        occi_networks = self.os_helper.index(req, attributes)
+        occi_networks = self.os_helper.list_resources(req,
+                                                      'networks',
+                                                      attributes)
         occi_network_resources = self._get_network_resources(
             occi_networks)
 
@@ -150,7 +153,7 @@ class Controller(ooi.api.base.Controller):
         :param req: request object
         :param id: network identification
         """
-        resp = self.os_helper.get_network(req, id)
+        resp = self.os_helper.get_network_details(req, id)
         occi_network_resources = self._get_network_resources(
             [resp])
         return occi_network_resources[0]
@@ -158,7 +161,7 @@ class Controller(ooi.api.base.Controller):
     def create(self, req, body=None):
         """Create a network instance in the cloud
 
-        :param: req: request object
+        :param req: request object
         :param body: body request (not used)
         """
         # todo(jorgesece): manage several creation
@@ -166,27 +169,53 @@ class Controller(ooi.api.base.Controller):
         # resource class and is not used
         attributes = self._filter_attributes(req)
         self._validate_attributes(
-            self.os_helper.required["network"], attributes)
-        net = self.os_helper.create_network(req, attributes)
+            self.os_helper.required["networks"], attributes)
+        net = self.os_helper.create_resource(req,
+                                             'networks',
+                                             attributes)
+        # SUBNETWORK
         try:
             attributes["occi.core.id"] = net["id"]
-            net["subnet_info"] = self.os_helper.create_subnet(
-                req, attributes)
+            net["subnet_info"] = self.os_helper.create_resource(
+                req, 'subnets', attributes)
         except Exception as ex:
-            self.os_helper.delete_network(req, attributes)
+            self.os_helper.delete_resource(req,
+                                           'networks', attributes)
             raise ex
         occi_network_resources = self._get_network_resources([net])
+        # # PORT and ROUTER information is agnostic to the user
+        # try:
+        #     attributes_port = {"subnet_id": net["subnet_info"]["id"],
+        #                        "network_id": net["id"]
+        #                        }
+        #     self.os_helper.create_resource(req,
+        #                                    'ports',
+        #                                    attributes_port)
+        #     attributes_router = {"external_gateway_info": {
+        #         "network_id": net["id"]}
+        #     }
+        #     self.os_helper.create_resource(req,
+        #                                    'routers',
+        #                                    attributes_router)
+        # except Exception as ex:
+        #     self.os_helper.delete_resource(req,
+        #                                    'networks', attributes)
+        #     self.os_helper.delete_resource(req,
+        #                                    'subnets', attributes)
+        #     raise ex
         return occi_network_resources[0]
 
     def delete(self, req, id):
         """delete networks which satisfy the parameters
 
         :param req: current request
-        :param id: identificator
+        :param id: identification
         """
         # todo(jorgesece): manage several deletion
-        attributes = {"occi.core.id": id}
-        network = self.os_helper.delete_network(req, attributes)
+        # fixme(jorgesece): delete all the resources (ports...)
+        network = self.os_helper.delete_resource(req,
+                                                 'networks',
+                                                 id)
         if network.status_int == 404:
             raise exception.NotFound()
         return []

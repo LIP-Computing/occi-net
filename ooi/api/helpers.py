@@ -634,20 +634,25 @@ class OpenStackNet(BaseHelper):
         super(OpenStackNet, self).__init__(None, None)
         self.neutron_endpoint = neutron_endpoint
 
-    translation = {"network": {"occi.core.title": "name",
+    translation = {"networks": {"occi.core.title": "name",
                                "occi.core.id": "network_id",
                                "occi.network.state": "status",
                                "org.openstack.network.public": "router:external",
                                "org.openstack.network.shared": "shared",
                                "X_PROJECT_ID": "tenant_id",
                                },
-                   "subnet": {"occi.core.id": "network_id",
+                   "subnets": {"occi.core.id": "network_id",
                               "org.openstack.network.ip_version": "ip_version",
+                              "occi.network.address": "cidr",
+                              "occi.network.gateway": "gateway_ip"
+                              },
+                   "ports": {"occi.core.id": "network_id",
+                              "subnet_id": "subnet_id",
                               "occi.network.address": "cidr",
                               "occi.network.gateway": "gateway_ip"
                               }
                    }
-    required = {"network": {"occi.core.title": "name",
+    required = {"networks": {"occi.core.title": "name",
                             "org.openstack.network.ip_version": "ip_version",
                             "occi.network.address": "cidr",
                             }
@@ -712,7 +717,7 @@ class OpenStackNet(BaseHelper):
         :param path: element location
         :param parameters: parameters to filter results
         """
-        resource = "network"
+        resource = path.split('/')[1]
         param = utils.translate_parameters(
             self.translation[resource], parameters)
         query_string = utils.get_query_string(param)
@@ -727,15 +732,16 @@ class OpenStackNet(BaseHelper):
         :param req: the incoming request
         :param parameters: parameters with values
         """
-        path = "/%ss" % resource
+        path = "/%s" % resource
         param = utils.translate_parameters(
             self.translation[resource], parameters)
-        body = utils.make_body(resource, param)
+        single_resource = resource[:-1]
+        body = utils.make_body(single_resource, param)
         return self._get_req(req, path=path,
                              content_type="application/json",
                              body=json.dumps(body), method="POST")
 
-    def _make_delete_request(self, req, path, parameters):
+    def _make_delete_request(self, req, path, id):
         """Create DELETE request
 
         This method create a DELETE Request instance
@@ -743,26 +749,10 @@ class OpenStackNet(BaseHelper):
         :param req: the incoming request
         :param path: element location
         """
-        param = utils.translate_parameters(
-            self.translation["network"], parameters)
-        id = param["network_id"]
         path = "%s/%s" % (path, id)
         return self._get_req(req, path=path, method="DELETE")
 
-    def index(self, req, parameters=None):
-        """Get a list of networks.
-
-        This method retrieve a list of network to which the tenant has access.
-
-        :param req: the incoming request
-        :param parameters: parameters to filter results
-        """
-        path = "/networks"
-        os_req = self._make_get_request(req, path, parameters)
-        response = os_req.get_response()
-        return self.get_from_response(response, "networks", [])
-
-    def get_network(self, req, id):
+    def get_network_details(self, req, id):
         """Get info from a network.
 
         It returns json code from the server
@@ -784,57 +774,55 @@ class OpenStackNet(BaseHelper):
 
         return net
 
-    def get_subnet(self, req, id):
-        """Get information from a subnet.
+    def list_resources(self, req, resource, parameters):
+        """List resources.
+
+        It returns json code from the server
 
         :param req: the incoming request
+        :param resource: network resource to manage
+        :param parameters: query parameters
+        """
+        path = "/%s" % resource
+        os_req = self._make_get_request(req, path, parameters)
+        response = os_req.get_response()
+        return self.get_from_response(response, resource, [])
+
+    def get_resource(self, req, resource, id):
+        """Get information from a resource.
+
+        :param req: the incoming request
+        :param resource: network resource to manage
         :param id: subnet identification
         """
-        path = "/subnets/%s" % id
+        path = "/%s/%s" % (resource, id)
         req = self._make_get_request(req, path)
         response = req.get_response()
+        single_resource = resource[:-1]
+        return self.get_from_response(response, single_resource, {})
 
-        return self.get_from_response(response, "subnet", {})
-
-    def create_network(self, req, parameters):
-        """Create a server.
-
-        :param req: the incoming request
-        :param parameters: parameters with values for the new network
-        """
-        req = self._make_create_request(req, "network", parameters)
-        response = req.get_response()
-        json_response = self.get_from_response(response, "network", {})
-        # subnetattributes
-        # if "occi.networkinterface.address" in parameters:
-        #     parameters["network_id"] = json_response["id"]
-        #     req_subnet= self._make_create_request(req, "subnet", parameters)
-        #     response_subnet = req_subnet.get_response()
-        #     json_response["subnet_info"] = self.get_from_response(
-        # response_subnet, "subnet", {})
-
-        return json_response
-
-    def create_subnet(self, req, parameters):
-        """Create a server.
+    def create_resource(self, req, resource, parameters):
+        """Create a resource.
 
         :param req: the incoming request
+        :param resource: network resource to manage
         :param parameters: parameters with values for the new network
         """
-        req_subnet = self._make_create_request(req, "subnet", parameters)
+        single_resource = resource[:-1]
+        req_subnet = self._make_create_request(req, resource, parameters)
         response_subnet = req_subnet.get_response()
         json_response = self.get_from_response(
-            response_subnet, "subnet", {})
+            response_subnet, single_resource, {})
         return json_response
 
-    def delete_network(self, req, parameters):
-        """Delete network. It returns empty array
+    def delete_resource(self, req, resource, id):
+        """Delete resource. It returns empty array
 
-        :param req: the incoming network
-        :param parameters:
+        :param req: the incoming request
+        :param parameters: conain id
         """
-        path = "/networks"
-        req = self._make_delete_request(req, path, parameters)
+        path = "/%s" % resource
+        req = self._make_delete_request(req, path, id)
         response = req.get_response()
         return response
 
