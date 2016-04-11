@@ -634,24 +634,23 @@ class OpenStackNet(BaseHelper):
         super(OpenStackNet, self).__init__(None, None)
         self.neutron_endpoint = neutron_endpoint
 
-    translation = {"networks": {"occi.core.title": "name",
-                               "occi.core.id": "network_id",
-                               "occi.network.state": "status",
-                               "org.openstack.network.public": "router:external",
-                               "org.openstack.network.shared": "shared",
-                               "X_PROJECT_ID": "tenant_id",
-                               },
-                   "subnets": {"occi.core.id": "network_id",
-                              "org.openstack.network.ip_version": "ip_version",
-                              "occi.network.address": "cidr",
-                              "occi.network.gateway": "gateway_ip"
-                              },
-                   "ports": {"occi.core.id": "network_id",
-                              "subnet_id": "subnet_id",
-                              "occi.network.address": "cidr",
-                              "occi.network.gateway": "gateway_ip"
-                              }
-                   }
+    translation = {
+        "networks": {"occi.core.title": "name",
+                     "occi.core.id": "network_id",
+                     "occi.network.state": "status",
+                     "org.openstack.network.public": "router:external",
+                     "org.openstack.network.shared": "shared",
+                     "X_PROJECT_ID": "tenant_id",
+                     },
+        "subnets": {"occi.core.id": "network_id",
+                    "org.openstack.network.ip_version": "ip_version",
+                    "occi.network.address": "cidr",
+                    "occi.network.gateway": "gateway_ip"
+                    },
+        "ports": {"network_id": "network_id",
+                  "subnet_id": "subnet_id",
+                  }
+    }
     required = {"networks": {"occi.core.title": "name",
                             "org.openstack.network.ip_version": "ip_version",
                             "occi.network.address": "cidr",
@@ -752,28 +751,6 @@ class OpenStackNet(BaseHelper):
         path = "%s/%s" % (path, id)
         return self._get_req(req, path=path, method="DELETE")
 
-    def get_network_details(self, req, id):
-        """Get info from a network.
-
-        It returns json code from the server
-
-        :param req: the incoming network
-        :param id: net identification
-        """
-        path = "/networks/%s" % id
-        req = self._make_get_request(req, path)
-        response = req.get_response()
-        net = self.get_from_response(response, "network", {})
-        # subnet
-        if "subnets" in net:
-            path = "/subnets/%s" % net["subnets"][0]
-            req_subnet = self._make_get_request(req, path)
-            response_subnet = req_subnet.get_response()
-            net["subnet_info"] = self.get_from_response(
-                response_subnet, "subnet", {})
-
-        return net
-
     def list_resources(self, req, resource, parameters):
         """List resources.
 
@@ -824,6 +801,96 @@ class OpenStackNet(BaseHelper):
         path = "/%s" % resource
         req = self._make_delete_request(req, path, id)
         response = req.get_response()
+        return response
+
+    def get_network_details(self, req, id):
+        """Get info from a network.
+
+        It returns json code from the server
+
+        :param req: the incoming network
+        :param id: net identification
+        """
+        path = "/networks/%s" % id
+        req = self._make_get_request(req, path)
+        response = req.get_response()
+        net = self.get_from_response(response, "network", {})
+        # subnet
+        if "subnets" in net:
+            path = "/subnets/%s" % net["subnets"][0]
+            req_subnet = self._make_get_request(req, path)
+            response_subnet = req_subnet.get_response()
+            net["subnet_info"] = self.get_from_response(
+                response_subnet, "subnet", {})
+
+        return net
+
+    def index(self, req, parameters):
+        """List networks.
+
+        It returns json code from the server
+
+        :param req: the incoming request
+        :param parameters: query parameters
+        """
+        networks = self.list_resources(req,
+                                       'networks',
+                                       parameters)
+        return networks
+
+    def create_network(self, req, attributes):
+        net = self.create_resource(req,
+                                   'networks',
+                                   attributes)
+        # SUBNETWORK
+        try:
+            attributes["occi.core.id"] = net["id"]
+            net["subnet_info"] = self.create_resource(
+                req, 'subnets', attributes)
+        except Exception as ex:
+            self.delete_resource(req,
+                                 'networks', attributes)
+            raise ex
+
+        # PORT and ROUTER information is agnostic to the user
+        try:
+            attributes_port = {
+                "network_id": net["id"],
+                "fixed_ips": [{
+                    "subnet_id": net["subnet_info"]["id"]
+                }]
+            }
+            self.create_resource(req,
+                                 'ports',
+                                 attributes_port)
+            # attributes_router = {"external_gateway_info": {
+            #     "network_id": net["id"]}
+            # }
+            # self.os_helper.create_resource(req,
+            #                                'routers',
+            #                                attributes_router)
+        except Exception as ex:
+            self.delete_resource(req,
+                                 'networks', attributes)
+            self.delete_resource(req,
+                                 'subnets', attributes)
+            raise ex
+        return net
+
+    def delete_network(self, req, id):
+        """Delete a full network.
+
+        :param req: the incoming request
+        :param id: net identification
+        """
+        param = {"network_id": id}
+        ports = self.list_resources(req, 'ports', param)
+        for port in ports:
+            self.delete_resource(req,
+                                 'ports', port["id"])
+        response = self.delete_resource(req,
+                                        'networks',
+                                        id)
         return response
 
     def run_action(self, req, action, id):

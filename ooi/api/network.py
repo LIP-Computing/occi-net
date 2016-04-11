@@ -138,9 +138,7 @@ class Controller(ooi.api.base.Controller):
         :param req: request object
         """
         attributes = self._filter_attributes(req)
-        occi_networks = self.os_helper.list_resources(req,
-                                                      'networks',
-                                                      attributes)
+        occi_networks = self.os_helper.index(req, attributes)
         occi_network_resources = self._get_network_resources(
             occi_networks)
 
@@ -170,39 +168,8 @@ class Controller(ooi.api.base.Controller):
         attributes = self._filter_attributes(req)
         self._validate_attributes(
             self.os_helper.required["networks"], attributes)
-        net = self.os_helper.create_resource(req,
-                                             'networks',
-                                             attributes)
-        # SUBNETWORK
-        try:
-            attributes["occi.core.id"] = net["id"]
-            net["subnet_info"] = self.os_helper.create_resource(
-                req, 'subnets', attributes)
-        except Exception as ex:
-            self.os_helper.delete_resource(req,
-                                           'networks', attributes)
-            raise ex
+        net = self.os_helper.create_network(req, attributes)
         occi_network_resources = self._get_network_resources([net])
-        # # PORT and ROUTER information is agnostic to the user
-        # try:
-        #     attributes_port = {"subnet_id": net["subnet_info"]["id"],
-        #                        "network_id": net["id"]
-        #                        }
-        #     self.os_helper.create_resource(req,
-        #                                    'ports',
-        #                                    attributes_port)
-        #     attributes_router = {"external_gateway_info": {
-        #         "network_id": net["id"]}
-        #     }
-        #     self.os_helper.create_resource(req,
-        #                                    'routers',
-        #                                    attributes_router)
-        # except Exception as ex:
-        #     self.os_helper.delete_resource(req,
-        #                                    'networks', attributes)
-        #     self.os_helper.delete_resource(req,
-        #                                    'subnets', attributes)
-        #     raise ex
         return occi_network_resources[0]
 
     def delete(self, req, id):
@@ -212,11 +179,8 @@ class Controller(ooi.api.base.Controller):
         :param id: identification
         """
         # todo(jorgesece): manage several deletion
-        # fixme(jorgesece): delete all the resources (ports...)
-        network = self.os_helper.delete_resource(req,
-                                                 'networks',
-                                                 id)
-        if network.status_int == 404:
+        response = self.os_helper.delete_network(req, id)
+        if response.status_int == 404:
             raise exception.NotFound()
         return []
 

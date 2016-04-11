@@ -79,7 +79,7 @@ class TestNetworkController(base.TestController):
 
         self.assertRaises(exception.Invalid, self.controller.create, req)
 
-    @mock.patch.object(helpers.OpenStackNet, "delete_resource")
+    @mock.patch.object(helpers.OpenStackNet, "delete_network")
     def test_delete(self, m_network):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         # schema1 = network.Network.scheme

@@ -62,6 +62,16 @@ class TestNetOpenStackHelper(base.TestCase):
                              path="/networks", query_string=None)
 
     @mock.patch.object(helpers.OpenStackNet, "_make_get_request")
+    def test_index3(self, m):
+        resp = fakes.create_fake_json_resp({"networks": ["FOO"]}, 200)
+        req_mock = mock.MagicMock()
+        req_mock.get_response.return_value = resp
+        m.return_value = req_mock
+        ret = self.helper.index(None, None)
+        self.assertEqual(["FOO"], ret)
+        m.assert_called_with(None, "/networks", None)
+
+    @mock.patch.object(helpers.OpenStackNet, "_make_get_request")
     def test_get_network(self, m):
         resp = fakes.create_fake_json_resp(
             {"network": {"status": "ACTIVE"}}, 200)
