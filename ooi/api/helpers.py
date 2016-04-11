@@ -646,10 +646,7 @@ class OpenStackNet(BaseHelper):
                     "org.openstack.network.ip_version": "ip_version",
                     "occi.network.address": "cidr",
                     "occi.network.gateway": "gateway_ip"
-                    },
-        "ports": {"network_id": "network_id",
-                  "subnet_id": "subnet_id",
-                  }
+                    }
     }
     required = {"networks": {"occi.core.title": "name",
                             "org.openstack.network.ip_version": "ip_version",
@@ -657,6 +654,27 @@ class OpenStackNet(BaseHelper):
                             }
                 }
 
+    @staticmethod
+    def get_from_response(response, element, default):
+        """Get a JSON element from a valid response or raise an exception.
+
+        This method will extract an element a JSON response (falling back to a
+        default value) if the response has a code of 200, otherwise it will
+        raise a webob.exc.exception
+
+        :param response: The webob.Response object
+        :param element: The element to look for in the JSON body
+        :param default: The default element to be returned if not found.
+        """
+        if response.status_int in [200, 201, 202]:
+            if element:
+                return response.json_body.get(element, default)
+            else:
+                return response.json_body
+        elif response.status_int in [204]:
+            return []
+        else:
+            raise exception_from_response(response)
 
     def _get_req(self, req, method,
                  path=None,
@@ -716,10 +734,7 @@ class OpenStackNet(BaseHelper):
         :param path: element location
         :param parameters: parameters to filter results
         """
-        resource = path.split('/')[1]
-        param = utils.translate_parameters(
-            self.translation[resource], parameters)
-        query_string = utils.get_query_string(param)
+        query_string = utils.get_query_string(parameters)
         return self._get_req(req, path=path,
                              query_string=query_string, method="GET")
 
@@ -732,10 +747,8 @@ class OpenStackNet(BaseHelper):
         :param parameters: parameters with values
         """
         path = "/%s" % resource
-        param = utils.translate_parameters(
-            self.translation[resource], parameters)
         single_resource = resource[:-1]
-        body = utils.make_body(single_resource, param)
+        body = utils.make_body(single_resource, parameters)
         return self._get_req(req, path=path,
                              content_type="application/json",
                              body=json.dumps(body), method="POST")
@@ -750,6 +763,32 @@ class OpenStackNet(BaseHelper):
         """
         path = "%s/%s" % (path, id)
         return self._get_req(req, path=path, method="DELETE")
+
+    def _make_put_request(self, req, path, parameters):
+        """Create DELETE request
+
+        This method create a DELETE Request instance
+
+        :param req: the incoming request
+        :param path: element location
+        """
+        body = utils.make_body(None, parameters)
+        return self._get_req(req, path=path,
+                             content_type="application/json",
+                             body=json.dumps(body), method="PUT")
+
+    def _get_public_network(self, req):
+        """Get public network
+
+        This method get public network id
+
+        :param req: the incoming request
+        """
+        att_public = {"router:external": True}
+        net_public = self.list_resources(req,
+                                         'networks',
+                                         att_public)
+        return net_public[0]["id"]
 
     def list_resources(self, req, resource, parameters):
         """List resources.
@@ -801,7 +840,47 @@ class OpenStackNet(BaseHelper):
         path = "/%s" % resource
         req = self._make_delete_request(req, path, id)
         response = req.get_response()
-        return response
+        return self.get_from_response(response, None, [])
+
+    def add_router_interace(self, req, router_id, subnet_id):
+        """Add interface.
+
+        :param req: the incoming request
+        :param router_id: router identification
+        :param subnet_id: router identification
+        :param port_id: router identification
+        """
+        path = "/routers/%s/add_router_interface" % router_id
+        parameters = {'subnet_id': subnet_id}
+        os_req = self._make_put_request(req, path, parameters)
+        response = os_req.get_response()
+        json_response = self.get_from_response(
+            response, None, {})
+        return json_response
+
+    def _add_port(self, req, net_id, subnet_id):
+        attributes_port = {
+            "network_id": net_id,
+            "fixed_ips": [{
+                "subnet_id": subnet_id
+            }]
+        }
+        port = self.create_resource(req,
+                                    'ports',
+                                    attributes_port)
+        return port
+
+    def add_port(self, req, net_id, subnet_id):
+        attributes_port = {
+            "network_id": net_id,
+            "fixed_ips": [{
+                "subnet_id": subnet_id
+            }]
+        }
+        port = self.create_resource(req,
+                                    'floatingips',
+                                    attributes_port)
+        return port
 
     def get_network_details(self, req, id):
         """Get info from a network.
@@ -833,48 +912,81 @@ class OpenStackNet(BaseHelper):
         :param req: the incoming request
         :param parameters: query parameters
         """
+        param = utils.translate_parameters(
+            self.translation['networks'], parameters)
         networks = self.list_resources(req,
                                        'networks',
-                                       parameters)
+                                       param)
         return networks
 
-    def create_network(self, req, attributes):
+    def create_network(self, req, parameters):
+        """Create a full neutron network.
+
+        It creates a private network conected to the public one.
+        It creates a full network objects stack:
+        network, subnet, port, and router.
+        In case of error, the objects already created are deleted.
+
+        :param req: the incoming request
+        :param resource: network resource to manage
+        :param parameters: parameters with values
+         for the new network
+        """
+
+        # NETWORK
+        net_param = utils.translate_parameters(
+            self.translation['networks'], parameters)
         net = self.create_resource(req,
                                    'networks',
-                                   attributes)
+                                   net_param)
         # SUBNETWORK
         try:
-            attributes["occi.core.id"] = net["id"]
+            subnet_param = utils.translate_parameters(
+                self.translation['subnets'], parameters)
+
+            subnet_param["network_id"] = net["id"]
             net["subnet_info"] = self.create_resource(
-                req, 'subnets', attributes)
-        except Exception as ex:
-            self.delete_resource(req,
-                                 'networks', attributes)
-            raise ex
+                req, 'subnets', subnet_param)
 
         # PORT and ROUTER information is agnostic to the user
-        try:
             attributes_port = {
                 "network_id": net["id"],
                 "fixed_ips": [{
                     "subnet_id": net["subnet_info"]["id"]
                 }]
             }
-            self.create_resource(req,
-                                 'ports',
-                                 attributes_port)
-            # attributes_router = {"external_gateway_info": {
-            #     "network_id": net["id"]}
-            # }
-            # self.os_helper.create_resource(req,
-            #                                'routers',
-            #                                attributes_router)
+            port = self.create_resource(req,
+                                        'ports',
+                                        attributes_port)
+            try:
+                net_public = self._get_public_network(req)
+                attributes_router = {"external_gateway_info": {
+                    "network_id": net_public}
+                }
+                router = self.create_resource(req,
+                                               'routers',
+                                               attributes_router)
+                try:
+                    #create interface to the network
+                    self.add_router_interace(req,
+                                             router['id'],
+                                             net['subnet_info']['id']
+                                             )
+                except Exception as ex:
+                    self.delete_resource(req,
+                                         'routers', router['id']
+                                         )
+                    raise ex
+            except Exception as ex:
+                # self.delete_resource(req,
+                #                  'ports', port['id'])
+                raise ex
         except Exception as ex:
+            # fixme(jorgesece): check it is working
             self.delete_resource(req,
-                                 'networks', attributes)
-            self.delete_resource(req,
-                                 'subnets', attributes)
+                                 'networks', net['id'])
             raise ex
+
         return net
 
     def delete_network(self, req, id):
@@ -886,19 +998,41 @@ class OpenStackNet(BaseHelper):
         param = {"network_id": id}
         ports = self.list_resources(req, 'ports', param)
         for port in ports:
-            self.delete_resource(req,
+            resp_port = self.delete_resource(req,
                                  'ports', port["id"])
         response = self.delete_resource(req,
                                         'networks',
                                         id)
         return response
 
-    def run_action(self, req, action, id):
+    # def assign_floating_ip(self, req, compute_id, net_id):
+    #     """assign floating ip to a server
+    #
+    #     :param req: the incoming request
+    #     :param compute_id: compute identification
+    #     :param net_id: network identification
+    #     """
+    #     path_net = "/networks/%s" % net_id
+    #     req = self._make_get_request(req, path_net)
+    #     response_net = req.get_response()
+    #     net = self.get_from_response(response_net, "network", {})
+    #     # subnet
+    #     try:
+    #         port = self._add_port(req, net_id, net["subnets"][0])
+    #         net_public = self._get_public_network(req)
+    #     except:
+    #         raise exception.NetworkNotFound()
+    #
+    #     response = lin
+    #
+    #     return response
+
+    def run_action(self, req, action, net_id):
         """Run an action on a network.
 
         :param req: the incoming request
         :param action: the action to run
-        :param id: server id to delete
+        :param net_id: server id to delete
         """
         os_req = self._make_action_reques(req, action, id)
         response = os_req.get_response()

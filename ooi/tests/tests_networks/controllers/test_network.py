@@ -52,7 +52,7 @@ class TestNetworkController(base.TestController):
             ret = self.controller.show(None, net["id"])
             self.assertIsInstance(ret, occi_network.NetworkResource)
 
-    @mock.patch.object(helpers.OpenStackNet, "create_resource")
+    @mock.patch.object(helpers.OpenStackNet, "create_network")
     def test_create(self, m):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         schema1 = occi_network.NetworkResource.kind.scheme

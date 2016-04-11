@@ -24,5 +24,5 @@ class TestIntegration(base.TestController):
         super(TestIntegration, self).setUp()
         self.project_id = "6a7f9cdcdcc049b1b9ca849b9b678255"
         self.public_network = "cd58eade-79a1-4633-8fb7-c7d8a030c942"
-        self.new_network_name = "networkOCCINET"
+        self.new_network_name = "networkTEST_OCCINET"
         self.session = KeySession().create_keystone("admin", "stack1", self.project_id)

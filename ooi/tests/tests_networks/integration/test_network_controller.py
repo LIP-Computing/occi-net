@@ -79,8 +79,8 @@ class TestIntegrationNetwork(TestIntegration):
     def test_create_delete_network_with_subnet(self):
         list1 = self.controller.index(self.req)
         ip_version = 4
-        cidr = "11.0.0.1/24"
-        gateway = "11.0.0.3"
+        cidr = "12.0.0.1/24"
+        gateway = "12.0.0.3"
         #Create
         parameters ={"occi.core.title": self.new_network_name,
                     "org.openstack.network.ip_version": ip_version,
@@ -97,6 +97,7 @@ class TestIntegrationNetwork(TestIntegration):
 
          # Delete
         #response = self.controller.delete(self.req, {"attributes":{"occi.core.id": net.id}})
+        oid = '26be0b06-be63-4fe4-950a-601feda250cc'
         response = self.controller.delete(self.req, net.id)
         self.assertIsInstance(response, list)
         list3 = self.controller.index(self.req)

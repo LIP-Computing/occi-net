@@ -22,6 +22,7 @@ from ooi.tests import base
 from ooi.tests.tests_networks import fakes
 from ooi import utils
 
+
 class TestNetOpenStackHelper(base.TestCase):
     def setUp(self):
         super(TestNetOpenStackHelper, self).setUp()
@@ -157,7 +158,7 @@ class TestNetOpenStackHelper(base.TestCase):
         m.assert_called_with(None, "networks", parameters)
 
     @mock.patch.object(helpers.OpenStackNet, "_make_create_request")
-    def test_create_full_network(self, m):
+    def test_create_resource_net_subnet(self, m):
         name = "name_net"
         net_id = 1
         state = "ACTIVE"
@@ -188,7 +189,7 @@ class TestNetOpenStackHelper(base.TestCase):
         m.assert_called_with(None, "subnets", parameters)
 
     @mock.patch.object(helpers.OpenStackNet, "_get_req")
-    def test_create_full_network_2(self, m):
+    def test_create_resource_net_subnet_req(self, m):
         name = "name_net"
         net_id = 1
         state = "ACTIVE"
@@ -216,14 +217,43 @@ class TestNetOpenStackHelper(base.TestCase):
         self.assertEqual(net_id, ret["id"])
         ret2 = self.helper.create_resource(None,'subnets', parameters)
         self.assertEqual(subnet_id, ret2["id"])
-        param = utils.translate_parameters(
-            self.translation["subnets"], parameters)
         m.assert_called_with(None,
                              path="/subnets",
                              content_type="application/json",
                              body=json.dumps(utils.make_body(
-                                 "subnet", param)),
+                                 "subnet", parameters)),
                              method="POST")
+
+    @mock.patch.object(helpers.OpenStackNet, "create_resource")
+    @mock.patch.object(helpers.OpenStackNet, "list_resources")
+    @mock.patch.object(helpers.OpenStackNet, "add_router_interace")
+    def test_create_full_network(self, add_if, list_net, cre_net):
+        # fixme(jorgesece): control all the create resources
+        name = "name_net"
+        net_id = 1
+        state = "ACTIVE"
+        project = "project_id"
+        ip_version = 4
+        cidr = "0.0.0.0"
+        gate_way = "0.0.0.1"
+        subnet_id = 11
+        parameters = {"occi.core.title": name,
+                      "occi.core.id": net_id,
+                      "occi.network.state": state,
+                      "X_PROJECT_ID": project,
+                      "org.openstack.network.ip_version": ip_version,
+                      "occi.network.address": cidr,
+                      "occi.network.gateway": gate_way
+                      }
+        cre_net.side_effect = [{'id': net_id},
+                               {"id": subnet_id},
+                               {"id": 0},
+                               {"id": 0}]
+        ret = self.helper.create_network(None, parameters)
+        self.assertEqual(net_id, ret["id"])
+        param = utils.translate_parameters(
+            self.translation["networks"], parameters)
+        cre_net.call_args_list[0].assert_called_with(None,'networks', param)
 
     @mock.patch.object(helpers.OpenStackNet, "_make_delete_request")
     def test_delete_network(self, m):

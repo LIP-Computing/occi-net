@@ -50,10 +50,13 @@ def join_url(base, parts):
 
 
 def make_body(resource, parameters):
-        body = {resource: {}}
+        content = {}
         for key in parameters.keys():
-            body[resource][key] = parameters[key]
-
+            content[key] = parameters[key]
+        if resource:
+            body = {resource:content}
+        else:
+            body = content
         return body
 
 
