@@ -81,11 +81,12 @@ class TestNetworkController(base.TestController):
 
     @mock.patch.object(helpers.OpenStackNet, "delete_network")
     def test_delete(self, m_network):
+        m_network.return_value = []
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         # schema1 = network.Network.scheme
         for net in test_networks:
             ret = self.controller.delete(None, net["id"])
-            self.assertIsInstance(ret, list)
+            self.assertEquals(ret, [])
             self.assertEqual(ret.__len__(), 0)
 
     def test_get_network_resources(self):

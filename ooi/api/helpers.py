@@ -705,12 +705,9 @@ class OpenStackNet(BaseHelper):
             else:
                 env_token = req.environ["keystone.token_auth"]
                 token = env_token.get_auth_ref(None)['auth_token']
-
-            # project_id = req.environ["HTTP_X_PROJECT_ID"]
         except Exception:
             raise webob.exc.HTTPUnauthorized
         environ = {"HTTP_X-Auth-Token": token}
-        # "HTTP_X_PROJECT_ID": project_id}
 
         new_req = webob.Request.blank(path=path,
                                       environ=environ, base_url=server)
@@ -872,25 +869,25 @@ class OpenStackNet(BaseHelper):
             response, None, {})
         return json_response
 
-    def _add_port(self, req, net_id, subnet_id):
-        """Add a port to the subnet
-
-        Returns the port information
-
-        :param req: the incoming network
-        :param net_id: network id
-        :param subnet_id: subnetwork id
-        """
-        attributes_port = {
-            "network_id": net_id,
-            "fixed_ips": [{
-                "subnet_id": subnet_id
-            }]
-        }
-        port = self.create_resource(req,
-                                    'ports',
-                                    attributes_port)
-        return port
+    # def _add_port(self, req, net_id, subnet_id):
+    #     """Add a port to the subnet
+    #
+    #     Returns the port information
+    #
+    #     :param req: the incoming network
+    #     :param net_id: network id
+    #     :param subnet_id: subnetwork id
+    #     """
+    #     attributes_port = {
+    #         "network_id": net_id,
+    #         "fixed_ips": [{
+    #             "subnet_id": subnet_id
+    #         }]
+    #     }
+    #     port = self.create_resource(req,
+    #                                 'ports',
+    #                                 attributes_port)
+    #     return port
 
     def _add_floating_ip(self, req, public_net_id, port_id):
         """Add floating to the public network and a port
@@ -906,10 +903,10 @@ class OpenStackNet(BaseHelper):
             "floating_network_id": public_net_id,
             "port_id": port_id
         }
-        port = self.create_resource(req,
+        floating_ip = self.create_resource(req,
                                     'floatingips',
                                     attributes_port)
-        return port
+        return floating_ip
 
     def _remove_floating_ip(self, req, public_net_id, port_id):
         """Delete floating to the public network and a port
@@ -986,7 +983,6 @@ class OpenStackNet(BaseHelper):
         :param parameters: parameters with values
          for the new network
         """
-
         # NETWORK
         net_param = utils.translate_parameters(
             self.translation['networks'], parameters)
@@ -1008,8 +1004,8 @@ class OpenStackNet(BaseHelper):
                 "network_id": net_public}
             }
             router = self.create_resource(req,
-                                           'routers',
-                                           attributes_router)
+                                          'routers',
+                                          attributes_router)
             try:
                 #create interface to the network
                 self._add_router_interface(req,

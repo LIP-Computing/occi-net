@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2015 LIP - Lisbon
+# Copyright 2016 LIP - Lisbon
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -30,22 +30,29 @@ class TestIntegrationNetwork(TestIntegration):
 
     def setUp(self):
         super(TestIntegrationNetwork, self).setUp()
-        self.req = Request(KeySession().create_request(self.session, path="/",
-                                                       environ={},
-                                                       headers={"X_PROJECT_ID": self.project_id}).environ)
+        self.req = Request(
+            KeySession().create_request(self.session, path="/",
+                                        environ={},
+                                        headers={
+                                            "X_PROJECT_ID": self.project_id
+                                        }).environ)
 
         self.controller = net_controler.Controller("http://127.0.0.1:9696/v2.0")
 
     def test_list(self):
         list = self.controller.index(self.req)
         self.assertIsInstance(list.resources[0], network.NetworkResource)
-        sortedList = sorted(list.resources, key=lambda Network: Network.title, reverse=True)
-        self.assertEqual("public", sortedList[0].title)
+        sortedList = sorted(list.resources,
+                            key=lambda Network: Network.title,
+                            reverse=True)
+        self.assertEqual("private", sortedList[0].title)
 
     def test_list_by_tenant(self):
         self.req.headers = fakes.create_header(None,None, self.project_id)
         list = self.controller.index(self.req)
-        sortedList = sorted(list.resources, key=lambda Network: Network.title, reverse=True)
+        sortedList = sorted(list.resources,
+                            key=lambda Network: Network.title,
+                            reverse=True)
         self.assertIsInstance(sortedList[0], network.NetworkResource)
       #  self.assertEqual("public", sortedList[0].title)
 
@@ -62,7 +69,8 @@ class TestIntegrationNetwork(TestIntegration):
         body = None
         out = None
         try:
-            net = self.controller.run_action(self.req,self.public_network,body)
+            self.controller.run_action(self.req,
+                                       self.public_network, body)
         except Exception as e:
             out = e
         self.assertIsInstance(out, exception.NotFound)
@@ -93,7 +101,8 @@ class TestIntegrationNetwork(TestIntegration):
         self.assertEqual(self.new_network_name, net.title)
         self.req.headers.pop("X-OCCI-Attribute")
         list2 = self.controller.index(self.req)
-        self.assertEqual(list1.resources.__len__() + 1, list2.resources.__len__())
+        self.assertEqual(list1.resources.__len__() + 1,
+                         list2.resources.__len__())
 
          # Delete
         #id = 'c9b50445-9d6f-402a-91cd-d7c323402f96'
