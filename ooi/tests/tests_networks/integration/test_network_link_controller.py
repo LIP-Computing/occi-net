@@ -29,7 +29,7 @@ from ooi.tests.tests_networks import fakes
 class TestIntegrationNetworkLink(TestIntegration):
 
     def setUp(self):
-        super(TestIntegrationNetwork, self).setUp()
+        super(TestIntegrationNetworkLink, self).setUp()
         self.req = Request(KeySession().create_request(self.session, path="/",
                                                        environ={},
                                                        headers={"X_PROJECT_ID": self.project_id}).environ)

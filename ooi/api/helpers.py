@@ -1075,7 +1075,7 @@ class OpenStackNet(BaseHelper):
             response = self._add_floating_ip(req, net_public,
                                              ports[0]['id'])
         except:
-            raise exception.ResourceNotFound()
+            raise exception.NotFound()
         return response
 
     def release_floating_ip(self, req, compute_id, net_id=None):
@@ -1098,7 +1098,7 @@ class OpenStackNet(BaseHelper):
             response = self._remove_floating_ip(req, net_public,
                                                 ports[0]['id'])
         except:
-            raise exception.ResourceNotFound()
+            raise exception.NotFound()
         return response
 
     def run_action(self, req, action, net_id):
