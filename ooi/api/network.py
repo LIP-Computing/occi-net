@@ -102,7 +102,7 @@ class Controller(ooi.api.base.Controller):
     def _get_network_resources(networks_list):
         """Create network instances from network in json format
 
-        :param networks: networks objects provides by the cloud infrastructure
+        :param networks_list: networks objects provides by the cloud infrastructure
         """
         # fixme(jorgesece):
         # those attributes should be mapped in driver to occi attr.

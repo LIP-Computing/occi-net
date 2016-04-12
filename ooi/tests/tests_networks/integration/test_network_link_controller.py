@@ -37,10 +37,9 @@ class TestIntegrationNetworkLink(TestIntegration):
         self.controller = net_controler.Controller("http://127.0.0.1:9696/v2.0")
 
 
-    #
-    # def test_create_delete_network_with_subnet(self):
-    #     compute_id = 'bb62976a-13fe-4c23-9343-324149c63dbc'
-    #
-    #     fip = self.controller.assign_floating_ip(self.req, compute_id)
-    #     self.controller.release_floating_ip(self.req, compute_id)
-    #     s
+
+    def test_create_delete_network_with_subnet(self):
+        compute_id = 'bb62976a-13fe-4c23-9343-324149c63dbc'
+
+        fip = self.controller.assign_floating_ip(self.req, compute_id)
+        self.controller.release_floating_ip(self.req, compute_id)

@@ -708,7 +708,8 @@ class OpenStackNet(BaseHelper):
         except Exception:
             raise webob.exc.HTTPUnauthorized
         environ = {"HTTP_X-Auth-Token": token}
-
+        # fixme(jorgesece): tenant is not included
+        # "X_PROJECT_ID": self.project_id
         new_req = webob.Request.blank(path=path,
                                       environ=environ, base_url=server)
         new_req.query_string = query_string
@@ -1100,6 +1101,88 @@ class OpenStackNet(BaseHelper):
         except:
             raise exception.NotFound()
         return response
+
+    def _build_link(self, net_id, compute_id, ip, mac=None, pool=None):
+        link = {}
+        link['mac'] = mac
+        link['pool'] = pool
+        link['network_id'] = net_id
+        link['compute_id'] = compute_id
+        link['ip'] = ip
+        return link
+
+    def list_compute_net_links(self, req):
+        """List the network and compute links
+
+        It lists every private and public ip related to
+        the servers of the tenant
+
+        :param req: the incoming request
+        """
+        # net_id it is not needed if
+        # there is just one port of the VM
+        param = {'device_owner':'compute:nova'}
+        link_list = []
+        try:
+            ports = self.list_resources(req, 'ports', param)
+            for port in ports:
+                link_private = self._build_link(
+                    port["network_id"],
+                    port['device_id'],
+                    port["fixed_ips"][0]["ip_address"],
+                    mac=port["mac_address"])
+                link_list.append(link_private)
+                # Query public links associated to the port
+                floating_ips = self.list_resource(req,
+                                                  'floatingips',
+                                                  {"port_id": port['id']})
+                for f_ip in floating_ips:
+                    link_public = self._build_link(
+                        port["network_id"],
+                        port['device_id'],
+                        f_ip['floating_ip_address'],
+                        pool=f_ip['floating_network_id'])
+                    # FIXME(jorgesece) could be port mac
+                    link_list.append(link_public)
+        except:
+            raise exception.NotFound()
+        return link_list
+
+    def get_compute_net_link(self, req, compute_id, network_id, ip):
+        """Get a specific network/server link
+
+        It shows a specific link (either private or public ip)
+
+        :param req: the incoming request
+        :param compute_id: server id
+        :param network_id: network id
+        :param ip: ip connected
+        """
+        try:
+            flo_ips = self.list_resources(req,
+                                          'floatingips',
+                                          {'floating_ip_address': ip})
+            for f_ip in flo_ips:
+                link_public = self._build_link(
+                    network_id,
+                    compute_id,
+                    f_ip['floating_ip_address'],
+                    pool=f_ip['floating_network_id'])
+                return link_public
+            # if it is not public, check in the private ips
+            ports = self.list_resources(req, 'ports', {'device_id': compute_id,
+                                                       'network_id': network_id})
+            for p in ports:
+                if ip == p["fixed_ips"][0]["ip_address"]:
+                    link_private = self._build_link(
+                        p["network_id"],
+                        p['device_id'],
+                        p["fixed_ips"][0]["ip_address"],
+                        mac=p["mac_address"])
+                    return link_private
+            raise exception.NotFound()
+        except:
+            raise exception.NotFound()
 
     def run_action(self, req, action, net_id):
         """Run an action on a network.

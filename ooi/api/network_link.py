@@ -13,6 +13,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+from samba.dcerpc.dfs.netdfs import netdfs
 
 from ooi.api import base
 from ooi.api import helpers
@@ -37,84 +38,52 @@ class Controller(base.Controller):
             neutron_endpoint
         )
 
-    def index2(self, req):
-        floating_ips = self.os_helper.get_floating_ips(req)
-        occi_link_resources = []
-        for ip in floating_ips:
-            parameters = {'devide_id=%s' % ip['instance_id']}
-            ports = self.os_neutron_helper.get_ports(req, parameters)
-            if ports.__len__() > 0:
-                net_id = ports[0]["network_id"]
+    @staticmethod
+    def _get_network_link_resources(link_list):
+        """Create networkLink instances from network in json format
+
+        :param link_list: provides by the cloud infrastructure
+        """
+        occi_network_resources = []
+        if link_list:
+            for l in link_list:
+                compute_id = l['compute_id']
+                net_id = l['network_id']
+                mac = l["mac"]
+                net_pool = l['pool']
+                ip = l['ip']
                 n = network.NetworkResource(title="network",
                                             id=net_id)
                 c = compute.ComputeResource(title="Compute",
-                                            id=ip["instance_id"])
-                # TODO(enolfc): get the MAC?
-                iface = os_network.OSNetworkInterface(c, n, "mac", ip["ip"],
-                                                      pool=ip["pool"])
-# {"ports": [{"status": "ACTIVE", "binding:host_id": "ubuntu", "allowed_address_pairs": [], "extra_dhcp_opts": [],
-#  "device_owner": "compute:nova", "binding:profile": {}, "fixed_ips": [{"subnet_id": "4bebdd47-215c-44a7-9a15-4f0ffdd7897d", "ip_address": "11.0.0.5"}],
-#  "id": "838781e8-693d-40e7-b3f5-f698985a6ac0", "security_groups": ["8830f4f5-e18a-48af-a5ba-0543ca699938"],
-#  "device_id": "1226a4c0-4190-46f6-a674-763c196ea18d", "name": "", "admin_state_up": true, "network_id": "2c9868b4-f71a-45d2-ba8c-dbf42f0b3120",
-#  "tenant_id": "86bf9730b23d4817b431f4c34cc9cc8e", "binding:vif_details": {"port_filter": true, "ovs_hybrid_plug": true}, "binding:vnic_type": "normal",
-#   "binding:vif_type": "ovs", "mac_address": "fa:16:3e:65:f3:6d"}]}
-
-    def index(self, req):
-        # FIXME(jorgesece): include every IP linked with VMs
-        floating_ips = self.os_helper.get_floating_ips(req)
-        occi_link_resources = []
-        for ip in floating_ips:
-            if ip["instance_id"]:
-                # FIXME(jorgesece): create the full network
-                n = network.NetworkResource(title="network",
-                                            id=network_api.FLOATING_PREFIX)
-                c = compute.ComputeResource(title="Compute",
-                                            id=ip["instance_id"])
-                # TODO(enolfc): get the MAC?
-                iface = os_network.OSNetworkInterface(c, n, "mac", ip["ip"],
-                                                      pool=ip["pool"])
-                occi_link_resources.append(iface)
-
-        return collection.Collection(resources=occi_link_resources)
-
-    def _build_os_net_iface(self, req, server_id, addr):
-        ip_id = pool = None
-        if addr["OS-EXT-IPS:type"] == "fixed":
-            net_id = network_api.FIXED_PREFIX
-        else:
-            net_id = network_api.FLOATING_PREFIX
-            # FIXME(jorgesece): include every IP linked with VMs
-            # TODO(jorgesece):  get server from id, an then network
-            floating_ips = self.os_helper.get_floating_ips(req)
-            for ip in floating_ips:
-                if addr["addr"] == ip["ip"]:
-                    ip_id = ip["id"]
-                    pool = ip["pool"]
-                    break
-            else:
-                raise exception.NetworkNotFound(resource_id=addr)
-        c = compute.ComputeResource(title="Compute", id=server_id)
-        n = network.NetworkResource(title="network", id=net_id)
-        # TODO(enolfc): get the MAC?
-        # FIXME(jorgesece): create the full network
-        return os_network.OSNetworkInterface(c, n, "mac", addr["addr"],
-                                             ip_id, pool)
+                                            id=compute_id)
+                iface = os_network.OSNetworkInterface(c, n, mac, ip,
+                                                      pool=net_pool)
+                occi_network_resources.append(iface)
+        return occi_network_resources
 
     def _get_interface_from_id(self, req, id):
         try:
-            server_id, server_addr = id.split('_', 1)
+            server_id, network_id, server_addr = id.split('_', 1)
         except ValueError:
             raise exception.LinkNotFound(link_id=id)
-        s = self.os_helper.get_server(req, server_id)
-        addresses = s.get("addresses", {})
-        for addr_set in addresses.values():
-            for addr in addr_set:
-                if addr["addr"] == server_addr:
-                    return self._build_os_net_iface(req, server_id, addr)
-        raise exception.LinkNotFound(link_id=id)
+        try:
+            link = self.os_neutron_helper.get_compute_net_link(
+                req,
+                server_id,
+                network_id,
+                server_addr)
+        except:
+            raise exception.LinkNotFound(link_id=id)
+        occi_list = self._get_network_link_resources([link])
+        return occi_list
+
+    def index(self, req):
+        link_list = self.os_neutron_helper.list_compute_net_links(req)
+        occi_link_resources = self._get_network_link_resources(link_list)
+        return collection.Collection(resources=occi_link_resources)
 
     def show(self, req, id):
-        return [self._get_interface_from_id(req, id)]
+        return self._get_interface_from_id(req, id)
 
     def create(self, req, body):
         parser = req.get_parser()(req.headers, req.body)
