@@ -30,7 +30,9 @@ class TestIntegrationNetwork(TestIntegration):
 
     def setUp(self):
         super(TestIntegrationNetwork, self).setUp()
-        self.req = Request(KeySession().create_request(self.session, path="/", environ={}, headers=None).environ)
+        self.req = Request(KeySession().create_request(self.session, path="/",
+                                                       environ={},
+                                                       headers={"X_PROJECT_ID": self.project_id}).environ)
 
         self.controller = net_controler.Controller("http://127.0.0.1:9696/v2.0")
 
@@ -87,17 +89,15 @@ class TestIntegrationNetwork(TestIntegration):
                     "occi.network.address": cidr,
                     "occi.network.gateway": gateway,
                      }
-        self.req.headers = fakes.create_header(parameters,None,self.project_id)
+        self.req.headers = fakes.create_header(parameters,None)
         net = self.controller.create(self.req)
         self.assertEqual(self.new_network_name, net.title)
         self.req.headers.pop("X-OCCI-Attribute")
-        self.req.headers.pop("X-PROJECT-ID")
         list2 = self.controller.index(self.req)
         self.assertEqual(list1.resources.__len__() + 1, list2.resources.__len__())
 
          # Delete
-        #response = self.controller.delete(self.req, {"attributes":{"occi.core.id": net.id}})
-        oid = '26be0b06-be63-4fe4-950a-601feda250cc'
+        #id = 'c9b50445-9d6f-402a-91cd-d7c323402f96'
         response = self.controller.delete(self.req, net.id)
         self.assertIsInstance(response, list)
         list3 = self.controller.index(self.req)

@@ -180,9 +180,7 @@ class Controller(ooi.api.base.Controller):
         """
         # todo(jorgesece): manage several deletion
         response = self.os_helper.delete_network(req, id)
-        if response.status_int == 404:
-            raise exception.NotFound()
-        return []
+        return response
 
     def run_action(self, req, id, body, parameters=None):
         raise exception.NotFound()

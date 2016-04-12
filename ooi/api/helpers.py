@@ -842,16 +842,30 @@ class OpenStackNet(BaseHelper):
         response = req.get_response()
         return self.get_from_response(response, None, [])
 
-    def add_router_interace(self, req, router_id, subnet_id):
+    def _add_router_interface(self, req, router_id, subnet_id):
         """Add interface.
 
         :param req: the incoming request
         :param router_id: router identification
         :param subnet_id: router identification
-        :param port_id: router identification
         """
         path = "/routers/%s/add_router_interface" % router_id
         parameters = {'subnet_id': subnet_id}
+        os_req = self._make_put_request(req, path, parameters)
+        response = os_req.get_response()
+        json_response = self.get_from_response(
+            response, None, {})
+        return json_response
+
+    def _remove_router_interface(self, req, router_id, port_id):
+        """Remove interface.
+
+        :param req: the incoming request
+        :param router_id: router identification
+        :param subnet_id: router identification
+        """
+        path = "/routers/%s/remove_router_interface" % router_id
+        parameters = {'port_id': port_id}
         os_req = self._make_put_request(req, path, parameters)
         response = os_req.get_response()
         json_response = self.get_from_response(
@@ -870,7 +884,7 @@ class OpenStackNet(BaseHelper):
                                     attributes_port)
         return port
 
-    def add_port(self, req, net_id, subnet_id):
+    def add_floating_ips(self, req, net_id, subnet_id):
         attributes_port = {
             "network_id": net_id,
             "fixed_ips": [{
@@ -948,41 +962,26 @@ class OpenStackNet(BaseHelper):
             net["subnet_info"] = self.create_resource(
                 req, 'subnets', subnet_param)
 
-        # PORT and ROUTER information is agnostic to the user
-            attributes_port = {
-                "network_id": net["id"],
-                "fixed_ips": [{
-                    "subnet_id": net["subnet_info"]["id"]
-                }]
+        # INTERFACE and ROUTER information is agnostic to the user
+            net_public = self._get_public_network(req)
+            attributes_router = {"external_gateway_info": {
+                "network_id": net_public}
             }
-            port = self.create_resource(req,
-                                        'ports',
-                                        attributes_port)
+            router = self.create_resource(req,
+                                           'routers',
+                                           attributes_router)
             try:
-                net_public = self._get_public_network(req)
-                attributes_router = {"external_gateway_info": {
-                    "network_id": net_public}
-                }
-                router = self.create_resource(req,
-                                               'routers',
-                                               attributes_router)
-                try:
-                    #create interface to the network
-                    self.add_router_interace(req,
-                                             router['id'],
-                                             net['subnet_info']['id']
-                                             )
-                except Exception as ex:
-                    self.delete_resource(req,
-                                         'routers', router['id']
+                #create interface to the network
+                self._add_router_interface(req,
+                                         router['id'],
+                                         net['subnet_info']['id']
                                          )
-                    raise ex
             except Exception as ex:
-                # self.delete_resource(req,
-                #                  'ports', port['id'])
+                self.delete_resource(req,
+                                     'routers', router['id']
+                                     )
                 raise ex
         except Exception as ex:
-            # fixme(jorgesece): check it is working
             self.delete_resource(req,
                                  'networks', net['id'])
             raise ex
@@ -996,10 +995,23 @@ class OpenStackNet(BaseHelper):
         :param id: net identification
         """
         param = {"network_id": id}
+        # subnet
+        # net = self.get_resource(req, 'networks', id)
+        # sub_net_id = net["subnets"][0]["id"]
+        # self.remove_router_interace(req, sub_net_id)
+        #
         ports = self.list_resources(req, 'ports', param)
         for port in ports:
-            resp_port = self.delete_resource(req,
-                                 'ports', port["id"])
+            if port['device_owner'] == "network:router_interface":
+                self._remove_router_interface(req,
+                                              port['device_id'],
+                                              port['id'],
+                                              )
+                self.delete_resource(req,
+                                     'routers', port["device_id"])
+            else:
+                self.delete_resource(req,
+                                     'ports', port["id"])
         response = self.delete_resource(req,
                                         'networks',
                                         id)
