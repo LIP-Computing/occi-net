@@ -873,6 +873,14 @@ class OpenStackNet(BaseHelper):
         return json_response
 
     def _add_port(self, req, net_id, subnet_id):
+        """Add a port to the subnet
+
+        Returns the port information
+
+        :param req: the incoming network
+        :param net_id: network id
+        :param subnet_id: subnetwork id
+        """
         attributes_port = {
             "network_id": net_id,
             "fixed_ips": [{
@@ -884,17 +892,49 @@ class OpenStackNet(BaseHelper):
                                     attributes_port)
         return port
 
-    def add_floating_ips(self, req, net_id, subnet_id):
+    def _add_floating_ip(self, req, public_net_id, port_id):
+        """Add floating to the public network and a port
+
+        Creates the floating IP and asign it to the port
+        of the device.
+
+        :param req: the incoming network
+        :param public_net_id: public network id
+        :param port_id: port id of the device
+        """
         attributes_port = {
-            "network_id": net_id,
-            "fixed_ips": [{
-                "subnet_id": subnet_id
-            }]
+            "floating_network_id": public_net_id,
+            "port_id": port_id
         }
         port = self.create_resource(req,
                                     'floatingips',
                                     attributes_port)
         return port
+
+    def _remove_floating_ip(self, req, public_net_id, port_id):
+        """Delete floating to the public network and a port
+
+        Delete the floating IP and asign it to the port
+        of the device.
+
+        :param req: the incoming network
+        :param public_net_id: network id
+        :param port_id: port id of the device
+        """
+        attributes_port = {
+            "floating_network_id": public_net_id,
+            "port_id": port_id
+        }
+        try:
+            floating_ip = self.list_resources(req,
+                                              'floatingips',
+                                              attributes_port)
+            response = self.delete_resource(req,
+                                            'floatingips',
+                                            floating_ip[0]['id'])
+        except:
+            raise exception.NotFound
+        return response
 
     def get_network_details(self, req, id):
         """Get info from a network.
@@ -1017,27 +1057,53 @@ class OpenStackNet(BaseHelper):
                                         id)
         return response
 
-    # def assign_floating_ip(self, req, compute_id, net_id):
-    #     """assign floating ip to a server
-    #
-    #     :param req: the incoming request
-    #     :param compute_id: compute identification
-    #     :param net_id: network identification
-    #     """
-    #     path_net = "/networks/%s" % net_id
-    #     req = self._make_get_request(req, path_net)
-    #     response_net = req.get_response()
-    #     net = self.get_from_response(response_net, "network", {})
-    #     # subnet
-    #     try:
-    #         port = self._add_port(req, net_id, net["subnets"][0])
-    #         net_public = self._get_public_network(req)
-    #     except:
-    #         raise exception.NetworkNotFound()
-    #
-    #     response = lin
-    #
-    #     return response
+    def assign_floating_ip(self, req, compute_id, net_id=None):
+        """assign floating ip to a server
+
+        :param req: the incoming request
+        :param compute_id: compute identification
+        :param net_id: network identification
+        """
+        # net_id it is not needed if
+        # there is just one port of the VM
+        param = {'device_id': compute_id}
+        if net_id:
+            param['network_id'] = net_id
+        try:
+            net_public = self._get_public_network(req)
+        except:
+            raise exception.NetworkNotFound()
+        try:
+            ports = self.list_resources(req, 'ports', param)
+            # subnet_id = ports[0]['fixed_ips'][0]['subnet_id']
+            response = self._add_floating_ip(req, net_public,
+                                             ports[0]['id'])
+        except:
+            raise exception.ResourceNotFound()
+        return response
+
+    def release_floating_ip(self, req, compute_id, net_id=None):
+        """release floating ip from a server
+
+        :param req: the incoming request
+        :param compute_id: compute identification
+        :param net_id: network identification
+        """
+        # net_id it is not needed if there is just one port of the VM
+        param = {'device_id': compute_id}
+        if net_id:
+            param['network_id'] = net_id
+        try:
+            net_public = self._get_public_network(req)
+        except:
+            raise exception.NetworkNotFound()
+        try:
+            ports = self.list_resources(req, 'ports', param)
+            response = self._remove_floating_ip(req, net_public,
+                                                ports[0]['id'])
+        except:
+            raise exception.ResourceNotFound()
+        return response
 
     def run_action(self, req, action, net_id):
         """Run an action on a network.

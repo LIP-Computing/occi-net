@@ -69,8 +69,7 @@ class TestIntegrationNetwork(TestIntegration):
 
     def test_create_network_no_subnetwork(self):
         #Create
-        parameters = { "occi.core.title":self.new_network_name,
-                     }
+        parameters = {"occi.core.title": self.new_network_name}
         self.req.headers = fakes.create_header(parameters,None)
         try:
             self.controller.create(self.req)
@@ -78,7 +77,7 @@ class TestIntegrationNetwork(TestIntegration):
             out = e
         self.assertIsInstance(out, exception.Invalid)
 
-    def test_create_delete_network_with_subnet(self):
+    def test_create_delete_network_with_all(self):
         list1 = self.controller.index(self.req)
         ip_version = 4
         cidr = "12.0.0.1/24"
@@ -104,9 +103,3 @@ class TestIntegrationNetwork(TestIntegration):
         self.assertEqual(list1.resources.__len__(), list3.resources.__len__())
 
 
-"""
-    def test_delete_network(self):
-        response = self.controller.delete(self.req, self.new_network_id)
-
-        self.assertEqual(204, response.status_code)
-"""
