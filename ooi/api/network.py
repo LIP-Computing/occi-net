@@ -23,6 +23,9 @@ from ooi.openstack import network as os_network
 from ooi.occi.infrastructure import network
 
 
+PUBLIC_NETWORK = "PUBLIC"
+
+
 def build_network(name, prefix=None):
     if prefix:
         network_id = '/'.join([prefix, name])

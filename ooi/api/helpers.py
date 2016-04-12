@@ -870,25 +870,45 @@ class OpenStackNet(BaseHelper):
             response, None, {})
         return json_response
 
-    # def _add_port(self, req, net_id, subnet_id):
-    #     """Add a port to the subnet
-    #
-    #     Returns the port information
-    #
-    #     :param req: the incoming network
-    #     :param net_id: network id
-    #     :param subnet_id: subnetwork id
-    #     """
-    #     attributes_port = {
-    #         "network_id": net_id,
-    #         "fixed_ips": [{
-    #             "subnet_id": subnet_id
-    #         }]
-    #     }
-    #     port = self.create_resource(req,
-    #                                 'ports',
-    #                                 attributes_port)
-    #     return port
+    def create_port(self, req, net_id, device_id):
+        """Add a port to the subnet
+
+        Returns the port information
+
+        :param req: the incoming network
+        :param net_id: network id
+        :param device_id: device to connect
+        """
+        attributes_port = {
+            "network_id": net_id,
+            "device_id": device_id
+        }
+        port = self.create_resource(req,
+                                    'ports',
+                                    attributes_port)
+        return port
+
+    def delete_port(self, req, mac):
+        """Add a port to the subnet
+
+        Returns the port information
+
+        :param req: the incoming network
+        :param net_id: network id
+        :param device_id: device to connect
+        """
+        attributes_port = {
+            "mac_address ": mac
+        }
+        ports = self.list_resources(
+            req,
+            'ports',
+        )
+        if ports.__len__() == 0:
+            raise exception.LinkNotFound()
+        self.delete_resource(req,
+                             'ports',
+                             ports[0]['id'])
 
     def _add_floating_ip(self, req, public_net_id, port_id):
         """Add floating to the public network and a port

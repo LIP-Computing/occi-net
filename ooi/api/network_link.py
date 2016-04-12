@@ -48,10 +48,13 @@ class Controller(base.Controller):
         if link_list:
             for l in link_list:
                 compute_id = l['compute_id']
-                net_id = l['network_id']
                 mac = l["mac"]
                 net_pool = l['pool']
                 ip = l['ip']
+                if net_pool: # mac only in the public
+                    net_id = network_api.PUBLIC_NETWORK
+                else:
+                    net_id = l['network_id']
                 n = network.NetworkResource(title="network",
                                             id=net_id)
                 c = compute.ComputeResource(title="Compute",
@@ -107,38 +110,32 @@ class Controller(base.Controller):
             attrs.get("occi.core.source"),
             compute.ComputeResource.kind)
 
-        # net_id is something like "fixed" or "floating"
-        if net_id == network_api.FIXED_PREFIX:
-            raise exception.Invalid()
-        elif net_id != network_api.FLOATING_PREFIX:
-            raise exception.NetworkNotFound(resource_id=net_id)
-
+        # todo(jorgesece): check if about pools
         pool_name = None
         if os_network.OSFloatingIPPool.scheme in obj["schemes"]:
             pool_name = obj["schemes"][os_network.OSFloatingIPPool.scheme][0]
-        # Allocate IP
-        ip = self.os_helper.allocate_floating_ip(req, pool_name)
 
-        # Add it to server
-        # FIXME(jorgesece): include FIXED IP linked with VMs
-        # TODO(jorgesece):  get server from id, an then network
-        # FIXME(jorgesece): create the full network
-        self.os_helper.associate_floating_ip(req, server_id, ip["ip"])
-        n = network.NetworkResource(title="network", id=net_id)
-        c = compute.ComputeResource(title="Compute", id=server_id)
-        l = os_network.OSNetworkInterface(c, n, "mac", ip["ip"])
-        return collection.Collection(resources=[l])
+        # Allocate public IP and associate it ot the server
+        if net_id == network_api.PUBLIC_NETWORK:
+            os_link = self.os_neutron_helper.assign_floating_ip(
+                req,
+                server_id)
+        else:
+            # Allocate private network
+            os_link = self.os_neutron_helper.create_port(
+                req,
+                net_id,
+                server_id)
+            # raise exception.NetworkNotFound(resource_id=net_id)
+
+        occi_link = self._get_network_link_resources([os_link])
+        return collection.Collection(resources=[occi_link])
 
     def delete(self, req, id):
-        iface = self._get_interface_from_id(req, id)
-        if iface.target.id == "fixed":
-            raise exception.Invalid()
-
-        # remove floating IP
-        server = iface.source.id
-        # FIXME(jorgesece): include FIXED IP linked with VMs
-        self.os_helper.remove_floating_ip(req, server, iface.address)
-
-        # release IP
-        self.os_helper.release_floating_ip(req, iface.ip_id)
+        iface = self._get_interface_from_id(req, id)[0]
+        if iface.target.id == network_api.PUBLIC_NETWORK:
+            os_link = self.os_neutron_helper.release_floating_ip(
+                req, iface.source.id)
+        else:
+            os_link = self.os_neutron_helper.delete_port(iface.mac)
         return []
