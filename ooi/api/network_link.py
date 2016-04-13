@@ -86,37 +86,30 @@ class Controller(base.Controller):
     def show(self, req, id):
         return self._get_interface_from_id(req, id)
 
-
-    def process_occi(self, req, scheme):
+    def process_input(self, req, scheme):
         """Get attributes from request parameters
 
         :param req: request
         """
         parser = req.get_parser()(req.headers, req.body)
-        obj = parser.parse()
-        validator = occi_validator.Validator(obj)
+        input_data = parser.parse()
+        validator = occi_validator.Validator(input_data)
         validator.validate(scheme)
         if 'X_PROJECT_ID' in req.headers:
             project_id = req.headers["X_PROJECT_ID"]
-            if obj:
-                obj["attributes"]["X_PROJECT_ID"] = (
+            if input_data:
+                input_data["attributes"]["X_PROJECT_ID"] = (
                     project_id)
             else:
                 obj = {"attributes": {"X_PROJECT_ID": project_id}
                      }
-        return obj
 
-    def filter_attributes(self, parameters):
-        """Get attributes from request parameters
-
-        :param req: request
-        """
         try:
-            if not parameters:
+            if not input_data:
                 return None
-            if "attributes" in parameters:
+            if "attributes" in input_data:
                 attributes = {}
-                for k, v in parameters.get("attributes", None).items():
+                for k, v in input_data.get("attributes", None).items():
                     attributes[k.strip()] = v.strip()
             else:
                 attributes = None
@@ -131,8 +124,7 @@ class Controller(base.Controller):
                 os_network.OSFloatingIPPool,
             ]
         }
-        occi_input = self.process_occi(req, scheme)
-        parameters = self.filter_attributes(occi_input)
+        parameters = self.process_input(req, scheme)
         net_id = parameters['occi.core.target']
 
         # todo(jorgesece): check if about pools

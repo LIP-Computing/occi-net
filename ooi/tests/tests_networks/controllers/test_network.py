@@ -104,12 +104,12 @@ class TestNetworkController(base.TestController):
         attr_dic = {'attr1': '0', 'attr2': '1', 'attr3': '2'}
         schemes = {"something.schema1": "8923489"}
         req = fakes.create_req_test(attr_dic, schemes)
-        ret = self.controller._filter_attributes(req)
+        ret = network.filter_attributes(req)
         self.assertIsNotNone(ret)
         self.assertEqual(attr_dic, ret)
 
     def test_filter_attributes_empty(self):
         schemes = {"any": "net"}
         req = fakes.create_req_test(params=None, schemes=schemes)
-        attributes = self.controller._filter_attributes(req)
+        attributes = network.filter_attributes(req)
         self.assertIsNone(attributes)

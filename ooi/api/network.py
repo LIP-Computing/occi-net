@@ -21,6 +21,7 @@ from ooi.api import helpers
 from ooi import exception
 from ooi.occi.core import collection
 from ooi.occi.infrastructure import network
+from ooi.occi import validator as occi_validator
 from ooi.openstack import network as os_network
 from ooi import utils
 
@@ -47,7 +48,6 @@ def process_parameters(req):
                      }
     return param
 
-
 def filter_attributes(req):
     """Get attributes from request parameters
 
@@ -60,6 +60,39 @@ def filter_attributes(req):
         if "attributes" in parameters:
             attributes = {}
             for k, v in parameters.get("attributes", None).items():
+                attributes[k.strip()] = v.strip()
+        else:
+            attributes = None
+    except Exception:
+        raise exception.Invalid
+    return attributes
+
+
+def process_input(self, req, scheme):
+    """Get attributes from request parameters
+
+    :param req: request
+    :param: scheme: scheme to validate
+    """
+    parser = req.get_parser()(req.headers, req.body)
+    input_data = parser.parse()
+    validator = occi_validator.Validator(input_data)
+    validator.validate(scheme)
+    if 'X_PROJECT_ID' in req.headers:
+        project_id = req.headers["X_PROJECT_ID"]
+        if input_data:
+            input_data["attributes"]["X_PROJECT_ID"] = (
+                project_id)
+        else:
+            obj = {"attributes": {"X_PROJECT_ID": project_id}
+                 }
+
+    try:
+        if not input_data:
+            return None
+        if "attributes" in input_data:
+            attributes = {}
+            for k, v in input_data.get("attributes", None).items():
                 attributes[k.strip()] = v.strip()
         else:
             attributes = None

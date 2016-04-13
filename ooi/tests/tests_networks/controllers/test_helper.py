@@ -288,16 +288,16 @@ class TestNetOpenStackHelper(base.TestCase):
 
     @mock.patch.object(helpers.OpenStackNet, "delete_resource")
     @mock.patch.object(helpers.OpenStackNet, "list_resources")
-    def test_add_floating_ip(self, m_list, m_del):
-        port_id = 1
+    def test_remove_floating_ip(self, m_list, m_del):
+        ip = '1.0.0.0'
         public_net = 111
         f_ip = 33
         m_list.return_value = [{'id':f_ip}]
         m_del.return_value = []
-        ret = self.helper._remove_floating_ip(None, public_net, port_id)
+        ret = self.helper._remove_floating_ip(None, public_net, ip)
         attributes_port = {
             "floating_network_id": public_net,
-            "port_id": port_id
+            "floating_ip_address": ip
         }
         self.assertEqual([], ret)
         m_list.assert_called_with(None, 'floatingips', attributes_port)
@@ -411,35 +411,35 @@ class TestNetOpenStackHelper(base.TestCase):
     def test_assign_floating_ip(self, m_add, m_list, m_get_net):
         compute_id = 33
         net_id = 22
+        param_occi = {'occi.core.target': net_id,
+                 'occi.core.source': compute_id
+                 }
         f_id = 44
         ip = '0.0.0.1'
-        port = {'id': 11, 'device_owner': 'nova'}
+        port = {'id': 11, 'network_id':net_id, 'device_owner': 'nova'}
         param = {'device_id': compute_id}
         m_get_net.return_value = net_id
         m_list.return_value = [port]
         m_add.return_value = {"id": f_id,
-                 'floating_ip_address': ip}
-        ret = self.helper.assign_floating_ip(None, compute_id)
-        self.assertEqual(f_id, ret['id'])
-        self.assertEqual(ip, ret['floating_ip_address'])
+                 'floating_ip_address': ip,
+                 'floating_network_id': '84'}
+        ret = self.helper.assign_floating_ip(None, param_occi)
+        self.assertEqual(net_id, ret['network_id'])
+        self.assertEqual(ip, ret['ip'])
         m_list.assert_called_with(None,'ports', param)
         m_add.assert_called_with(None, net_id, port['id'])
 
     @mock.patch.object(helpers.OpenStackNet, "_get_public_network")
-    @mock.patch.object(helpers.OpenStackNet, "list_resources")
     @mock.patch.object(helpers.OpenStackNet, "_remove_floating_ip")
-    def test_release_floating_ip(self, m_add, m_list, m_get_net):
-        compute_id = 33
-        net_id = 22
-        port = {'id': 11, 'device_owner': 'nova'}
-        param = {'device_id': compute_id}
+    def test_release_floating_ip(self, m_add, m_get_net):
+        ip = '22.0.0.1'
+        net_id='PUBLIC'
+
         m_get_net.return_value = net_id
-        m_list.return_value = [port]
         m_add.return_value = []
-        ret = self.helper.release_floating_ip(None, compute_id)
+        ret = self.helper.release_floating_ip(None, ip)
         self.assertEqual([], ret)
-        m_list.assert_called_with(None,'ports', param)
-        m_add.assert_called_with(None, net_id, port['id'])
+        m_add.assert_called_with(None, net_id, ip)
 
 
     # todo(jorgesece):

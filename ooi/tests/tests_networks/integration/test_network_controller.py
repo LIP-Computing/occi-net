@@ -25,7 +25,6 @@ from ooi.tests.tests_networks.integration.keystone.session import KeySession
 from ooi.tests.tests_networks import fakes
 
 
-
 class TestIntegrationNetwork(TestIntegration):
 
     def setUp(self):
