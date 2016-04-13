@@ -15,7 +15,7 @@
 # under the License.
 
 from ooi.tests.tests_networks.integration import TestIntegration
-
+from ooi.occi.infrastructure import network
 from ooi.tests.tests_networks.integration.keystone.session import KeySession
 from ooi.wsgi import OCCIMiddleware
 
@@ -45,8 +45,10 @@ class TestMiddleware(TestIntegration):
         cidr = "11.0.0.1/24"
         gateway = "11.0.0.3"
         allocation = "dynamic"
+        term = network.NetworkResource.kind.term
+        scheme = network.NetworkResource.kind.scheme
         headers = {
-            #'Category': 'network; scheme="http://schema#";class="kind";',
+            'Category': '%s; scheme="%s";class="kind"' % (term, scheme),
             "X_OCCI_Attribute": 'occi.core.title=OCCI_WSGI_TEST, org.openstack.network.ip_version=4,'
                                 'occi.network.address="%s", occi.network.gateway="%s", occi.network.allocation="%s"' % (cidr, gateway, allocation),
             "X_PROJECT_ID": self.project_id,
@@ -56,10 +58,7 @@ class TestMiddleware(TestIntegration):
         self.assertEqual(200, result.status_code)
 
         net_id = result.text.split('\n')[6].split('=')[1].replace('"', '').strip()
-        headers_delete = {
-             "X_OCCI_Attribute": 'occi.core.id=%s' % net_id,
-        }
-        req = KeySession().create_request(self.session, path="/network/%s" % net_id, headers=headers_delete, method="DELETE")
+        req = KeySession().create_request(self.session, path="/network/%s" % net_id, method="DELETE")
         result = req.get_response(self.app)
         self.assertEqual(204, result.status_code)
 

@@ -58,12 +58,14 @@ class TestNetworkController(base.TestController):
         schema1 = occi_network.NetworkResource.kind.scheme
         # m_network.return_value = {"id":"xxx"}
         for net in test_networks:
-            schemes = {schema1: net}
-            parameters = {"occi.core.title": "name",
+            parameters = {"occi.core.title": net["name"],
                           "org.openstack.network.ip_version": 4,
                           "occi.network.address": "0.0.0.0",
                           }
-            req = fakes.create_req_test(parameters, schemes)
+            term = occi_network.NetworkResource.kind.term
+            scheme = occi_network.NetworkResource.kind.scheme
+            categories = {term: scheme}
+            req = fakes.create_req_test_occi(parameters, categories)
             ret = self.controller.create(req)
             self.assertIsInstance(ret, occi_network.NetworkResource)
 

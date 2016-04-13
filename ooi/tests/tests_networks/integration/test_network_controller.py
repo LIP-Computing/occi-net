@@ -95,7 +95,10 @@ class TestIntegrationNetwork(TestIntegration):
                     "occi.network.address": cidr,
                     "occi.network.gateway": gateway,
                      }
-        self.req.headers = fakes.create_header(parameters,None)
+        term = network.NetworkResource.kind.term
+        scheme = network.NetworkResource.kind.scheme
+        categories = {term: scheme}
+        self.req.headers = fakes.create_header_occi(parameters, categories)
         net = self.controller.create(self.req)
         self.assertEqual(self.new_network_name, net.title)
         self.req.headers.pop("X-OCCI-Attribute")

@@ -151,6 +151,13 @@ def create_header(params, schemes, project=None):
     return headers
 
 
+def create_req_test_occi(params, category):
+    headers = create_header_occi(params, category)
+    req = webob.Request.blank(path="")
+    req.headers = headers
+    return wsgi.Request(req.environ)
+
+
 def create_header_occi(params, category, project=None):
     headers = {}
     class_type = "kind"

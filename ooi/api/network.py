@@ -48,6 +48,7 @@ def process_parameters(req):
                      }
     return param
 
+
 def filter_attributes(req):
     """Get attributes from request parameters
 
@@ -68,7 +69,7 @@ def filter_attributes(req):
     return attributes
 
 
-def process_input(self, req, scheme):
+def process_input(req, scheme):
     """Get attributes from request parameters
 
     :param req: request
@@ -86,7 +87,6 @@ def process_input(self, req, scheme):
         else:
             obj = {"attributes": {"X_PROJECT_ID": project_id}
                  }
-
     try:
         if not input_data:
             return None
@@ -186,7 +186,14 @@ class Controller(ooi.api.base.Controller):
         # todo(jorgesece): manage several creation
         # FIXME(jorgesece): Body is coming from OOI
         # resource class and is not used
-        attributes = filter_attributes(req)
+        scheme = {
+            "category": network.NetworkResource.kind,
+            "optional_mixins": [
+                network.ip_network,
+            ]
+        }
+        attributes = process_input(req, scheme)
+        #attributes = filter_attributes(req)
         self._validate_attributes(
             self.os_helper.required["networks"], attributes)
         net = self.os_helper.create_network(req, attributes)
