@@ -48,7 +48,7 @@ class TestIntegrationNetwork(TestIntegration):
         self.assertEqual("private", sortedList[0].title)
 
     def test_list_by_tenant(self):
-        self.req.headers = fakes.create_header(None,None, self.project_id)
+        self.req.headers = fakes.create_header(None, None, self.project_id)
         list = self.controller.index(self.req)
         sortedList = sorted(list.resources,
                             key=lambda Network: Network.title,
@@ -57,7 +57,7 @@ class TestIntegrationNetwork(TestIntegration):
       #  self.assertEqual("public", sortedList[0].title)
 
     def test_list_by_tenant_error(self):
-        self.req.headers = fakes.create_header(None,None, "noexits")
+        self.req.headers = fakes.create_header(None, None, "noexits")
         list = self.controller.index(self.req)
         self.assertIs(0, list.resources.__len__())
 
@@ -78,7 +78,7 @@ class TestIntegrationNetwork(TestIntegration):
     def test_create_network_no_subnetwork(self):
         #Create
         parameters = {"occi.core.title": self.new_network_name}
-        self.req.headers = fakes.create_header(parameters,None)
+        self.req.headers = fakes.create_header(parameters, None)
         try:
             self.controller.create(self.req)
         except Exception as e:

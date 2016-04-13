@@ -883,10 +883,16 @@ class OpenStackNet(BaseHelper):
             "network_id": net_id,
             "device_id": device_id
         }
-        port = self.create_resource(req,
-                                    'ports',
-                                    attributes_port)
-        return port
+        p = self.create_resource(req,
+                                 'ports',
+                                 attributes_port)
+        link = self._build_link(
+                        p["network_id"],
+                        p['device_id'],
+                        p["fixed_ips"][0]["ip_address"],
+                        mac=p["mac_address"],
+                        state=utils.network_status(p["status"]))
+        return link
 
     def delete_port(self, req, mac):
         """Add a port to the subnet
@@ -898,17 +904,18 @@ class OpenStackNet(BaseHelper):
         :param device_id: device to connect
         """
         attributes_port = {
-            "mac_address ": mac
+            "mac_address": mac
         }
         ports = self.list_resources(
             req,
-            'ports',
+            'ports', attributes_port
         )
         if ports.__len__() == 0:
             raise exception.LinkNotFound()
-        self.delete_resource(req,
-                             'ports',
-                             ports[0]['id'])
+        out = self.delete_resource(req,
+                                   'ports',
+                                   ports[0]['id'])
+        return out
 
     def _add_floating_ip(self, req, public_net_id, port_id):
         """Add floating to the public network and a port

@@ -86,32 +86,60 @@ class Controller(base.Controller):
     def show(self, req, id):
         return self._get_interface_from_id(req, id)
 
-    def create(self, req, body):
+
+    def process_occi(self, req, scheme):
+        """Get attributes from request parameters
+
+        :param req: request
+        """
         parser = req.get_parser()(req.headers, req.body)
+        obj = parser.parse()
+        validator = occi_validator.Validator(obj)
+        validator.validate(scheme)
+        if 'X_PROJECT_ID' in req.headers:
+            project_id = req.headers["X_PROJECT_ID"]
+            if obj:
+                obj["attributes"]["X_PROJECT_ID"] = (
+                    project_id)
+            else:
+                obj = {"attributes": {"X_PROJECT_ID": project_id}
+                     }
+        return obj
+
+    def filter_attributes(self, parameters):
+        """Get attributes from request parameters
+
+        :param req: request
+        """
+        try:
+            if not parameters:
+                return None
+            if "attributes" in parameters:
+                attributes = {}
+                for k, v in parameters.get("attributes", None).items():
+                    attributes[k.strip()] = v.strip()
+            else:
+                attributes = None
+        except Exception:
+            raise exception.Invalid
+        return attributes
+
+    def create(self, req, body=None):
         scheme = {
             "category": network_link.NetworkInterface.kind,
             "optional_mixins": [
                 os_network.OSFloatingIPPool,
             ]
         }
-        obj = parser.parse()
-        validator = occi_validator.Validator(obj)
-        validator.validate(scheme)
-
-        attrs = obj.get("attributes", {})
-        _, net_id = helpers.get_id_with_kind(
-            req,
-            attrs.get("occi.core.target"),
-            network.NetworkResource.kind)
-        _, server_id = helpers.get_id_with_kind(
-            req,
-            attrs.get("occi.core.source"),
-            compute.ComputeResource.kind)
+        parameters = self.process_occi(req, scheme)
+        parameters = self.filter_attributes(parameters)
+        net_id = parameters['occi.core.target']
+        server_id = parameters['occi.core.source']
 
         # todo(jorgesece): check if about pools
-        pool_name = None
-        if os_network.OSFloatingIPPool.scheme in obj["schemes"]:
-            pool_name = obj["schemes"][os_network.OSFloatingIPPool.scheme][0]
+        # pool_name = None
+        # if os_network.OSFloatingIPPool.scheme in obj["schemes"]:
+        #     pool_name = obj["schemes"][os_network.OSFloatingIPPool.scheme][0]
 
         # Allocate public IP and associate it ot the server
         if net_id == network_api.PUBLIC_NETWORK:
@@ -135,5 +163,5 @@ class Controller(base.Controller):
             os_link = self.os_neutron_helper.release_floating_ip(
                 req, iface.source.id)
         else:
-            os_link = self.os_neutron_helper.delete_port(iface.mac)
+            os_link = self.os_neutron_helper.delete_port(req, iface.mac)
         return []

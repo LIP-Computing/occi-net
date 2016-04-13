@@ -145,7 +145,25 @@ def create_header(params, schemes, project=None):
             sch = "%s, %s:%s" % (sch, k, v)
             cat = "%s, %s%s" % (cat, k, v)
         headers["schemes"] = sch
-        # headers['category']= cat
+        #headers['Category']= cat
+    if project is not None:
+        headers["X_PROJECT_ID"] = project
+    return headers
+
+
+def create_header_occi(params, category, project=None):
+    headers = {}
+    class_type = "kind"
+    att = ""
+    if params is not None:
+        for k, v in params.items():
+            att = "%s, %s=%s " % (att, k, v)
+        headers["X_OCCI_Attribute"] = att
+    if category is not None:
+        cat = ""
+        for k, v in category.items():
+            cat = "%s%s; scheme=%s; class=%s," % (cat, k, v, class_type)
+        headers['Category']= cat[:-1]
     if project is not None:
         headers["X_PROJECT_ID"] = project
     return headers

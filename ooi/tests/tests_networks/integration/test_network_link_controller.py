@@ -22,7 +22,7 @@ from ooi.wsgi import Request
 from ooi.api import network_link as link_controller
 from ooi.occi.infrastructure import network_link
 from ooi.tests.tests_networks.integration.keystone.session import KeySession
-
+from ooi.tests.tests_networks import fakes
 
 
 class TestIntegrationNetworkLink(TestIntegration):
@@ -47,6 +47,42 @@ class TestIntegrationNetworkLink(TestIntegration):
         self.assertEquals(occi[0].target.id, network_id)
         self.assertEquals(occi[0].source.id, server_id)
         self.assertEquals(occi[0].address, server_addr)
+
+    def test_create_private(self):
+        compute_id = 'bb62976a-13fe-4c23-9343-324149c63dbc'
+        net_id = 'cd48b7dd-9ac8-44fc-aec0-5ea679941ced'
+        parameters = {
+                "occi.core.target": net_id,
+                "occi.core.source": compute_id,
+            }
+        term = network_link.NetworkInterface.kind.term
+        scheme = network_link.NetworkInterface.kind.scheme
+        categories = {term: scheme}
+
+        self.req.headers = fakes.create_header_occi(parameters, categories, self.project_id)
+        out = self.controller.create(self.req)
+        self.assertIsNone(out)
+
+    def test_create_public(self):
+        compute_id = 'bb62976a-13fe-4c23-9343-324149c63dbc'
+        net_id = 'PUBLIC'
+        parameters = {
+                "occi.core.target": net_id,
+                "occi.core.source": compute_id,
+            }
+        term = network_link.NetworkInterface.kind.term
+        scheme = network_link.NetworkInterface.kind.scheme
+        categories = {term: scheme}
+
+        self.req.headers = fakes.create_header_occi(parameters, categories, self.project_id)
+        out = self.controller.create(self.req)
+        self.assertIsNone(out)
+
+    def test_delete_private(self):
+        link_id = 'bb62976a-13fe-4c23-9343-324149c63dbc_'\
+                  'cd48b7dd-9ac8-44fc-aec0-5ea679941ced_12.0.0.5'
+        out = self.controller.delete(self.req, link_id)
+        self.assertIsE([], out)
 
 
 
