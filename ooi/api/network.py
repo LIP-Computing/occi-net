@@ -16,31 +16,16 @@
 # under the License.
 
 import ooi.api.base
+
 from ooi.api import helpers
 from ooi import exception
 from ooi.occi.core import collection
-from ooi.openstack import network as os_network
 from ooi.occi.infrastructure import network
+from ooi.openstack import network as os_network
+from ooi import utils
 
 
 PUBLIC_NETWORK = "PUBLIC"
-
-
-def build_network(name, prefix=None):
-    if prefix:
-        network_id = '/'.join([prefix, name])
-    else:
-        network_id = name
-    return network.Network(title=name, id=network_id, state="active")
-
-
-def network_status(neutron_status):
-    if neutron_status == "ACTIVE":
-        return "active"
-    elif neutron_status == "SUSPENDED":
-        return "suspended"
-    else:
-        return "inactive"
 
 
 def process_parameters(req):
@@ -63,32 +48,32 @@ def process_parameters(req):
     return param
 
 
+def filter_attributes(req):
+    """Get attributes from request parameters
+
+    :param req: request
+    """
+    try:
+        parameters = process_parameters(req)
+        if not parameters:
+            return None
+        if "attributes" in parameters:
+            attributes = {}
+            for k, v in parameters.get("attributes", None).items():
+                attributes[k.strip()] = v.strip()
+        else:
+            attributes = None
+    except Exception:
+        raise exception.Invalid
+    return attributes
+
+
 class Controller(ooi.api.base.Controller):
     def __init__(self, neutron_endpoint):
         super(Controller, self).__init__(app=None, openstack_version="v2.0")
         self.os_helper = helpers.OpenStackNet(
             neutron_endpoint
         )
-
-    @staticmethod
-    def _filter_attributes(req):
-        """Get attributes from request parameters
-
-        :param req: request
-        """
-        try:
-            parameters = process_parameters(req)
-            if not parameters:
-                return None
-            if "attributes" in parameters:
-                attributes = {}
-                for k, v in parameters.get("attributes", None).items():
-                    attributes[k.strip()] = v.strip()
-            else:
-                attributes = None
-        except Exception:
-            raise exception.Invalid
-        return attributes
 
     @staticmethod
     def _validate_attributes(required, attributes):
@@ -113,7 +98,7 @@ class Controller(ooi.api.base.Controller):
         occi_network_resources = []
         if networks_list:
             for s in networks_list:
-                s["status"] = network_status(s["status"])
+                s["status"] = utils.network_status(s["status"])
                 n_id = s["id"]
                 n_status = s["status"]
                 n_name = s["name"]
@@ -140,7 +125,7 @@ class Controller(ooi.api.base.Controller):
 
         :param req: request object
         """
-        attributes = self._filter_attributes(req)
+        attributes = filter_attributes(req)
         occi_networks = self.os_helper.index(req, attributes)
         occi_network_resources = self._get_network_resources(
             occi_networks)
@@ -168,7 +153,7 @@ class Controller(ooi.api.base.Controller):
         # todo(jorgesece): manage several creation
         # FIXME(jorgesece): Body is coming from OOI
         # resource class and is not used
-        attributes = self._filter_attributes(req)
+        attributes = filter_attributes(req)
         self._validate_attributes(
             self.os_helper.required["networks"], attributes)
         net = self.os_helper.create_network(req, attributes)

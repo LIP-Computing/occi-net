@@ -234,9 +234,7 @@ class OCCIMiddleware(object):
 
         # FIXME(jorgesece): control and improved it
         self.resources["networklink"] = Resource(
-            ooi.api.network_link.Controller(self.application,
-                                            self.openstack_version,
-                                            self.neutron_endpoint))
+            ooi.api.network_link.Controller(self.neutron_endpoint))
         self._setup_resource_routes("networklink",
                                     self.resources["networklink"])
 

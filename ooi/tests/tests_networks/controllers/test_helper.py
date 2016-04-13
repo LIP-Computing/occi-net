@@ -441,3 +441,7 @@ class TestNetOpenStackHelper(base.TestCase):
         m_list.assert_called_with(None,'ports', param)
         m_add.assert_called_with(None, net_id, port['id'])
 
+
+    # todo(jorgesece):
+        # - create port
+        # - release port

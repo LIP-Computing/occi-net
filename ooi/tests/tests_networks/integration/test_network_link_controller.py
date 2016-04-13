@@ -19,10 +19,9 @@ from ooi.tests.tests_networks.integration import  TestIntegration
 
 from ooi import exception
 from ooi.wsgi import Request
-from ooi.api import network as net_controler
-from ooi.occi.infrastructure import network
+from ooi.api import network_link as link_controller
+from ooi.occi.infrastructure import network_link
 from ooi.tests.tests_networks.integration.keystone.session import KeySession
-from ooi.tests.tests_networks import fakes
 
 
 
@@ -33,13 +32,14 @@ class TestIntegrationNetworkLink(TestIntegration):
         self.req = Request(KeySession().create_request(self.session, path="/",
                                                        environ={},
                                                        headers={"X_PROJECT_ID": self.project_id}).environ)
+        self.controller = link_controller.Controller("http://127.0.0.1:9696/v2.0")
 
-        self.controller = net_controler.Controller("http://127.0.0.1:9696/v2.0")
-
-
-
-    def test_create_delete_network_with_subnet(self):
+    def test_index(self):
         compute_id = 'bb62976a-13fe-4c23-9343-324149c63dbc'
+        occi = self.controller.index(self.req)
+        self.assertIsNotNone(occi)
 
-        fip = self.controller.assign_floating_ip(self.req, compute_id)
-        self.controller.release_floating_ip(self.req, compute_id)
+
+
+
+

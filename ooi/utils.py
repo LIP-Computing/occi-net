@@ -81,3 +81,12 @@ def translate_parameters(translation, parameters):
         if key in translation:
             out[translation[key]] = parameters[key]
     return out
+
+
+def network_status(neutron_status):
+    if neutron_status == "ACTIVE":
+        return "active"
+    elif neutron_status == "SUSPENDED":
+        return "suspended"
+    else:
+        return "inactive"

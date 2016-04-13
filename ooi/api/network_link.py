@@ -13,7 +13,6 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-from samba.dcerpc.dfs.netdfs import netdfs
 
 from ooi.api import base
 from ooi.api import helpers
@@ -28,12 +27,7 @@ from ooi.openstack import network as os_network
 
 
 class Controller(base.Controller):
-    def __init__(self, app, openstack_version, neutron_endpoint):
-        super(Controller, self).__init__(app, openstack_version)
-        self.os_helper = helpers.OpenStackHelper(
-            self.app,
-            self.openstack_version
-        )
+    def __init__(self, neutron_endpoint):
         self.os_neutron_helper = helpers.OpenStackNet(
             neutron_endpoint
         )
@@ -51,6 +45,7 @@ class Controller(base.Controller):
                 mac = l["mac"]
                 net_pool = l['pool']
                 ip = l['ip']
+                state = l['state']
                 if net_pool: # mac only in the public
                     net_id = network_api.PUBLIC_NETWORK
                 else:
@@ -58,9 +53,11 @@ class Controller(base.Controller):
                 n = network.NetworkResource(title="network",
                                             id=net_id)
                 c = compute.ComputeResource(title="Compute",
-                                            id=compute_id)
+                                            id=compute_id
+                                            )
                 iface = os_network.OSNetworkInterface(c, n, mac, ip,
-                                                      pool=net_pool)
+                                                      pool=net_pool,
+                                                      state=state)
                 occi_network_resources.append(iface)
         return occi_network_resources
 
@@ -81,7 +78,8 @@ class Controller(base.Controller):
         return occi_list
 
     def index(self, req):
-        link_list = self.os_neutron_helper.list_compute_net_links(req)
+        attributes = network_api.filter_attributes(req)
+        link_list = self.os_neutron_helper.list_compute_net_links(req, attributes)
         occi_link_resources = self._get_network_link_resources(link_list)
         return collection.Collection(resources=occi_link_resources)
 

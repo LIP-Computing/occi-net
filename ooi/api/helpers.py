@@ -699,17 +699,15 @@ class OpenStackNet(BaseHelper):
         :returns: a Request object
         """
         server = self.neutron_endpoint
+        environ = copy.copy(req.environ)
         try:
-            if "HTTP_X-Auth-Token" in req.environ:
-                token = req.environ["HTTP_X-Auth-Token"]
-            else:
+            if "HTTP_X-Auth-Token" not in environ:
                 env_token = req.environ["keystone.token_auth"]
                 token = env_token.get_auth_ref(None)['auth_token']
+                environ = {"HTTP_X-Auth-Token": token}
         except Exception:
             raise webob.exc.HTTPUnauthorized
-        environ = {"HTTP_X-Auth-Token": token}
-        # fixme(jorgesece): tenant is not included
-        # "X_PROJECT_ID": self.project_id
+
         new_req = webob.Request.blank(path=path,
                                       environ=environ, base_url=server)
         new_req.query_string = query_string
@@ -731,6 +729,7 @@ class OpenStackNet(BaseHelper):
         :param req: the incoming request
         :param path: element location
         :param parameters: parameters to filter results
+        :param tenant: include tenant in the query parameters
         """
         query_string = utils.get_query_string(parameters)
         return self._get_req(req, path=path,
@@ -796,6 +795,7 @@ class OpenStackNet(BaseHelper):
         :param req: the incoming request
         :param resource: network resource to manage
         :param parameters: query parameters
+        :param tenant: include tenant in the query parameters
         """
         path = "/%s" % resource
         os_req = self._make_get_request(req, path, parameters)
@@ -1122,38 +1122,44 @@ class OpenStackNet(BaseHelper):
             raise exception.NotFound()
         return response
 
-    def _build_link(self, net_id, compute_id, ip, mac=None, pool=None):
+    def _build_link(self, net_id, compute_id, ip, mac=None, pool=None, state='active'):
         link = {}
         link['mac'] = mac
         link['pool'] = pool
         link['network_id'] = net_id
         link['compute_id'] = compute_id
         link['ip'] = ip
+        link['state'] = state
         return link
 
-    def list_compute_net_links(self, req):
+    def list_compute_net_links(self, req, parameters=None):
         """List the network and compute links
 
         It lists every private and public ip related to
         the servers of the tenant
 
         :param req: the incoming request
+        :param parameters: the incoming parameters
         """
         # net_id it is not needed if
         # there is just one port of the VM
-        param = {'device_owner':'compute:nova'}
+        param_port = {'device_owner':'compute:nova'}
+        param_common=utils.translate_parameters(
+            self.translation['networks'], parameters)
+        param_port.update(param_common)
         link_list = []
         try:
-            ports = self.list_resources(req, 'ports', param)
+            ports = self.list_resources(req, 'ports', param_port)
             for port in ports:
                 link_private = self._build_link(
                     port["network_id"],
                     port['device_id'],
                     port["fixed_ips"][0]["ip_address"],
-                    mac=port["mac_address"])
+                    mac=port["mac_address"],
+                    state=utils.network_status(port["status"]))
                 link_list.append(link_private)
                 # Query public links associated to the port
-                floating_ips = self.list_resource(req,
+                floating_ips = self.list_resources(req,
                                                   'floatingips',
                                                   {"port_id": port['id']})
                 for f_ip in floating_ips:
@@ -1168,7 +1174,8 @@ class OpenStackNet(BaseHelper):
             raise exception.NotFound()
         return link_list
 
-    def get_compute_net_link(self, req, compute_id, network_id, ip):
+    def get_compute_net_link(self, req, compute_id, network_id,
+                             ip, parameters=None):
         """Get a specific network/server link
 
         It shows a specific link (either private or public ip)
@@ -1177,11 +1184,14 @@ class OpenStackNet(BaseHelper):
         :param compute_id: server id
         :param network_id: network id
         :param ip: ip connected
+        :param parameters: the incoming parameters
         """
         try:
+            param = {'floating_ip_address': ip}
+            param.update(parameters)
             flo_ips = self.list_resources(req,
                                           'floatingips',
-                                          {'floating_ip_address': ip})
+                                          param)
             for f_ip in flo_ips:
                 link_public = self._build_link(
                     network_id,
@@ -1190,8 +1200,9 @@ class OpenStackNet(BaseHelper):
                     pool=f_ip['floating_network_id'])
                 return link_public
             # if it is not public, check in the private ips
-            ports = self.list_resources(req, 'ports', {'device_id': compute_id,
-                                                       'network_id': network_id})
+            param_ports = {'device_id': compute_id, 'network_id': network_id}
+            param_ports.update(parameters)
+            ports = self.list_resources(req, 'ports', param_ports)
             for p in ports:
                 if ip == p["fixed_ips"][0]["ip_address"]:
                     link_private = self._build_link(

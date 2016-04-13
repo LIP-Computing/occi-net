@@ -47,7 +47,7 @@ class TestMiddleware(TestIntegration):
         allocation = "dynamic"
         headers = {
             #'Category': 'network; scheme="http://schema#";class="kind";',
-            "X_OCCI_Attribute": 'occi.core.title= pruebas, org.openstack.network.ip_version=4,'
+            "X_OCCI_Attribute": 'occi.core.title=OCCI_WSGI_TEST, org.openstack.network.ip_version=4,'
                                 'occi.network.address="%s", occi.network.gateway="%s", occi.network.allocation="%s"' % (cidr, gateway, allocation),
             "X_PROJECT_ID": self.project_id,
         }

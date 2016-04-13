@@ -66,6 +66,43 @@ networks = {
     ]
 }
 
+pools = {
+    tenants["bar"]["id"]: [],
+    tenants["foo"]["id"]: [
+        {
+            "id": uuid.uuid4().hex,
+            "name": "foo",
+        },
+        {
+            "id": uuid.uuid4().hex,
+            "name": "bar",
+        },
+    ]
+}
+
+linked_vm_id = uuid.uuid4().hex
+
+allocated_ip = "192.168.253.23"
+
+floating_ips = {
+    tenants["bar"]["id"]: [],
+    tenants["foo"]["id"]: [
+        {
+            "fixed_ip": "10.0.0.2",
+            "id": uuid.uuid4().hex,
+            "instance_id": linked_vm_id,
+            "ip": "192.168.253.1",
+            "pool": pools[tenants["foo"]["id"]][0]["name"],
+        },
+        {
+            "fixed_ip": None,
+            "id": uuid.uuid4().hex,
+            "instance_id": None,
+            "ip": "192.168.253.2",
+            "pool": pools[tenants["foo"]["id"]][0]["name"],
+        },
+    ],
+}
 
 def create_fake_json_resp(data, status=200):
     r = webob.Response()
