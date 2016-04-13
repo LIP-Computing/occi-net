@@ -63,7 +63,7 @@ class Controller(base.Controller):
 
     def _get_interface_from_id(self, req, id):
         try:
-            server_id, network_id, server_addr = id.split('_', 1)
+            server_id, network_id, server_addr = id.split('_', 2)
         except ValueError:
             raise exception.LinkNotFound(link_id=id)
         try:

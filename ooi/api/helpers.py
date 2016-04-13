@@ -1188,7 +1188,6 @@ class OpenStackNet(BaseHelper):
         """
         try:
             param = {'floating_ip_address': ip}
-            param.update(parameters)
             flo_ips = self.list_resources(req,
                                           'floatingips',
                                           param)
@@ -1201,7 +1200,6 @@ class OpenStackNet(BaseHelper):
                 return link_public
             # if it is not public, check in the private ips
             param_ports = {'device_id': compute_id, 'network_id': network_id}
-            param_ports.update(parameters)
             ports = self.list_resources(req, 'ports', param_ports)
             for p in ports:
                 if ip == p["fixed_ips"][0]["ip_address"]:
@@ -1209,7 +1207,8 @@ class OpenStackNet(BaseHelper):
                         p["network_id"],
                         p['device_id'],
                         p["fixed_ips"][0]["ip_address"],
-                        mac=p["mac_address"])
+                        mac=p["mac_address"],
+                        state=utils.network_status(p["status"]))
                     return link_private
             raise exception.NotFound()
         except:

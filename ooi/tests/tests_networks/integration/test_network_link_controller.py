@@ -35,10 +35,18 @@ class TestIntegrationNetworkLink(TestIntegration):
         self.controller = link_controller.Controller("http://127.0.0.1:9696/v2.0")
 
     def test_index(self):
-        compute_id = 'bb62976a-13fe-4c23-9343-324149c63dbc'
         occi = self.controller.index(self.req)
         self.assertIsNotNone(occi)
 
+    def test_show(self):
+        link_id = 'bb62976a-13fe-4c23-9343-324149c63dbc_'\
+                  'cd48b7dd-9ac8-44fc-aec0-5ea679941ced_12.0.0.5'
+        occi = self.controller.show(self.req, link_id)
+        self.assertIsNotNone(occi)
+        server_id, network_id, server_addr = link_id.split('_', 2)
+        self.assertEquals(occi[0].target.id, network_id)
+        self.assertEquals(occi[0].source.id, server_id)
+        self.assertEquals(occi[0].address, server_addr)
 
 
 
