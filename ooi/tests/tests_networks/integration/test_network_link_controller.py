@@ -39,8 +39,8 @@ class TestIntegrationNetworkLink(TestIntegration):
         self.assertIsNotNone(occi)
 
     def test_show(self):
-        link_id = 'bb62976a-13fe-4c23-9343-324149c63dbc_'\
-                  'cd48b7dd-9ac8-44fc-aec0-5ea679941ced_12.0.0.5'
+        link_id = '63ec7dbc-5597-4455-925a-763b8891aa1f_'\
+                  'cd48b7dd-9ac8-44fc-aec0-5ea679941ced_12.0.0.4'
         occi = self.controller.show(self.req, link_id)
         self.assertIsNotNone(occi)
         server_id, network_id, server_addr = link_id.split('_', 2)
@@ -48,8 +48,8 @@ class TestIntegrationNetworkLink(TestIntegration):
         self.assertEquals(occi[0].source.id, server_id)
         self.assertEquals(occi[0].address, server_addr)
 
-    def test_create_private(self):
-        compute_id = 'bb62976a-13fe-4c23-9343-324149c63dbc'
+    def test_create_delete_private(self):
+        compute_id = '63ec7dbc-5597-4455-925a-763b8891aa1f'
         net_id = 'cd48b7dd-9ac8-44fc-aec0-5ea679941ced'
         parameters = {
                 "occi.core.target": net_id,
@@ -61,10 +61,14 @@ class TestIntegrationNetworkLink(TestIntegration):
 
         self.req.headers = fakes.create_header_occi(parameters, categories, self.project_id)
         out = self.controller.create(self.req)
-        self.assertIsNone(out)
+        self.assertIsNotNone(out)
+        self.assertIsNotNone(out.resources)
+        link_id = out.resources[0].id
+        out = self.controller.delete(self.req, link_id)
+        self.assertEqual([], out)
 
     def test_create_public(self):
-        compute_id = 'bb62976a-13fe-4c23-9343-324149c63dbc'
+        compute_id = '63ec7dbc-5597-4455-925a-763b8891aa1f'
         net_id = 'PUBLIC'
         parameters = {
                 "occi.core.target": net_id,
@@ -76,13 +80,22 @@ class TestIntegrationNetworkLink(TestIntegration):
 
         self.req.headers = fakes.create_header_occi(parameters, categories, self.project_id)
         out = self.controller.create(self.req)
-        self.assertIsNone(out)
-
-    def test_delete_private(self):
-        link_id = 'bb62976a-13fe-4c23-9343-324149c63dbc_'\
-                  'cd48b7dd-9ac8-44fc-aec0-5ea679941ced_12.0.0.5'
+        self.assertIsNotNone(out)
+        self.assertIsNotNone(out.resources)
+        link_id = out.resources[0].id
         out = self.controller.delete(self.req, link_id)
-        self.assertIsE([], out)
+        self.assertEqual([], out)
+
+    def test_delete_private_not_found(self):
+        link_id = '63ec7dbc-5597-4455-925a-763b8891aa1f_'\
+                  'cd48b7dd-9ac8-44fc-aec0-5ea679941ced_12.0.0.9'
+        self.assertRaises(exception.LinkNotFound, self.controller.delete, self.req, link_id)
+
+    def test_delete_public_not_found(self):
+        link_id = '63ec7dbc-5597-4455-925a-763b8891aa1f_' \
+                  'PUBLIC_172.24.4.25'
+        self.assertRaises(exception.LinkNotFound, self.controller.delete, self.req, link_id)
+
 
 
 

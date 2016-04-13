@@ -131,10 +131,9 @@ class Controller(base.Controller):
                 os_network.OSFloatingIPPool,
             ]
         }
-        parameters = self.process_occi(req, scheme)
-        parameters = self.filter_attributes(parameters)
+        occi_input = self.process_occi(req, scheme)
+        parameters = self.filter_attributes(occi_input)
         net_id = parameters['occi.core.target']
-        server_id = parameters['occi.core.source']
 
         # todo(jorgesece): check if about pools
         # pool_name = None
@@ -145,23 +144,21 @@ class Controller(base.Controller):
         if net_id == network_api.PUBLIC_NETWORK:
             os_link = self.os_neutron_helper.assign_floating_ip(
                 req,
-                server_id)
+                parameters)
         else:
             # Allocate private network
             os_link = self.os_neutron_helper.create_port(
-                req,
-                net_id,
-                server_id)
+                req, parameters)
             # raise exception.NetworkNotFound(resource_id=net_id)
 
         occi_link = self._get_network_link_resources([os_link])
-        return collection.Collection(resources=[occi_link])
+        return collection.Collection(resources=occi_link)
 
     def delete(self, req, id):
         iface = self._get_interface_from_id(req, id)[0]
         if iface.target.id == network_api.PUBLIC_NETWORK:
             os_link = self.os_neutron_helper.release_floating_ip(
-                req, iface.source.id)
+                req, iface.address)
         else:
             os_link = self.os_neutron_helper.delete_port(req, iface.mac)
         return []
