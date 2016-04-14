@@ -103,15 +103,35 @@ class TestNetworkController(base.TestController):
             self.assertIsInstance(net_ret, occi_network.NetworkResource)
 
     def test_filter_attributes(self):
-        attr_dic = {'attr1': '0', 'attr2': '1', 'attr3': '2'}
-        schemes = {"something.schema1": "8923489"}
-        req = fakes.create_req_test(attr_dic, schemes)
-        ret = network.filter_attributes(req)
+        parameters ={"occi.core.title": 'name',
+                    "org.openstack.network.ip_version": '777',
+                    "occi.network.address": '77777',
+                    "occi.network.gateway": '7777',
+                     }
+        term = occi_network.NetworkResource.kind.term
+        scheme = occi_network.NetworkResource.kind.scheme
+        categories = {term: scheme}
+        req = fakes.create_req_test_occi(parameters, categories)
+        occi_scheme = {
+            "category": occi_network.NetworkResource.kind,
+            "optional_mixins": [
+                occi_network.ip_network,
+            ]
+        }
+        ret = network.process_parameters(req, occi_scheme)
         self.assertIsNotNone(ret)
-        self.assertEqual(attr_dic, ret)
+        self.assertEqual(parameters, ret)
 
     def test_filter_attributes_empty(self):
-        schemes = {"any": "net"}
-        req = fakes.create_req_test(params=None, schemes=schemes)
-        attributes = network.filter_attributes(req)
+        term = occi_network.NetworkResource.kind.term
+        scheme = occi_network.NetworkResource.kind.scheme
+        categories = {term: scheme}
+        req = fakes.create_req_test_occi(None, categories)
+        occi_scheme = {
+            "category": occi_network.NetworkResource.kind,
+            "optional_mixins": [
+                occi_network.ip_network,
+            ]
+        }
+        attributes = network.process_parameters(req, occi_scheme)
         self.assertIsNone(attributes)

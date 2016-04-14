@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright 2015 Spanish National Research Council
+# Copyright 2016 LIP - Lisbon
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -22,7 +23,6 @@ from ooi.occi.core import collection
 from ooi.occi.infrastructure import compute
 from ooi.occi.infrastructure import network
 from ooi.occi.infrastructure import network_link
-from ooi.occi import validator as occi_validator
 from ooi.openstack import network as os_network
 
 
@@ -34,7 +34,7 @@ class Controller(base.Controller):
 
     @staticmethod
     def _get_network_link_resources(link_list):
-        """Create networkLink instances from network in json format
+        """Create OCCI networkLink instances from json format
 
         :param link_list: provides by the cloud infrastructure
         """
@@ -62,6 +62,11 @@ class Controller(base.Controller):
         return occi_network_resources
 
     def _get_interface_from_id(self, req, id):
+        """Get interface from id
+
+        :param req: request object
+        :param id: network link identification
+        """
         try:
             server_id, network_id, server_addr = id.split('_', 2)
         except ValueError:
@@ -78,53 +83,39 @@ class Controller(base.Controller):
         return occi_list
 
     def index(self, req):
-        attributes = network_api.filter_attributes(req)
+        """List networksLinks
+
+        :param req: request object
+        """
+        attributes = network_api.process_parameters(req)
         link_list = self.os_neutron_helper.list_compute_net_links(req, attributes)
         occi_link_resources = self._get_network_link_resources(link_list)
         return collection.Collection(resources=occi_link_resources)
 
     def show(self, req, id):
+        """Get networkLink details
+
+        :param req: request object
+        :param id: networkLink identification
+        """
         return self._get_interface_from_id(req, id)
 
-    def process_input(self, req, scheme):
-        """Get attributes from request parameters
-
-        :param req: request
-        """
-        parser = req.get_parser()(req.headers, req.body)
-        input_data = parser.parse()
-        validator = occi_validator.Validator(input_data)
-        validator.validate(scheme)
-        if 'X_PROJECT_ID' in req.headers:
-            project_id = req.headers["X_PROJECT_ID"]
-            if input_data:
-                input_data["attributes"]["X_PROJECT_ID"] = (
-                    project_id)
-            else:
-                obj = {"attributes": {"X_PROJECT_ID": project_id}
-                     }
-
-        try:
-            if not input_data:
-                return None
-            if "attributes" in input_data:
-                attributes = {}
-                for k, v in input_data.get("attributes", None).items():
-                    attributes[k.strip()] = v.strip()
-            else:
-                attributes = None
-        except Exception:
-            raise exception.Invalid
-        return attributes
-
     def create(self, req, body=None):
+        """Create a networkLink
+
+        Creates a link between a server and a network.
+        It could be fixed or floating IP.
+
+        :param req: request object
+        :param body: body request (not used)
+        """
         scheme = {
             "category": network_link.NetworkInterface.kind,
             "optional_mixins": [
                 os_network.OSFloatingIPPool,
             ]
         }
-        parameters = self.process_input(req, scheme)
+        parameters = network_api.process_parameters(req, scheme)
         net_id = parameters['occi.core.target']
 
         # todo(jorgesece): check if about pools
@@ -141,16 +132,19 @@ class Controller(base.Controller):
             # Allocate private network
             os_link = self.os_neutron_helper.create_port(
                 req, parameters)
-            # raise exception.NetworkNotFound(resource_id=net_id)
-
         occi_link = self._get_network_link_resources([os_link])
         return collection.Collection(resources=occi_link)
 
     def delete(self, req, id):
+        """Delete networks link
+
+        :param req: current request
+        :param id: identification
+        """
         iface = self._get_interface_from_id(req, id)[0]
         if iface.target.id == network_api.PUBLIC_NETWORK:
             os_link = self.os_neutron_helper.release_floating_ip(
                 req, iface.address)
         else:
             os_link = self.os_neutron_helper.delete_port(req, iface.mac)
-        return []
+        return os_link

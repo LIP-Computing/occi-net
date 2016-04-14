@@ -29,72 +29,42 @@ from ooi import utils
 PUBLIC_NETWORK = "PUBLIC"
 
 
-def process_parameters(req):
-    param = None
-    parser = req.get_parser()(req.headers, req.body)
-    if 'Category' in req.headers:
-        param = parser.parse()
-    else:
-        attrs = parser.parse_attributes(req.headers)
-        if attrs.__len__():
-            param = {"attributes": attrs}
-    if 'X_PROJECT_ID' in req.headers:
-        project_id = req.headers["X_PROJECT_ID"]
-        if param:
-            param["attributes"]["X_PROJECT_ID"] = (
-                project_id)
-        else:
-            param = {"attributes": {"X_PROJECT_ID": project_id}
-                     }
-    return param
+def parse_validate_schema(req, scheme=None):
+    """Parse attributes, even Validate scheme
 
 
-def filter_attributes(req):
-    """Get attributes from request parameters
-
-    :param req: request
-    """
-    try:
-        parameters = process_parameters(req)
-        if not parameters:
-            return None
-        if "attributes" in parameters:
-            attributes = {}
-            for k, v in parameters.get("attributes", None).items():
-                attributes[k.strip()] = v.strip()
-        else:
-            attributes = None
-    except Exception:
-        raise exception.Invalid
-    return attributes
-
-
-def process_input(req, scheme):
-    """Get attributes from request parameters
+    Returns attributes from request
+    If scheme is specified, it validate the OCCI scheme:
+     -Raises exception in case of being invalid
 
     :param req: request
     :param: scheme: scheme to validate
     """
     parser = req.get_parser()(req.headers, req.body)
-    input_data = parser.parse()
-    validator = occi_validator.Validator(input_data)
-    validator.validate(scheme)
-    if 'X_PROJECT_ID' in req.headers:
-        project_id = req.headers["X_PROJECT_ID"]
-        if input_data:
-            input_data["attributes"]["X_PROJECT_ID"] = (
-                project_id)
-        else:
-            obj = {"attributes": {"X_PROJECT_ID": project_id}
-                 }
+    if scheme:
+        attributes = parser.parse()
+        validator = occi_validator.Validator(attributes)
+        validator.validate(scheme)
+    else:
+        attributes = parser.parse_attributes(req.headers)
+    return attributes
+
+
+def process_parameters(req, scheme=None):
+    """Get attributes from request parameters
+
+    :param req: request
+    :param: scheme: scheme to validate
+    """
+    parameters = parse_validate_schema(req, scheme)
     try:
-        if not input_data:
-            return None
-        if "attributes" in input_data:
-            attributes = {}
-            for k, v in input_data.get("attributes", None).items():
+        attributes = {}
+        if 'X_PROJECT_ID' in req.headers:
+            attributes["X_PROJECT_ID"] = req.headers["X_PROJECT_ID"]
+        if "attributes" in parameters:
+            for k, v in parameters.get("attributes", None).items():
                 attributes[k.strip()] = v.strip()
-        else:
+        if not attributes:
             attributes = None
     except Exception:
         raise exception.Invalid
@@ -125,9 +95,6 @@ class Controller(ooi.api.base.Controller):
 
         :param networks_list: networks objects provides by the cloud infrastructure
         """
-        # fixme(jorgesece):
-        # those attributes should be mapped in driver to occi attr.
-
         occi_network_resources = []
         if networks_list:
             for s in networks_list:
@@ -154,11 +121,11 @@ class Controller(ooi.api.base.Controller):
         return occi_network_resources
 
     def index(self, req):
-        """List networks filtered by parameters
+        """List networks
 
         :param req: request object
         """
-        attributes = filter_attributes(req)
+        attributes = process_parameters(req)
         occi_networks = self.os_helper.index(req, attributes)
         occi_network_resources = self._get_network_resources(
             occi_networks)
@@ -183,17 +150,13 @@ class Controller(ooi.api.base.Controller):
         :param req: request object
         :param body: body request (not used)
         """
-        # todo(jorgesece): manage several creation
-        # FIXME(jorgesece): Body is coming from OOI
-        # resource class and is not used
         scheme = {
             "category": network.NetworkResource.kind,
             "optional_mixins": [
                 network.ip_network,
             ]
         }
-        attributes = process_input(req, scheme)
-        #attributes = filter_attributes(req)
+        attributes = process_parameters(req, scheme)
         self._validate_attributes(
             self.os_helper.required["networks"], attributes)
         net = self.os_helper.create_network(req, attributes)
@@ -206,7 +169,6 @@ class Controller(ooi.api.base.Controller):
         :param req: current request
         :param id: identification
         """
-        # todo(jorgesece): manage several deletion
         response = self.os_helper.delete_network(req, id)
         return response
 
