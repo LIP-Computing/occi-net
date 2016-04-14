@@ -81,25 +81,30 @@ pools = {
 }
 
 linked_vm_id = uuid.uuid4().hex
+linked_net_id = uuid.uuid4().hex
 
 allocated_ip = "192.168.253.23"
 
-floating_ips = {
+network_links = {
     tenants["bar"]["id"]: [],
     tenants["foo"]["id"]: [
         {
-            "fixed_ip": "10.0.0.2",
+            "ip": "10.0.0.2",
             "id": uuid.uuid4().hex,
             "instance_id": linked_vm_id,
             "ip": "192.168.253.1",
+            "network_id": linked_net_id,
             "pool": pools[tenants["foo"]["id"]][0]["name"],
+            'status':'active'
         },
         {
-            "fixed_ip": None,
+            "ip": None,
             "id": uuid.uuid4().hex,
             "instance_id": None,
+            "network_id": linked_net_id,
             "ip": "192.168.253.2",
             "pool": pools[tenants["foo"]["id"]][0]["name"],
+            'status':'inactive'
         },
     ],
 }
@@ -174,3 +179,14 @@ def create_header_occi(params, category, project=None):
     if project is not None:
         headers["X_PROJECT_ID"] = project
     return headers
+
+
+def fake_build_link(net_id, compute_id, ip, mac=None, pool=None, state='active'):
+    link = {}
+    link['mac'] = mac
+    link['pool'] = pool
+    link['network_id'] = net_id
+    link['compute_id'] = compute_id
+    link['ip'] = ip
+    link['state'] = state
+    return link

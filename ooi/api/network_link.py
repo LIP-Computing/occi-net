@@ -59,6 +59,8 @@ class Controller(base.Controller):
                                                       pool=net_pool,
                                                       state=state)
                 occi_network_resources.append(iface)
+        else:
+            raise exception.NotFound()
         return occi_network_resources
 
     def _get_interface_from_id(self, req, id):
@@ -77,10 +79,10 @@ class Controller(base.Controller):
                 server_id,
                 network_id,
                 server_addr)
+            occi_instance = self._get_network_link_resources([link])[0]
         except:
             raise exception.LinkNotFound(link_id=id)
-        occi_list = self._get_network_link_resources([link])
-        return occi_list
+        return occi_instance
 
     def index(self, req):
         """List networksLinks
@@ -141,7 +143,7 @@ class Controller(base.Controller):
         :param req: current request
         :param id: identification
         """
-        iface = self._get_interface_from_id(req, id)[0]
+        iface = self._get_interface_from_id(req, id)
         if iface.target.id == network_api.PUBLIC_NETWORK:
             os_link = self.os_neutron_helper.release_floating_ip(
                 req, iface.address)
