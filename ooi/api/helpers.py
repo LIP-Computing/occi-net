@@ -1156,8 +1156,9 @@ class OpenStackNet(BaseHelper):
         # net_id it is not needed if
         # there is just one port of the VM
         param_port = {'device_owner':'compute:nova'}
-        param_common=utils.translate_parameters(
-            self.translation['networks'], parameters)
+        param_common = utils.translate_parameters(
+            self.translation['networks_link'], parameters)
+
         param_port.update(param_common)
         link_list = []
         try:

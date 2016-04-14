@@ -122,8 +122,16 @@ class OCCIMiddleware(object):
         # OCCINetworkMiddleware(neutron_endpoint).setup_net_routes(
         #     mapper=self.mapper, resources=self.resources)
 
-    def _create_resource(self, controller):
-        return Resource(controller(self.application, self.openstack_version))
+    def _create_resource(self, controller, neutron_endpoint=None):
+        if neutron_endpoint:
+            if controller == ooi.api.compute.Controller:
+                return Resource(controller(self.application,
+                                           self.openstack_version,
+                                           self.neutron_endpoint))
+            else:
+                return Resource(controller(self.neutron_endpoint))
+        else:
+            return Resource(controller(self.application, self.openstack_version))
 
     def _create_net_resource(self, controller):
         # fixme(jorgesece): wsgi unitttest do not work, it is not using FakeApp
@@ -220,7 +228,7 @@ class OCCIMiddleware(object):
                             action="index")
 
         self.resources["compute"] = self._create_resource(
-            ooi.api.compute.Controller)
+            ooi.api.compute.Controller, self.neutron_endpoint)
         self._setup_resource_routes("compute", self.resources["compute"])
 
         self.resources["storage"] = self._create_resource(
@@ -233,14 +241,14 @@ class OCCIMiddleware(object):
                                     self.resources["storagelink"])
 
         # FIXME(jorgesece): control and improved it
-        self.resources["networklink"] = Resource(
-            ooi.api.network_link.Controller(self.neutron_endpoint))
+        self.resources["networklink"] = self._create_resource(
+            ooi.api.network_link.Controller, self.neutron_endpoint)
         self._setup_resource_routes("networklink",
                                     self.resources["networklink"])
 
         # FIXME(jorgesece): control and improved it
-        self.resources["network"] = Resource(
-            ooi.api.network.Controller(self.neutron_endpoint))
+        self.resources["network"] = self._create_resource(
+            ooi.api.network.Controller, self.neutron_endpoint)
         self._setup_neutron_resources_routes("network", self.resources["network"])
 
     @webob.dec.wsgify(RequestClass=Request)

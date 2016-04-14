@@ -34,27 +34,42 @@ from ooi.openstack import network as os_network
 from ooi.openstack import templates
 
 
-def _create_network_link(addr, comp):
-    if addr["OS-EXT-IPS:type"] == "floating":
-        net_id = network_api.FLOATING_PREFIX
+def _create_network_link(l):
+    compute_id = l['compute_id']
+    mac = l["mac"]
+    net_pool = l['pool']
+    ip = l['ip']
+    state = l['state']
+    if net_pool: # mac only in the public
+        net_id = network_api.PUBLIC_NETWORK
     else:
-        net_id = network_api.FIXED_PREFIX
-    # FIXME(jorgesece): create the full network addresses give the name:
-    # (addresses[{"net_name":{OS-EX-IP...}}])
-    net = network.NetworkResource(title="network", id=net_id)
-    return os_network.OSNetworkInterface(comp, net,
-                                         addr["OS-EXT-IPS-MAC:mac_addr"],
-                                         addr["addr"])
+        net_id = l['network_id']
+    n = network.NetworkResource(title="network",
+                                id=net_id)
+    c = compute.ComputeResource(title="Compute",
+                                id=compute_id
+                                )
+    iface = os_network.OSNetworkInterface(c, n, mac, ip,
+                                          pool=net_pool,
+                                          state=state)
+    return iface
 
 
 class Controller(ooi.api.base.Controller):
-    def __init__(self, *args, **kwargs):
-        super(Controller, self).__init__(*args, **kwargs)
+    def __init__(self, app, openstack_version, neutron_endpoint):
+        super(Controller, self).__init__(app, openstack_version)
         self.compute_actions = compute.ComputeResource.actions
         self.os_helper = ooi.api.helpers.OpenStackHelper(
             self.app,
             self.openstack_version
         )
+        if neutron_endpoint:
+            self.os_network_helper = ooi.api.helpers.OpenStackNet(
+                neutron_endpoint
+            )
+        else:
+            self.os_network_helper = None
+            raise exception.NetworkNotSuported
 
     def _get_compute_resources(self, servers):
         occi_compute_resources = []
@@ -242,11 +257,11 @@ class Controller(ooi.api.base.Controller):
                                                    deviceid=v["device"]))
 
         # network links
-        addresses = s.get("addresses", {})
-        if addresses:
-            for addr_set in addresses.values():
-                for addr in addr_set:
-                    comp.add_link(_create_network_link(addr, comp))
+        attributes = {'occi.core.source': id}
+        link_list = self.os_network_helper.list_compute_net_links(req, attributes)
+        if link_list:
+            for l in link_list:
+                    comp.add_link(_create_network_link(l))
 
         return [comp]
 

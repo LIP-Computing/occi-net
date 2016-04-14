@@ -14,9 +14,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
 import uuid
 
+from ooi.api import helpers
 from ooi.tests import fakes
+from ooi.tests import fakes_neutron
 from ooi.tests.middleware import test_middleware
 from ooi import utils
 
@@ -133,14 +136,19 @@ class TestComputeController(test_middleware.TestMiddleware):
             self.assertDefaults(resp)
             self.assertExpectedResult(expected, resp)
 
-    def test_show_vm(self):
+    @mock.patch.object(helpers.OpenStackNet, "list_compute_net_links")
+    def test_show_vm(self, mock_net):
         tenant = fakes.tenants["foo"]
         app = self.get_app()
-
+        net_id = '84848'
+        ip = '9393'
         for server in fakes.servers[tenant["id"]]:
             req = self._build_req("/compute/%s" % server["id"],
                                   tenant["id"], method="GET")
-
+            networ_link = fakes_neutron.fake_build_link(
+                net_id, server['id'], ip
+            )
+            mock_net.return_value = [networ_link]
             resp = req.get_response(app)
             expected = build_occi_server(server)
             self.assertDefaults(resp)
