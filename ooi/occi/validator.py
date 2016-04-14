@@ -36,6 +36,7 @@ class Validator(object):
                 type_id=category.type_id)
 
     def _compare_schemes(self, expected_type, actual):
+        # fixme(jorgesece): catch the exception
         actual_scheme, actual_term = helpers.decompose_type(actual)
         if expected_type.scheme != actual_scheme:
             return False

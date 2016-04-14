@@ -22,7 +22,7 @@ from ooi.wsgi import Request
 from ooi.api import network as net_controler
 from ooi.occi.infrastructure import network
 from ooi.tests.tests_networks.integration.keystone.session import KeySession
-from ooi.tests.tests_networks import fakes
+from ooi.tests import fakes_neutron as fakes
 
 
 class TestIntegrationNetwork(TestIntegration):

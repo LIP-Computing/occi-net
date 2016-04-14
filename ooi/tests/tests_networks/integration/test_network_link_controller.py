@@ -22,7 +22,7 @@ from ooi.wsgi import Request
 from ooi.api import network_link as link_controller
 from ooi.occi.infrastructure import network_link
 from ooi.tests.tests_networks.integration.keystone.session import KeySession
-from ooi.tests.tests_networks import fakes
+from ooi.tests import fakes_neutron as fakes
 
 
 class TestIntegrationNetworkLink(TestIntegration):
@@ -44,9 +44,9 @@ class TestIntegrationNetworkLink(TestIntegration):
         occi = self.controller.show(self.req, link_id)
         self.assertIsNotNone(occi)
         server_id, network_id, server_addr = link_id.split('_', 2)
-        self.assertEquals(occi[0].target.id, network_id)
-        self.assertEquals(occi[0].source.id, server_id)
-        self.assertEquals(occi[0].address, server_addr)
+        self.assertEquals(occi.target.id, network_id)
+        self.assertEquals(occi.source.id, server_id)
+        self.assertEquals(occi.address, server_addr)
 
     def test_create_delete_private(self):
         compute_id = '63ec7dbc-5597-4455-925a-763b8891aa1f'
