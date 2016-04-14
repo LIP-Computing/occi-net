@@ -173,11 +173,15 @@ def create_header_occi(params, category, project=None):
         headers["X_OCCI_Attribute"] = att
     if category is not None:
         cat = ""
-        for k, v in category.items():
-            cat = "%s%s; scheme=%s; class=%s," % (cat, k, v, class_type)
+        for c in category:
+            if c.occi_class != 'kind':
+                c.term = 'mixin'
+            cat = "%s%s; scheme=%s; class=%s, " % (
+                cat,
+                c.term, c.scheme, c.occi_class)
         headers['Category']= cat[:-1]
     if project is not None:
-        headers["X_PROJECT_ID"] = project
+        headers['X_PROJECT_ID'] = project
     return headers
 
 

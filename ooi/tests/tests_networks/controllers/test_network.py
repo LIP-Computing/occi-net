@@ -62,9 +62,7 @@ class TestNetworkController(base.TestController):
                           "org.openstack.network.ip_version": 4,
                           "occi.network.address": "0.0.0.0",
                           }
-            term = occi_network.NetworkResource.kind.term
-            scheme = occi_network.NetworkResource.kind.scheme
-            categories = {term: scheme}
+            categories = {occi_network.NetworkResource.kind}
             req = fakes.create_req_test_occi(parameters, categories)
             ret = self.controller.create(req)
             self.assertIsInstance(ret, occi_network.NetworkResource)
@@ -108,9 +106,7 @@ class TestNetworkController(base.TestController):
                     "occi.network.address": '77777',
                     "occi.network.gateway": '7777',
                      }
-        term = occi_network.NetworkResource.kind.term
-        scheme = occi_network.NetworkResource.kind.scheme
-        categories = {term: scheme}
+        categories = {occi_network.NetworkResource.kind}
         req = fakes.create_req_test_occi(parameters, categories)
         occi_scheme = {
             "category": occi_network.NetworkResource.kind,
@@ -123,9 +119,7 @@ class TestNetworkController(base.TestController):
         self.assertEqual(parameters, ret)
 
     def test_filter_attributes_empty(self):
-        term = occi_network.NetworkResource.kind.term
-        scheme = occi_network.NetworkResource.kind.scheme
-        categories = {term: scheme}
+        categories = {occi_network.NetworkResource.kind}
         req = fakes.create_req_test_occi(None, categories)
         occi_scheme = {
             "category": occi_network.NetworkResource.kind,

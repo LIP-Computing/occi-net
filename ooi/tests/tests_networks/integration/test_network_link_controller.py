@@ -55,9 +55,7 @@ class TestIntegrationNetworkLink(TestIntegration):
                 "occi.core.target": net_id,
                 "occi.core.source": compute_id,
             }
-        term = network_link.NetworkInterface.kind.term
-        scheme = network_link.NetworkInterface.kind.scheme
-        categories = {term: scheme}
+        categories = {network_link.NetworkInterface.kind}
 
         self.req.headers = fakes.create_header_occi(parameters, categories, self.project_id)
         out = self.controller.create(self.req)
@@ -74,9 +72,7 @@ class TestIntegrationNetworkLink(TestIntegration):
                 "occi.core.target": net_id,
                 "occi.core.source": compute_id,
             }
-        term = network_link.NetworkInterface.kind.term
-        scheme = network_link.NetworkInterface.kind.scheme
-        categories = {term: scheme}
+        categories = {network_link.NetworkInterface.kind}
 
         self.req.headers = fakes.create_header_occi(parameters, categories, self.project_id)
         out = self.controller.create(self.req)
