@@ -127,23 +127,17 @@ class AttributeRenderer(HeaderRenderer):
 
 
 class EntityRenderer(HeaderRenderer):
-    @staticmethod
-    def _render_attributes(attrs):
-        ret = []
-        if attrs is not None:
-            for a in attrs:
-                # FIXME(aloga): I dont like this test here
-                if attrs[a].value is not None:
-                    r = AttributeRenderer(attrs[a])
-                    ret.extend(r.render())
-        return ret
-
     def render(self, env={}):
         ret = []
         ret.extend(KindRenderer(self.obj.kind).render(env=env))
         for m in self.obj.mixins:
             ret.extend(MixinRenderer(m).render(env=env))
-        ret.extend(self._render_attributes(self.obj.attributes))
+        for a in self.obj.attributes:
+            # FIXME(aloga): I dont like this test here
+            if self.obj.attributes[a].value is None:
+                continue
+            r = AttributeRenderer(self.obj.attributes[a])
+            ret.extend(r.render(env=env))
         return ret
 
 

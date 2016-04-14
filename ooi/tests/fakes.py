@@ -294,12 +294,6 @@ def fake_query_results():
 
     # OCCI Infrastructure Network
     cats.append(
-        'networkmanagement; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure/network#"; '
-        'class="kind"; title="network extended"; '
-        'rel="http://schemas.ogf.org/occi/infrastructure#network"; '
-        'location="%s/networkmanagement/"' % application_url)
-    cats.append(
         'network; '
         'scheme="http://schemas.ogf.org/occi/infrastructure#"; '
         'class="kind"; title="network resource"; '
