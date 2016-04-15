@@ -49,7 +49,7 @@ class TestNetworkLinkController(base.TestController):
                 mac=None, pool=os_link['pool'], state=os_link['status']
             )
             links.append(l)
-        mock_list.return_value = links
+        mock_list.return_value = resources=links
         ret = self.controller.index(req)
         self.assertIsInstance(ret, collection.Collection)
         if tenant["name"] == "foo":
@@ -62,13 +62,14 @@ class TestNetworkLinkController(base.TestController):
         mock_list.assert_called_with(req, None)
 
     @mock.patch.object(helpers.OpenStackNet, "list_compute_net_links")
-    def test_index_NotFound(self, mock_list):
+    def test_index_Empty(self, mock_list):
         req = fake_nets.create_req_test(None, None)
         links = []
         mock_list.return_value = links
-        self.assertRaises(exception.NotFound,
-                          self.controller.index,
-                          req)
+        ret = self.controller.index(req)
+        self.assertIsInstance(ret, collection.Collection)
+        self.assertEqual(ret.resources.__len__(), 0)
+
 
     @mock.patch.object(helpers.OpenStackNet, "delete_port")
     @mock.patch.object(network_link_api.Controller, "_get_interface_from_id")
@@ -159,7 +160,7 @@ class TestNetworkLinkController(base.TestController):
         os_link = fake_nets.fake_build_link(
             net_id, server_id, server_addr
         )
-        ret = self.controller._get_network_link_resources([os_link])
+        ret = network_link_api._get_network_link_resources([os_link])
 
         self.assertIsInstance(ret, list)
         self.assertIsInstance(ret[0], os_network.OSNetworkInterface)
@@ -177,7 +178,7 @@ class TestNetworkLinkController(base.TestController):
         os_link = fake_nets.fake_build_link(
             net_id, server_id, server_addr, pool='public'
         )
-        ret = self.controller._get_network_link_resources([os_link])
+        ret = network_link_api._get_network_link_resources([os_link])
 
         self.assertIsInstance(ret, list)
         self.assertIsInstance(ret[0], os_network.OSNetworkInterface)
@@ -189,9 +190,8 @@ class TestNetworkLinkController(base.TestController):
         self.assertIn(network_link.ip_network_interface, ret[0].mixins)
 
     def test_get_network_link_resourcesinvalid(self):
-        self.assertRaises(exception.NotFound,
-                          self.controller._get_network_link_resources,
-                          None)
+        ret = network_link_api._get_network_link_resources(None)
+        self.assertEqual(ret.__len__(), 0)
 
     @mock.patch.object(helpers.OpenStackNet, "assign_floating_ip")
     def test_create_public(self, mock_assign):
@@ -266,22 +266,94 @@ class TestNetworkLinkController(base.TestController):
 
         mock_cre_port.assert_called_with(mock.ANY, parameters)
 
-    @mock.patch.object(helpers.OpenStackNet, "create_port")
-    def test_create_invalid_schema(self, mock_cre_port):
-        server_id = uuid.uuid4().hex
-        net_id = uuid.uuid4().hex
-        ip = '8.0.0.0'
-        parameters = {
-                "occi.core.target": net_id,
-                "occi.core.source": server_id,
-            }
-        pool = os_network.OSFloatingIPPool()
-        pool.scheme = 'FAIL#'
-        categories = {network_link.NetworkInterface.kind, pool}
-        req = fake_nets.create_req_test_occi(parameters, categories)
-        mock_cre_port.return_value = fake_nets.fake_build_link(
-            net_id, server_id, ip
-        )
-        self.assertRaises(exception.OCCISchemaMismatch,
-                          self.controller.create,
-                          req)
+    # @mock.patch.object(helpers.OpenStackNet, "create_port")
+    # def test_create_invalid_schema(self, mock_cre_port):
+    #     server_id = uuid.uuid4().hex
+    #     net_id = uuid.uuid4().hex
+    #     ip = '8.0.0.0'
+    #     parameters = {
+    #             "occi.core.target": net_id,
+    #             "occi.core.source": server_id,
+    #         }
+    #     pool = os_network.OSFloatingIPPool()
+    #     pool.scheme = 'FAIL#'
+    #     categories = {network_link.NetworkInterface.kind, pool}
+    #     req = fake_nets.create_req_test_occi(parameters, categories)
+    #     mock_cre_port.return_value = fake_nets.fake_build_link(
+    #         net_id, server_id, ip
+    #     )
+    #     self.assertRaises(exception.OCCISchemaMismatch,
+    #                       self.controller.create,
+    #                       req)
+    #
+    #     def test_create_link_with_unexistant_net(self):
+    #     tenant = fakes.tenants["foo"]
+    #     server_id = fakes.servers[tenant["id"]][0]["id"]
+    #     server_url = utils.join_url(self.application_url + "/",
+    #                                 "compute/%s" % server_id)
+    #     net_url = utils.join_url(self.application_url + "/",
+    #                              "network/notexistant")
+    #
+    #     app = self.get_app()
+    #     headers = {
+    #         'Category': (
+    #             'networkinterface;'
+    #             'scheme="http://schemas.ogf.org/occi/infrastructure#";'
+    #             'class="kind"'),
+    #         'X-OCCI-Attribute': (
+    #             'occi.core.source="%s", '
+    #             'occi.core.target="%s"'
+    #         ) % (server_url, net_url)
+    #     }
+    #     req = self._build_req("/networklink", tenant["id"], method="POST",
+    #                           headers=headers)
+    #     resp = req.get_response(app)
+    #     self.assertEqual(404, resp.status_code)
+
+        #     def test_create_link_invalid_pool(self):
+        # tenant = fakes.tenants["foo"]
+        #
+        # server_id = fakes.servers[tenant["id"]][0]["id"]
+        # server_url = utils.join_url(self.application_url + "/",
+        #                             "compute/%s" % server_id)
+        # net_url = utils.join_url(self.application_url + "/",
+        #                          "network/floating")
+        #
+        # app = self.get_app()
+        # headers = {
+        #     'Category': (
+        #         'networkinterface;'
+        #         'scheme="http://schemas.ogf.org/occi/infrastructure#";'
+        #         'class="kind",'
+        #         'invalid;'
+        #         'scheme="http://schemas.openstack.org/network/'
+        #         'floatingippool#"; class="mixin"'),
+        #     'X-OCCI-Attribute': (
+        #         'occi.core.source="%s", '
+        #         'occi.core.target="%s"'
+        #     ) % (server_url, net_url)
+        # }
+        # req = self._build_req("/networklink", tenant["id"], method="POST",
+        #                       headers=headers)
+        # resp = req.get_response(app)
+        # self.assertEqual(404, resp.status_code)
+
+
+    # def test_create_link_invalid_network(self):
+    #     app = self.get_app()
+    #     server_id = utils.join_url(self.application_url + "/",
+    #                                "compute/foo")
+    #     headers = {
+    #         'Category': (
+    #             'networkinterface;'
+    #             'scheme="http://schemas.ogf.org/occi/infrastructure#";'
+    #             'class="kind"'),
+    #         'X-OCCI-Attribute': (
+    #             'occi.core.source="%s", '
+    #             'occi.core.target="bar"'
+    #         ) % server_id
+    #     }
+    #     req = self._build_req("/networklink", None, method="POST",
+    #                           headers=headers)
+    #     resp = req.get_response(app)
+    #     self.assertEqual(400, resp.status_code)

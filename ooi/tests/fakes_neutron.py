@@ -20,7 +20,9 @@ import uuid
 import webob.dec
 import webob.exc
 
+from ooi.api import network_link
 from ooi import wsgi
+
 
 application_url = "https://foo.example.org:8774/ooiv1"
 
@@ -29,6 +31,8 @@ tenants = {
             "name": "foo"},
     "bar": {"id": uuid.uuid4().hex,
             "name": "bar"},
+    "public": {"id": uuid.uuid4().hex,
+               "name": "bar"},
 }
 
 subnets = [
@@ -105,6 +109,17 @@ network_links = {
             "ip": "192.168.253.2",
             "pool": pools[tenants["foo"]["id"]][0]["name"],
             'status':'inactive'
+        },
+    ],
+    tenants["public"]["id"]: [
+        {
+            "ip": "10.0.0.2",
+            "id": uuid.uuid4().hex,
+            "instance_id": linked_vm_id,
+            "ip": "192.168.253.1",
+            "network_id": 'PUBLIC',
+            "pool": pools[tenants["foo"]["id"]][0]["name"],
+            'status':'active'
         },
     ],
 }
@@ -194,3 +209,11 @@ def fake_build_link(net_id, compute_id, ip, mac=None, pool=None, state='active')
     link['ip'] = ip
     link['state'] = state
     return link
+
+
+def fake_network_link_occi(os_list_net):
+    list_links = []
+    for l in os_list_net:
+        if l['instance_id']:
+            list_links.append(fake_build_link(l['network_id'], l['instance_id'], l['ip']))
+    return  network_link._get_network_link_resources(list_links)

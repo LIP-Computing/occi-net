@@ -26,42 +26,40 @@ from ooi.occi.infrastructure import network_link
 from ooi.openstack import network as os_network
 
 
+def _get_network_link_resources(link_list):
+    """Create OCCI networkLink instances from json format
+
+    :param link_list: provides by the cloud infrastructure
+    """
+    occi_network_resources = []
+    if link_list:
+        for l in link_list:
+            compute_id = l['compute_id']
+            mac = l["mac"]
+            net_pool = l['pool']
+            ip = l['ip']
+            state = l['state']
+            if net_pool: # mac only in the public
+                net_id = network_api.PUBLIC_NETWORK
+            else:
+                net_id = l['network_id']
+            n = network.NetworkResource(title="network",
+                                        id=net_id)
+            c = compute.ComputeResource(title="Compute",
+                                        id=compute_id
+                                        )
+            iface = os_network.OSNetworkInterface(c, n, mac, ip,
+                                                  pool=net_pool,
+                                                  state=state)
+            occi_network_resources.append(iface)
+    return occi_network_resources
+
+
 class Controller(base.Controller):
     def __init__(self, neutron_endpoint):
         self.os_neutron_helper = helpers.OpenStackNet(
             neutron_endpoint
         )
-
-    @staticmethod
-    def _get_network_link_resources(link_list):
-        """Create OCCI networkLink instances from json format
-
-        :param link_list: provides by the cloud infrastructure
-        """
-        occi_network_resources = []
-        if link_list:
-            for l in link_list:
-                compute_id = l['compute_id']
-                mac = l["mac"]
-                net_pool = l['pool']
-                ip = l['ip']
-                state = l['state']
-                if net_pool: # mac only in the public
-                    net_id = network_api.PUBLIC_NETWORK
-                else:
-                    net_id = l['network_id']
-                n = network.NetworkResource(title="network",
-                                            id=net_id)
-                c = compute.ComputeResource(title="Compute",
-                                            id=compute_id
-                                            )
-                iface = os_network.OSNetworkInterface(c, n, mac, ip,
-                                                      pool=net_pool,
-                                                      state=state)
-                occi_network_resources.append(iface)
-        else:
-            raise exception.NotFound()
-        return occi_network_resources
 
     def _get_interface_from_id(self, req, id):
         """Get interface from id
@@ -79,7 +77,7 @@ class Controller(base.Controller):
                 server_id,
                 network_id,
                 server_addr)
-            occi_instance = self._get_network_link_resources([link])[0]
+            occi_instance = _get_network_link_resources([link])[0]
         except:
             raise exception.LinkNotFound(link_id=id)
         return occi_instance
@@ -91,7 +89,7 @@ class Controller(base.Controller):
         """
         attributes = network_api.process_parameters(req)
         link_list = self.os_neutron_helper.list_compute_net_links(req, attributes)
-        occi_link_resources = self._get_network_link_resources(link_list)
+        occi_link_resources = _get_network_link_resources(link_list)
         return collection.Collection(resources=occi_link_resources)
 
     def show(self, req, id):
@@ -134,7 +132,7 @@ class Controller(base.Controller):
             # Allocate private network
             os_link = self.os_neutron_helper.create_port(
                 req, parameters)
-        occi_link = self._get_network_link_resources([os_link])
+        occi_link = _get_network_link_resources([os_link])
         return collection.Collection(resources=occi_link)
 
     def delete(self, req, id):
