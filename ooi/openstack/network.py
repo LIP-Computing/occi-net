@@ -17,6 +17,7 @@
 from ooi.occi.core import attribute as attr
 from ooi.occi.core import mixin
 from ooi.occi.infrastructure import network_link
+from ooi.occi.infrastructure import network
 from ooi.openstack import helpers
 
 
@@ -32,14 +33,14 @@ class OSNetworkInterface(network_link.NetworkInterface):
                                            "occi.networkinterface.gateway",
                                            "occi.networkinterface.allocation"])
 
-    def __init__(self, source, target, mac, address, ip_id=None, pool=None):
-        link_id = '_'.join([source.id, address])
+    def __init__(self, source, target, mac, address, ip_id=None, pool=None, state='active'):
+        link_id = '_'.join([source.id, target.id, address])
         mixins = [network_link.ip_network_interface]
         if pool:
             mixins.append(OSFloatingIPPool(pool))
         super(OSNetworkInterface, self).__init__(mixins, source, target,
                                                  link_id, "eth0", mac,
-                                                 "active")
+                                                 state)
         self.ip_id = ip_id
         self.attributes["occi.networkinterface.address"] = (
             attr.MutableAttribute("occi.networkinterface.address", address))
@@ -72,3 +73,111 @@ class OSNetworkInterface(network_link.NetworkInterface):
     @allocation.setter
     def allocation(self, value):
         self.attributes["occi.networkinterface.allocation"].value = value
+
+
+class OSNetwork(mixin.Mixin):
+    scheme = helpers.build_scheme("infrastructure/network")
+
+    def __init__(self, pool=None):
+        term = "osnetwork"
+        title = "openstack network"
+
+        super(OSNetwork, self).__init__(
+            scheme=self.scheme,
+            term=term,
+            title=title,
+            attributes=attr.AttributeCollection([
+                             "org.openstack.network.public",
+                             "org.openstack.network.shared",
+                             "org.openstack.network.ip_version"])
+            )
+
+
+class OSNetworkResource(network.NetworkResource):
+
+    attributes = attr.AttributeCollection([
+                                           "org.openstack.network.public",
+                                           "org.openstack.network.shared",
+                                           "org.openstack.network.ip_version",
+                                           "occi.network.address",
+                                           "occi.network.gateway",
+                                           "occi.network.allocation",
+                                           ])
+
+    def __init__(self, title=None, summary=None,
+                 id=None, vlan=None, label=None, state=None,
+                 shared=False, public=False,
+                 address=None, gateway=None, ip_version=None, allocation=None):
+
+        super(OSNetworkResource,
+              self).__init__(title=title,
+                             summary=summary, id=id, vlan=vlan,
+                             label=label, state=state,
+                             mixins=[network.ip_network, OSNetwork()])
+
+        self.attributes["org.openstack.network.shared"] = attr.MutableAttribute(
+            "org.openstack.network.shared", shared)
+        self.attributes["org.openstack.network.public"] = attr.MutableAttribute(
+            "org.openstack.network.public", public)
+        # subnet
+        self.attributes["org.openstack.network.ip_version"] = (
+            attr.MutableAttribute(
+                "org.openstack.network.ip_version", ip_version))
+        self.attributes["occi.network.address"] = (
+            attr.MutableAttribute(
+                "occi.network.address", address))
+        self.attributes["occi.network.gateway"] = (
+            attr.MutableAttribute(
+                "occi.network.gateway", gateway))
+        self.attributes["occi.network.allocation"] = (
+            attr.MutableAttribute(
+                "occi.network.allocation", allocation))
+
+    @property
+    def shared(self):
+        return self.attributes["org.openstack.network.shared"].value
+
+    @shared.setter
+    def shared(self, value):
+        self.attributes["org.openstack.network.shared"].value = value
+
+    @property
+    def public(self):
+        return self.attributes["org.openstack.network.public"].value
+
+    @public.setter
+    def public(self, value):
+        self.attributes["org.openstack.network.public"].value = value
+
+    @property
+    def ip_version(self):
+        return self.attributes["org.openstack.network.ip_version"].value
+
+    @ip_version.setter
+    def ip_version(self, value):
+        self.attributes["org.openstack.network.ip_version"].value = value
+
+    @property
+    def address(self):
+        return self.attributes["occi.network.address"].value
+
+    @address.setter
+    def address(self, value):
+        self.attributes["occi.network.address"].value = value
+
+    @property
+    def gateway(self):
+        return self.attributes["occi.network.gateway"].value
+
+    @gateway.setter
+    def gateway(self,value):
+        self.attributes["occi.network.gateway"].value = value
+
+    @property
+    def allocation(self):
+        return self.attributes["occi.network.network.allocation"].value
+
+    @allocation.setter
+    def allocation(self, value):
+        self.attributes["occi.network.network.allocation"] = value
+

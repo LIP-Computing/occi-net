@@ -144,6 +144,12 @@ floating_ips = {
     ],
 }
 
+networks = {
+    tenants["baz"]["id"]: [
+        {"id": uuid.uuid4().hex},
+        {"id": uuid.uuid4().hex}
+        ]
+}
 servers = {
     tenants["foo"]["id"]: [
         {
@@ -293,12 +299,6 @@ def fake_query_results():
         'location="%s/resource_tpl/2"' % application_url)
 
     # OCCI Infrastructure Network
-    cats.append(
-        'networkmanagement; '
-        'scheme="http://schemas.ogf.org/occi/infrastructure/network#"; '
-        'class="kind"; title="network extended"; '
-        'rel="http://schemas.ogf.org/occi/infrastructure#network"; '
-        'location="%s/networkmanagement/"' % application_url)
     cats.append(
         'network; '
         'scheme="http://schemas.ogf.org/occi/infrastructure#"; '

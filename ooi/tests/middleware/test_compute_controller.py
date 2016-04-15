@@ -14,8 +14,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import mock
 import uuid
 
+from ooi.api import helpers
 from ooi.tests import fakes
 from ooi.tests.middleware import test_middleware
 from ooi import utils
@@ -133,14 +135,16 @@ class TestComputeController(test_middleware.TestMiddleware):
             self.assertDefaults(resp)
             self.assertExpectedResult(expected, resp)
 
-    def test_show_vm(self):
+    @mock.patch.object(helpers.OpenStackNet, "get_network_id")
+    def test_show_vm(self, mock_net):
         tenant = fakes.tenants["foo"]
         app = self.get_app()
-
+        net_id = '84848'
+        ip = '9393'
         for server in fakes.servers[tenant["id"]]:
             req = self._build_req("/compute/%s" % server["id"],
                                   tenant["id"], method="GET")
-
+            mock_net.return_value = net_id
             resp = req.get_response(app)
             expected = build_occi_server(server)
             self.assertDefaults(resp)
@@ -326,9 +330,11 @@ class TestComputeController(test_middleware.TestMiddleware):
         self.assertExpectedResult(expected, resp)
         self.assertDefaults(resp)
 
-    def test_vm_links(self):
+    @mock.patch.object(helpers.OpenStackNet, "get_network_id")
+    def test_vm_links(self, mock_net_id):
         tenant = fakes.tenants["baz"]
-
+        net_id = fakes.networks[tenant["id"]][0]['id']
+        mock_net_id.return_value = net_id
         app = self.get_app()
 
         for server in fakes.servers[tenant["id"]]:
@@ -358,11 +364,7 @@ class TestComputeController(test_middleware.TestMiddleware):
             for addr_set in addresses.values():
                 for addr in addr_set:
                     ip = addr["addr"]
-                    link_id = '_'.join([server["id"], ip])
-                    if addr["OS-EXT-IPS:type"] == "fixed":
-                        net_id = "fixed"
-                    else:
-                        net_id = "floating"
+                    link_id = '_'.join([server["id"],net_id, ip])
                     target = utils.join_url(self.application_url + "/",
                                             "network/%s" % net_id)
                     self.assertResultIncludesLink(link_id, source, target,

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2015 LIP - Lisbon
+# Copyright 2016 LIP - Lisbon
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -19,36 +19,44 @@ from ooi.tests.tests_networks.integration import  TestIntegration
 
 from ooi import exception
 from ooi.wsgi import Request
-from ooi.api.networks import network
-from ooi.occi.infrastructure import network_extend
+from ooi.api import network as net_controler
+from ooi.occi.infrastructure import network
 from ooi.tests.tests_networks.integration.keystone.session import KeySession
-from ooi.tests.tests_networks import fakes
-
+from ooi.tests import fakes_neutron as fakes
 
 
 class TestIntegrationNetwork(TestIntegration):
 
     def setUp(self):
         super(TestIntegrationNetwork, self).setUp()
-        self.req = Request(KeySession().create_request(self.session, path="/", environ={}, headers=None).environ)
+        self.req = Request(
+            KeySession().create_request(self.session, path="/",
+                                        environ={},
+                                        headers={
+                                            "X_PROJECT_ID": self.project_id
+                                        }).environ)
 
-        self.controller = network.Controller("http://127.0.0.1:9696/v2.0")
+        self.controller = net_controler.Controller("http://127.0.0.1:9696/v2.0")
 
     def test_list(self):
         list = self.controller.index(self.req)
-        self.assertIsInstance(list.resources[0], network_extend.Network)
-        sortedList = sorted(list.resources, key=lambda Network: Network.title, reverse=True)
-        self.assertEqual("public", sortedList[0].title)
+        self.assertIsInstance(list.resources[0], network.NetworkResource)
+        sortedList = sorted(list.resources,
+                            key=lambda Network: Network.title,
+                            reverse=True)
+        self.assertEqual("private", sortedList[0].title)
 
     def test_list_by_tenant(self):
-        self.req.headers = fakes.create_header(None,None, self.project_id)
+        self.req.headers = fakes.create_header(None, None, self.project_id)
         list = self.controller.index(self.req)
-        sortedList = sorted(list.resources, key=lambda Network: Network.title, reverse=True)
-        self.assertIsInstance(sortedList[0], network_extend.Network)
+        sortedList = sorted(list.resources,
+                            key=lambda Network: Network.title,
+                            reverse=True)
+        self.assertIsInstance(sortedList[0], network.NetworkResource)
       #  self.assertEqual("public", sortedList[0].title)
 
     def test_list_by_tenant_error(self):
-        self.req.headers = fakes.create_header(None,None, "noexits")
+        self.req.headers = fakes.create_header(None, None, "noexits")
         list = self.controller.index(self.req)
         self.assertIs(0, list.resources.__len__())
 
@@ -60,52 +68,47 @@ class TestIntegrationNetwork(TestIntegration):
         body = None
         out = None
         try:
-            net = self.controller.run_action(self.req,self.public_network,body)
+            self.controller.run_action(self.req,
+                                       self.public_network, body)
         except Exception as e:
             out = e
         self.assertIsInstance(out, exception.NotFound)
 
     def test_create_network_no_subnetwork(self):
         #Create
-        parameters = { "occi.core.title":self.new_network_name,
-                     }
-        self.req.headers = fakes.create_header(parameters,None)
+        parameters = {"occi.core.title": self.new_network_name}
+        self.req.headers = fakes.create_header(parameters, None)
         try:
             self.controller.create(self.req)
         except Exception as e:
             out = e
         self.assertIsInstance(out, exception.Invalid)
 
-    def test_create_delete_network_with_subnet(self):
+    def test_create_delete_network_with_all(self):
         list1 = self.controller.index(self.req)
         ip_version = 4
-        cidr = "11.0.0.1/24"
-        gateway = "11.0.0.3"
+        cidr = "12.0.0.1/24"
+        gateway = "12.0.0.3"
         #Create
         parameters ={"occi.core.title": self.new_network_name,
                     "org.openstack.network.ip_version": ip_version,
                     "occi.network.address": cidr,
                     "occi.network.gateway": gateway,
                      }
-        self.req.headers = fakes.create_header(parameters,None,self.project_id)
+        categories = {network.NetworkResource.kind}
+        self.req.headers = fakes.create_header_occi(parameters, categories)
         net = self.controller.create(self.req)
         self.assertEqual(self.new_network_name, net.title)
         self.req.headers.pop("X-OCCI-Attribute")
-        self.req.headers.pop("X-PROJECT-ID")
         list2 = self.controller.index(self.req)
-        self.assertEqual(list1.resources.__len__() + 1, list2.resources.__len__())
+        self.assertEqual(list1.resources.__len__() + 1,
+                         list2.resources.__len__())
 
          # Delete
-        #response = self.controller.delete(self.req, {"attributes":{"occi.core.id": net.id}})
+        #id = 'c9b50445-9d6f-402a-91cd-d7c323402f96'
         response = self.controller.delete(self.req, net.id)
         self.assertIsInstance(response, list)
         list3 = self.controller.index(self.req)
         self.assertEqual(list1.resources.__len__(), list3.resources.__len__())
 
 
-"""
-    def test_delete_network(self):
-        response = self.controller.delete(self.req, self.new_network_id)
-
-        self.assertEqual(204, response.status_code)
-"""

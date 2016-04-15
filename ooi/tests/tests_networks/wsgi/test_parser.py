@@ -15,7 +15,7 @@
 # under the License.
 
 from ooi.tests import base
-from ooi.api.networks import utils
+from ooi import utils
 from  ooi.wsgi.parsers import HeaderParser
 
 

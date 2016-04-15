@@ -15,7 +15,7 @@
 # under the License.
 
 from ooi.tests.tests_networks.integration import TestIntegration
-
+from ooi.occi.infrastructure import network
 from ooi.tests.tests_networks.integration.keystone.session import KeySession
 from ooi.wsgi import OCCIMiddleware
 
@@ -30,13 +30,13 @@ class TestMiddleware(TestIntegration):
             #'Category': 'network; scheme="http://schema#";class="kind";',
             "X_PROJECT_ID": self.project_id,
         }
-        req = KeySession().create_request(self.session, headers=headers, path="/networkmanagement")
+        req = KeySession().create_request(self.session, headers=headers, path="/network")
         result = req.get_response(self.app)
         self.assertEqual(200, result.status_code)
         self.assertIsNot("", result.text)
 
     def test_show(self):
-        req = KeySession().create_request(self.session, path="/networkmanagement/%s" % self.public_network, method="GET")
+        req = KeySession().create_request(self.session, path="/network/%s" % self.public_network, method="GET")
         result = req.get_response(self.app)
         self.assertEqual(200, result.status_code)
         self.assertIsNot("", result.text)
@@ -44,25 +44,25 @@ class TestMiddleware(TestIntegration):
     def test_create_delete_network(self):
         cidr = "11.0.0.1/24"
         gateway = "11.0.0.3"
+        allocation = "dynamic"
+        term = network.NetworkResource.kind.term
+        scheme = network.NetworkResource.kind.scheme
         headers = {
-            #'Category': 'network; scheme="http://schema#";class="kind";',
-            "X_OCCI_Attribute": 'occi.core.title= pruebas, org.openstack.network.ip_version=4,'
-                                'occi.network.address="%s", occi.network.gateway="%s"' % (cidr, gateway),
+            'Category': '%s; scheme="%s";class="kind"' % (term, scheme),
+            "X_OCCI_Attribute": 'occi.core.title=OCCI_WSGI_TEST, org.openstack.network.ip_version=4,'
+                                'occi.network.address="%s", occi.network.gateway="%s", occi.network.allocation="%s"' % (cidr, gateway, allocation),
             "X_PROJECT_ID": self.project_id,
         }
-        req = KeySession().create_request(self.session, path="/networkmanagement", headers=headers, method="POST")
+        req = KeySession().create_request(self.session, path="/network", headers=headers, method="POST")
         result = req.get_response(self.app)
         self.assertEqual(200, result.status_code)
 
-        net_id = result.text.split('\n')[5].split('=')[1].replace('"', '').strip()
-        headers_delete = {
-             "X_OCCI_Attribute": 'occi.core.id=%s' % net_id,
-        }
-        req = KeySession().create_request(self.session, path="/networkmanagement/%s" % net_id, headers=headers_delete, method="DELETE")
+        net_id = result.text.split('\n')[6].split('=')[1].replace('"', '').strip()
+        req = KeySession().create_request(self.session, path="/network/%s" % net_id, method="DELETE")
         result = req.get_response(self.app)
         self.assertEqual(204, result.status_code)
 
     def test_run_up_network(self):
-        req = KeySession().create_request(self.session, path="/networkmanagement/%s?action=up" % self.public_network, method="POST")
+        req = KeySession().create_request(self.session, path="/network/%s?action=up" % self.public_network, method="POST")
         result = req.get_response(self.app)
         self.assertEqual(404, result.status_code)
