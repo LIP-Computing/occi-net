@@ -54,6 +54,11 @@ def _create_network_link(l):
                                           state=state)
     return iface
 
+def _create_network_link(addr, comp, net_id):
+    net = network.NetworkResource(title="network", id=net_id)
+    return os_network.OSNetworkInterface(comp, net,
+                                         addr["OS-EXT-IPS-MAC:mac_addr"],
+                                         addr["addr"])
 
 class Controller(ooi.api.base.Controller):
     def __init__(self, app, openstack_version, neutron_endpoint):
@@ -257,11 +262,14 @@ class Controller(ooi.api.base.Controller):
                                                    deviceid=v["device"]))
 
         # network links
-        attributes = {'occi.core.source': id}
-        link_list = self.os_network_helper.list_compute_net_links(req, attributes)
-        if link_list:
-            for l in link_list:
-                    comp.add_link(_create_network_link(l))
+        addresses = s.get("addresses", {})
+        if addresses:
+            for addr_set in addresses.values():
+                for addr in addr_set:
+                    net_id = self.os_network_helper.get_network_id(
+                        req, addr['OS-EXT-IPS-MAC:mac_addr']
+                    )
+                    comp.add_link(_create_network_link(addr, comp, net_id))
 
         return [comp]
 

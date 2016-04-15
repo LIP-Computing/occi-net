@@ -900,7 +900,7 @@ class OpenStackNet(BaseHelper):
         return link
 
     def delete_port(self, req, mac):
-        """Add a port to the subnet
+        """Delete a port to the subnet
 
         Returns the port information
 
@@ -921,6 +921,25 @@ class OpenStackNet(BaseHelper):
                                    'ports',
                                    ports[0]['id'])
         return out
+
+    def get_network_id(self, req, mac):
+        """Get the Network ID from the mac port
+
+        :param req: the incoming network
+        :param mac: mac port
+        """
+        try:
+            attributes_port = {
+                "mac_address": mac
+            }
+            ports = self.list_resources(
+                req,
+                'ports', attributes_port
+            )
+            id = ports[0]['network_id']
+        except:
+            raise exception.NetworkNotFound
+        return id
 
     def _add_floating_ip(self, req, public_net_id, port_id):
         """Add floating to the public network and a port
