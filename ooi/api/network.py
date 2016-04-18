@@ -93,7 +93,8 @@ class Controller(ooi.api.base.Controller):
     def _get_network_resources(networks_list):
         """Create network instances from network in json format
 
-        :param networks_list: networks objects provides by the cloud infrastructure
+        :param networks_list: networks objects provides by
+        the cloud infrastructure
         """
         occi_network_resources = []
         if networks_list:
@@ -153,7 +154,8 @@ class Controller(ooi.api.base.Controller):
             self.os_helper.required["networks"], attributes)
         net = self.os_helper.create_network(req, attributes)
         occi_network_resources = self._get_network_resources([net])
-        return occi_network_resources[0]
+        return collection.Collection(
+            resources=occi_network_resources)
 
     def delete(self, req, id):
         """delete networks which satisfy the parameters

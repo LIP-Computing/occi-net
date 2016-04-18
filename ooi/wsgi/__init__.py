@@ -112,6 +112,7 @@ class OCCIMiddleware(object):
 
     def __init__(self, application, openstack_version="/v2.1",
                  neutron_ooi_endpoint="http://127.0.0.1:9696/v2.0"):
+        # todo(jorgesece): set default neturon endpoint None when add another driver
         self.application = application
         self.openstack_version = openstack_version
         self.neutron_ooi_endpoint = neutron_ooi_endpoint

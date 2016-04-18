@@ -18,6 +18,7 @@ import mock
 from ooi import exception
 from ooi.api import helpers
 from ooi.api import network
+from ooi.occi.core import collection
 from ooi.occi.infrastructure import network as occi_network
 from ooi.tests import base
 from ooi.tests import fakes_neutron as fakes
@@ -58,15 +59,23 @@ class TestNetworkController(base.TestController):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         schema1 = occi_network.NetworkResource.kind.scheme
         # m_network.return_value = {"id":"xxx"}
-        for net in test_networks:
-            parameters = {"occi.core.title": net["name"],
+        for test_net in test_networks:
+            parameters = {"occi.core.title": test_net["name"],
                           "org.openstack.network.ip_version": 4,
                           "occi.network.address": "0.0.0.0",
                           }
             categories = {occi_network.NetworkResource.kind}
             req = fakes.create_req_test_occi(parameters, categories)
+            fake_net = fakes.fake_build_net(
+                parameters ['occi.core.title'],
+                parameters['org.openstack.network.ip_version'],
+                parameters['occi.network.address']
+            )
+            m.return_value = fake_net
             ret = self.controller.create(req)
-            self.assertIsInstance(ret, occi_network.NetworkResource)
+            net = ret.resources.pop()
+            self.assertIsInstance(net, occi_network.NetworkResource)
+            self.assertEqual(net.title, test_net['name'])
 
     @mock.patch.object(helpers.OpenStackNet, "create_resource")
     def test_create_Error(self, m):

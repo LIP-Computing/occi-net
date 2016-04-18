@@ -97,7 +97,8 @@ class TestIntegrationNetwork(TestIntegration):
                      }
         categories = {network.NetworkResource.kind}
         self.req.headers = fakes.create_header_occi(parameters, categories)
-        net = self.controller.create(self.req)
+        ret = self.controller.create(self.req)
+        net = ret.resources.pop()
         self.assertEqual(self.new_network_name, net.title)
         self.req.headers.pop("X-OCCI-Attribute")
         list2 = self.controller.index(self.req)

@@ -57,7 +57,8 @@ class TestMiddleware(TestIntegration):
         result = req.get_response(self.app)
         self.assertEqual(200, result.status_code)
 
-        net_id = result.text.split('\n')[6].split('=')[1].replace('"', '').strip()
+       # net_id = result.text.split('\n')[6].split('=')[1].replace('"', '').strip()
+        net_id = result.text.split('/')[5].strip()
         req = KeySession().create_request(self.session, path="/network/%s" % net_id, method="DELETE")
         result = req.get_response(self.app)
         self.assertEqual(204, result.status_code)

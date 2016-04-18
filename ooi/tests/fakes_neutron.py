@@ -21,6 +21,7 @@ import webob.dec
 import webob.exc
 
 from ooi.api import network_link
+from ooi.api import network
 from ooi import wsgi
 
 
@@ -217,3 +218,20 @@ def fake_network_link_occi(os_list_net):
         if l['instance_id']:
             list_links.append(fake_build_link(l['network_id'], l['instance_id'], l['ip']))
     return  network_link._get_network_link_resources(list_links)
+
+def fake_build_net(name, ip_version=4, address='0.0.0.11', gateway='0.0.0.1', id=33, state='active'):
+    link = {}
+    link['id'] = id
+    link['name'] = name
+    link['address'] = address
+    link['gateway'] = gateway
+    link['ip_version'] = ip_version
+    link['state'] = state
+    return link
+
+
+def fake_network_occi(os_list_net):
+    list_nets = []
+    for n in os_list_net:
+        list_nets.append(fake_build_net(n['name'], id=n['id']))
+    return network.Controller._get_network_resources(list_nets)

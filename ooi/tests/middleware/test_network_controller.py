@@ -164,10 +164,16 @@ class TestNetworkController(TestMiddlewareNeutron):
             'X_Occi_Attribute': 'project=%s' % tenant["id"],
         }
         req = self._build_req(path="/network", tenant_id='X', method="POST", headers=headers)
-        ooi_net = helpers.OpenStackNet._build_networks(fakes.networks[tenant['id']])
-        m.return_value = create_occi_results(ooi_net)
+        fake_net = fakes.fake_network_occi(
+            fakes.networks[tenant['id']]
+        )[0]
+        m.return_value = collection.Collection([fake_net])
         resp = req.get_response(self.app)
         self.assertEqual(200, resp.status_code)
+        expected = [("X-OCCI-Location",
+                     utils.join_url(self.application_url + "/",
+                                    "network/%s" % fake_net.id))]
+        self.assertExpectedResult(expected, resp)
 
     @mock.patch.object(network.Controller, "show")
     def test_show_networks(self, m):

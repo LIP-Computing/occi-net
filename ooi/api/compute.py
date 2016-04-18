@@ -61,7 +61,7 @@ def _create_network_link(addr, comp, net_id):
                                          addr["addr"])
 
 class Controller(ooi.api.base.Controller):
-    def __init__(self, app, openstack_version, neutron_endpoint):
+    def __init__(self, app, openstack_version, neutron_endpoint=None):
         super(Controller, self).__init__(app, openstack_version)
         self.compute_actions = compute.ComputeResource.actions
         self.os_helper = ooi.api.helpers.OpenStackHelper(
