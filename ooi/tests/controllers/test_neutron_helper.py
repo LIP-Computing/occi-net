@@ -64,34 +64,37 @@ class TestNetOpenStackHelper(base.TestCase):
 
     @mock.patch.object(helpers.OpenStackNet, "_make_get_request")
     def test_index3(self, m):
-        resp = fakes.create_fake_json_resp({"networks": ["FOO"]}, 200)
+        id = '93493'
+        resp = fakes.create_fake_json_resp({"networks": [{"id": id}]}, 200)
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
         ret = self.helper.index(None, None)
-        self.assertEqual(["FOO"], ret)
+        self.assertEqual(id, ret[0]['id'])
         m.assert_called_with(None, "/networks", None)
 
     @mock.patch.object(helpers.OpenStackNet, "_make_get_request")
     def test_get_network(self, m):
+        id = 1
         resp = fakes.create_fake_json_resp(
-            {"network": {"status": "ACTIVE"}}, 200)
+            {"network": {"status": "ACTIVE", "id": id}}, 200)
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.get_network_details(None, 1)
-        self.assertEqual("ACTIVE", ret["status"])
+        ret = self.helper.get_network_details(None, id)
+        self.assertEqual("active", ret["state"])
         m.assert_called_with(None, "/networks/%s" % 1)
 
     @mock.patch.object(helpers.OpenStackNet, "_get_req")
     def test_get_network2(self, m):
+        id = 1
         resp = fakes.create_fake_json_resp(
-            {"network": {"status": "ACTIVE"}}, 200)
+            {"network": {"status": "ACTIVE", "id": id}}, 200)
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.get_network_details(None, 1)
-        self.assertEqual("ACTIVE", ret["status"])
+        ret = self.helper.get_network_details(None, id)
+        self.assertEqual("active", ret["state"])
         m.assert_called_with(None, method="GET",
                              path="/networks/1", query_string=None)
 
@@ -108,32 +111,34 @@ class TestNetOpenStackHelper(base.TestCase):
 
     @mock.patch.object(helpers.OpenStackNet, "_make_get_request")
     def test_get_network_with_subnet(self, m):
+        id = 1
+        address = '90349034'
         resp = fakes.create_fake_json_resp(
-            {"network": {"status": "ACTIVE", "subnets": [2]},
-             "subnet": ["FOO"]}, 200
+            {"network": {"status": "ACTIVE", "id": id, "subnets": [2]},
+             "subnet": {"cidr": address}}, 200
         )
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.get_network_details(None, 1)
-        self.assertEqual("ACTIVE", ret["status"])
-        self.assertEqual([2], ret["subnets"])
-        self.assertEqual(["FOO"], ret["subnet_info"])
+        ret = self.helper.get_network_details(None, id)
+        self.assertEqual("active", ret["state"])
+        self.assertEqual(address, ret["address"])
         m.assert_called_with(req_mock, "/subnets/2")
 
     @mock.patch.object(helpers.OpenStackNet, "_get_req")
     def test_get_network_with_subnet2(self, m):
+        id = 1
+        address = '90349034'
         resp = fakes.create_fake_json_resp(
-            {"network": {"status": "ACTIVE", "subnets": [2]},
-             "subnet": ["FOO"]}, 200
+            {"network": {"status": "DOWN", "id": id, "subnets": [2]},
+             "subnet": {"cidr": address}}, 200
         )
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
         ret = self.helper.get_network_details(None, 1)
-        self.assertEqual("ACTIVE", ret["status"])
-        self.assertEqual([2], ret["subnets"])
-        self.assertEqual(["FOO"], ret["subnet_info"])
+        self.assertEqual("inactive", ret["state"])
+        self.assertEqual(address, ret["address"])
         m.assert_called_with(req_mock, method="GET",
                              path="/subnets/2", query_string=None)
 
@@ -325,10 +330,13 @@ class TestNetOpenStackHelper(base.TestCase):
                       "occi.network.address": cidr,
                       "occi.network.gateway": gate_way
                       }
-        cre_net.side_effect = [{'id': net_id},
+        cre_net.side_effect = [{'id': net_id,
+                                "status": 'active',
+                                "name": 'xx',},
                                {"id": subnet_id,
                                 "cidr": cidr,
-                                "gateway_ip": gate_way},
+                                "gateway_ip": gate_way,
+                                },
                                {"id": router_id},
                                {"id": 0}]
         list_net.return_value = [{'id': public_net}]
@@ -349,9 +357,8 @@ class TestNetOpenStackHelper(base.TestCase):
                            {'external_gateway_info':{'network_id':public_net}}),
                           cre_net.call_args_list[2][0])
         add_if.assert_called_with(None, router_id, subnet_id)
-        self.assertEqual(subnet_id, ret["subnet_info"]['id'])
-        self.assertEqual(cidr, ret["subnet_info"]['cidr'])
-        self.assertEqual(gate_way, ret["subnet_info"]['gateway_ip'])
+        self.assertEqual(cidr, ret['address'])
+        self.assertEqual(gate_way, ret['gateway'])
 
     @mock.patch.object(helpers.OpenStackNet, "delete_resource")
     @mock.patch.object(helpers.OpenStackNet, "list_resources")

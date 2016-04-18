@@ -37,9 +37,10 @@ class TestNetworkController(base.TestController):
         ]
         req = fakes.create_req_test(None, None)
         for nets in test_networks:
-            m_index.return_value = nets
+            ooi_net = helpers.OpenStackNet._build_networks(nets)
+            m_index.return_value = ooi_net
             result = self.controller.index(req)
-            expected = self.controller._get_network_resources(nets)
+            expected = self.controller._get_network_resources(ooi_net)
             self.assertEqual(result.resources.__len__(),
                              expected.__len__())
             # self.assertEqual(result.resources, expected)
@@ -94,7 +95,8 @@ class TestNetworkController(base.TestController):
         subnet = fakes.subnets
         for net in test_networks:
             net["subnet_info"] = subnet[0]
-        ret = self.controller._get_network_resources(test_networks)
+        ooi_net = helpers.OpenStackNet._build_networks(test_networks)
+        ret = self.controller._get_network_resources(ooi_net)
         self.assertIsInstance(ret, list)
         self.assertIsNot(ret.__len__(), 0)
         for net_ret in ret:

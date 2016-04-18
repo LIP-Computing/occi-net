@@ -65,7 +65,7 @@ networks = {
             "id": uuid.uuid4().hex,
             "name": "bar",
             "subnet_info": subnets[1],
-            "status": "SHUTOFF",
+            "status": "DOWN",
         },
     ]
 }

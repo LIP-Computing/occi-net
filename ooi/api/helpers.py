@@ -659,6 +659,38 @@ class OpenStackNet(BaseHelper):
                 }
 
     @staticmethod
+    def _build_link(net_id, compute_id, ip, mac=None, pool=None, state='active'):
+        link = {}
+        link['mac'] = mac
+        link['pool'] = pool
+        link['network_id'] = net_id
+        link['compute_id'] = compute_id
+        link['ip'] = ip
+        link['state'] = state
+        return link
+
+    @staticmethod
+    def _build_networks(networks):
+        ooi_net_list = []
+        for net in networks:
+            ooi_net = {}
+            status = net.get("status", None)
+            ooi_net["state"] = utils.network_status(status)
+            public = net.get('router:external', None)
+            if public:
+                ooi_net["id"] = 'PUBLIC'
+            else:
+                ooi_net["id"] = net["id"]
+            ooi_net["name"] = net.get("name", None)
+            if "subnet_info" in net:
+                sub = net["subnet_info"]
+                ooi_net["address"] = sub.get("cidr", None)
+                ooi_net["ip_version"] = sub.get("ip_version", None)
+                ooi_net["gateway"] = sub.get("gateway_ip", None)
+            ooi_net_list.append(ooi_net)
+        return ooi_net_list
+
+    @staticmethod
     def get_from_response(response, element, default):
         """Get a JSON element from a valid response or raise an exception.
 
@@ -968,7 +1000,7 @@ class OpenStackNet(BaseHelper):
 
         :param req: the incoming network
         :param public_net_id: network id
-        :param port_id: port id of the device
+        :param ip: floating ip to remove
         """
         attributes_port = {
             "floating_network_id": public_net_id,
@@ -1005,7 +1037,9 @@ class OpenStackNet(BaseHelper):
             net["subnet_info"] = self.get_from_response(
                 response_subnet, "subnet", {})
 
-        return net
+        ooi_networks = self._build_networks([net])
+
+        return ooi_networks[0]
 
     def index(self, req, parameters):
         """List networks.
@@ -1020,7 +1054,8 @@ class OpenStackNet(BaseHelper):
         networks = self.list_resources(req,
                                        'networks',
                                        param)
-        return networks
+        ooi_networks = self._build_networks(networks)
+        return ooi_networks
 
     def create_network(self, req, parameters):
         """Create a full neutron network.
@@ -1073,8 +1108,8 @@ class OpenStackNet(BaseHelper):
             self.delete_resource(req,
                                  'networks', net['id'])
             raise ex
-
-        return net
+        ooi_net = self._build_networks([net])
+        return ooi_net[0]
 
     def delete_network(self, req, id):
         """Delete a full network.
@@ -1152,16 +1187,6 @@ class OpenStackNet(BaseHelper):
         response = self._remove_floating_ip(req, net_public, ip)
 
         return response
-
-    def _build_link(self, net_id, compute_id, ip, mac=None, pool=None, state='active'):
-        link = {}
-        link['mac'] = mac
-        link['pool'] = pool
-        link['network_id'] = net_id
-        link['compute_id'] = compute_id
-        link['ip'] = ip
-        link['state'] = state
-        return link
 
     def list_compute_net_links(self, req, parameters=None):
         """List the network and compute links

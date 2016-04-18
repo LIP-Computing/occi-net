@@ -17,13 +17,13 @@
 from ooi.tests.tests_networks.integration import TestIntegration
 from ooi.occi.infrastructure import network
 from ooi.tests.tests_networks.integration.keystone.session import KeySession
-from ooi.wsgi import OCCIMiddleware
+from ooi import wsgi
 
 
 class TestMiddleware(TestIntegration):
     def setUp(self):
         super(TestMiddleware, self).setUp()
-        self.app = OCCIMiddleware(None, neutron_endpoint="http://127.0.0.1:9696/v2.0")
+        self.app = wsgi.OCCIMiddleware(None, neutron_ooi_endpoint="http://127.0.0.1:9696/v2.0")
 
     def test_index(self):
         headers = {

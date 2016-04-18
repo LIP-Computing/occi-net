@@ -51,7 +51,7 @@ occi_opts = [
                       'The default will be equal to the number of CPUs '
                       'available.'),
     # NEUTRON
-    config.cfg.StrOpt('neutron_endpoint',
+    config.cfg.StrOpt('neutron_ooi_endpoint',
                       default="http://127.0.0.1:9696/v2.0",
                       help='Neutron end point which access to'
                            ' the Neutron Restful API.'),
@@ -111,31 +111,31 @@ class OCCIMiddleware(object):
         return _factory
 
     def __init__(self, application, openstack_version="/v2.1",
-                 neutron_endpoint="http://127.0.0.1:9696/v2.0"):
+                 neutron_ooi_endpoint="http://127.0.0.1:9696/v2.0"):
         self.application = application
         self.openstack_version = openstack_version
-        self.neutron_endpoint = neutron_endpoint
+        self.neutron_ooi_endpoint = neutron_ooi_endpoint
         self.resources = {}
 
         self.mapper = routes.Mapper()
         self._setup_routes()
-        # OCCINetworkMiddleware(neutron_endpoint).setup_net_routes(
+        # OCCINetworkMiddleware(neutron_ooi_endpoint).setup_net_routes(
         #     mapper=self.mapper, resources=self.resources)
 
-    def _create_resource(self, controller, neutron_endpoint=None):
-        if neutron_endpoint:
+    def _create_resource(self, controller, neutron_ooi_endpoint=None):
+        if neutron_ooi_endpoint:
             if controller == ooi.api.compute.Controller:
                 return Resource(controller(self.application,
                                            self.openstack_version,
-                                           self.neutron_endpoint))
+                                           self.neutron_ooi_endpoint))
             else:
-                return Resource(controller(self.neutron_endpoint))
+                return Resource(controller(self.neutron_ooi_endpoint))
         else:
             return Resource(controller(self.application, self.openstack_version))
 
     def _create_net_resource(self, controller):
         # fixme(jorgesece): wsgi unitttest do not work, it is not using FakeApp
-        return Resource(controller(self.neutron_endpoint))
+        return Resource(controller(self.neutron_ooi_endpoint))
 
     def _setup_resource_routes(self, resource, controller):
         path = "/" + resource
@@ -228,7 +228,7 @@ class OCCIMiddleware(object):
                             action="index")
 
         self.resources["compute"] = self._create_resource(
-            ooi.api.compute.Controller, self.neutron_endpoint)
+            ooi.api.compute.Controller, self.neutron_ooi_endpoint)
         self._setup_resource_routes("compute", self.resources["compute"])
 
         self.resources["storage"] = self._create_resource(
@@ -242,13 +242,13 @@ class OCCIMiddleware(object):
 
         # FIXME(jorgesece): control and improved it
         self.resources["networklink"] = self._create_resource(
-            ooi.api.network_link.Controller, self.neutron_endpoint)
+            ooi.api.network_link.Controller, self.neutron_ooi_endpoint)
         self._setup_resource_routes("networklink",
                                     self.resources["networklink"])
 
         # FIXME(jorgesece): control and improved it
         self.resources["network"] = self._create_resource(
-            ooi.api.network.Controller, self.neutron_endpoint)
+            ooi.api.network.Controller, self.neutron_ooi_endpoint)
         self._setup_neutron_resources_routes("network", self.resources["network"])
 
     @webob.dec.wsgify(RequestClass=Request)

@@ -98,25 +98,17 @@ class Controller(ooi.api.base.Controller):
         occi_network_resources = []
         if networks_list:
             for s in networks_list:
-                s["status"] = utils.network_status(s["status"])
+                n_state = s['state']
                 n_id = s["id"]
-                n_status = s["status"]
                 n_name = s["name"]
-                if "subnet_info" in s:
-                    # fixme(jorgesece) only works with the first subnetwork
-                    n_cidr = s["subnet_info"]["cidr"]
-                    n_ip_version = s["subnet_info"]["ip_version"]
-                    n_gateway = s["subnet_info"]["gateway_ip"]
-                    s = os_network.OSNetworkResource(title=n_name,
-                                                     id=n_id, state=n_status,
+                n_address = s.get("address", None)
+                n_ip_version = s.get("ip_version", None)
+                n_gateway = s.get("gateway", None)
+                s = os_network.OSNetworkResource(title=n_name,
+                                                     id=n_id, state=n_state,
                                                      ip_version=n_ip_version,
-                                                     address=n_cidr,
+                                                     address=n_address,
                                                      gateway=n_gateway)
-                else:
-                    # FIXME(jorgesece): raise exception.NotFound()
-                    # CHANGE IN TESTS
-                    s = network.NetworkResource(title=n_name,
-                                               id=n_id, state=n_status)
                 occi_network_resources.append(s)
         return occi_network_resources
 

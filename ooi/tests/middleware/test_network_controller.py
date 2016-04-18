@@ -19,6 +19,7 @@ import mock
 from ooi import utils
 from ooi import wsgi
 from ooi.api import network
+from ooi.api import helpers
 from ooi.occi.core import collection
 from ooi.tests.middleware import test_middleware
 from ooi.tests import fakes_neutron as fakes
@@ -134,8 +135,9 @@ class TestNetworkController(TestMiddlewareNeutron):
     @mock.patch.object(network.Controller, "index")
     def test_list_networks(self, m):
         tenant = fakes.tenants["foo"]
+        ooi_net = helpers.OpenStackNet._build_networks(fakes.networks[tenant['id']])
         m.return_value = collection.Collection(
-            create_occi_results(fakes.networks[tenant['id']]))
+            create_occi_results(ooi_net))
         req = self._build_req(path="/network",
                               tenant_id='X', method="GET")
         resp = req.get_response(self.app)
@@ -162,7 +164,8 @@ class TestNetworkController(TestMiddlewareNeutron):
             'X_Occi_Attribute': 'project=%s' % tenant["id"],
         }
         req = self._build_req(path="/network", tenant_id='X', method="POST", headers=headers)
-        m.return_value = create_occi_results(fakes.networks[tenant['id']])
+        ooi_net = helpers.OpenStackNet._build_networks(fakes.networks[tenant['id']])
+        m.return_value = create_occi_results(ooi_net)
         resp = req.get_response(self.app)
         self.assertEqual(200, resp.status_code)
 
@@ -171,7 +174,8 @@ class TestNetworkController(TestMiddlewareNeutron):
         tenant = fakes.tenants["foo"]
 
         for n in fakes.networks[tenant["id"]]:
-            m.return_value = create_occi_results([n])[0]
+            ooi_net = helpers.OpenStackNet._build_networks([n])[0]
+            m.return_value = create_occi_results([ooi_net])[0]
             req = self._build_req(path="/network/%s" % n["id"],
                                   tenant_id='X',
                                   method="GET")
