@@ -685,7 +685,7 @@ class OpenStackNeutron(BaseHelper):
             if "subnet_info" in net:
                 sub = net["subnet_info"]
                 ooi_net["address"] = sub.get("cidr", None)
-                ooi_net["ip_version"] = sub.get("ip_version", None)
+                ooi_net["ip_version"] = sub.get("ip_version", 4)
                 ooi_net["gateway"] = sub.get("gateway_ip", None)
             ooi_net_list.append(ooi_net)
         return ooi_net_list
