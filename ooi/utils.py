@@ -50,30 +50,44 @@ def join_url(base, parts):
 
 
 def make_body(resource, parameters):
-        content = {}
-        for key in parameters.keys():
-            content[key] = parameters[key]
-        if resource:
-            body = {resource:content}
-        else:
-            body = content
-        return body
+    """Creates body request using the parameters.
+
+    :param resource: kind of resource
+    :param parameters: list of parameters
+    """
+    content = {}
+    for key in parameters.keys():
+        content[key] = parameters[key]
+    if resource:
+        body = {resource: content}
+    else:
+        body = content
+    return body
 
 
 def get_query_string(parameters):
-        query_string = ""
-        if parameters is None:
-            return None
+    """Creates query string.
 
-        for key in parameters.keys():
-            query_string = ("%s%s=%s&" %
-                            (query_string, key, parameters[key]))
+    :param parameters: list of parameters
+    """
+    query_string = ""
+    if parameters is None:
+        return None
 
-        # delete last character
-        return query_string[:-1]
+    for key in parameters.keys():
+        query_string = ("%s%s=%s&" %
+                        (query_string, key, parameters[key]))
+
+    # delete last character
+    return query_string[:-1]
 
 
 def translate_parameters(translation, parameters):
+    """Translates parameter names to OS
+
+    :param translation: list of names for translation
+    :param parameters: list of parameters
+    """
     if not parameters:
         return None
     out = {}
@@ -84,6 +98,10 @@ def translate_parameters(translation, parameters):
 
 
 def network_status(neutron_status):
+    """Translate neutron network status.
+
+    :param neutron_status: neutron status
+    """
     if neutron_status == "ACTIVE":
         return "active"
     elif neutron_status == "SUSPENDED":
