@@ -40,7 +40,7 @@ def _create_network_link(l):
     net_pool = l['pool']
     ip = l['ip']
     state = l['state']
-    if net_pool: # mac only in the public
+    if net_pool: # public
         net_id = network_api.PUBLIC_NETWORK
     else:
         net_id = l['network_id']

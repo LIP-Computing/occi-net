@@ -50,7 +50,7 @@ def parse_validate_schema(req, scheme=None):
     return attributes
 
 
-def process_parameters(req, scheme=None):
+def process_parameters(req, scheme=None,):
     """Get attributes from request parameters
 
     :param req: request
@@ -66,9 +66,10 @@ def process_parameters(req, scheme=None):
                 attributes[k.strip()] = v.strip()
         if not attributes:
             attributes = None
+        parameters['attributes'] = attributes
     except Exception:
         raise exception.Invalid
-    return attributes
+    return parameters
 
 
 class Controller(ooi.api.base.Controller):
@@ -118,8 +119,8 @@ class Controller(ooi.api.base.Controller):
 
         :param req: request object
         """
-        attributes = process_parameters(req)
-        occi_networks = self.os_helper.index(req, attributes)
+        parameters = process_parameters(req)
+        occi_networks = self.os_helper.index(req, parameters['attributes'])
         occi_network_resources = self._get_network_resources(
             occi_networks)
 
@@ -152,10 +153,10 @@ class Controller(ooi.api.base.Controller):
                 os_network.OSNetwork()
             ]
         }
-        attributes = process_parameters(req, scheme)
+        parameters = process_parameters(req, scheme)
         self._validate_attributes(
-            self.os_helper.required["networks"], attributes)
-        net = self.os_helper.create_network(req, attributes)
+            self.os_helper.required["networks"], parameters['attributes'])
+        net = self.os_helper.create_network(req, parameters['attributes'])
         occi_network_resources = self._get_network_resources([net])
         return collection.Collection(
             resources=occi_network_resources)

@@ -810,7 +810,7 @@ class OpenStackNeutron(BaseHelper):
                              content_type="application/json",
                              body=json.dumps(body), method="PUT")
 
-    def _get_public_network(self, req):
+    def _get_public_network(self, req, pool=None):
         """Get public network
 
         This method get public network id
@@ -818,6 +818,8 @@ class OpenStackNeutron(BaseHelper):
         :param req: the incoming request
         """
         att_public = {"router:external": True}
+        if pool:
+            att_public['id'] = pool
         net_public = self.list_resources(req,
                                          'networks',
                                          att_public)
@@ -1143,7 +1145,7 @@ class OpenStackNeutron(BaseHelper):
                                         id)
         return response
 
-    def assign_floating_ip(self, req, parameters):
+    def assign_floating_ip(self, req, parameters=None):
         """assign floating ip to a server
 
         :param req: the incoming request
@@ -1156,9 +1158,10 @@ class OpenStackNeutron(BaseHelper):
             parameters)
         attributes_port.pop('network_id')
         try:
-            net_public = self._get_public_network(req)
+            pool = parameters.get('pool', None)
+            net_public = self._get_public_network(req, pool)
         except Exception:
-            raise exception.NetworkNotFound()
+            raise exception.NetworkNotFound('Public pool')
         try:
             ports = self.list_resources(req, 'ports', attributes_port)
             port_id = ports[0]['id']

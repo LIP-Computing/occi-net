@@ -216,6 +216,31 @@ class TestNetworkLinkController(base.TestController):
         self.assertEqual(net_id, link.target.id)
         self.assertEqual(server_id, link.source.id)
 
+    @mock.patch.object(helpers.OpenStackNeutron, "assign_floating_ip")
+    def test_create_with_pool(self, mock_assign):
+        server_id = uuid.uuid4().hex
+        net_id = network_api.PUBLIC_NETWORK
+        ip = '8.0.0.0'
+        parameters = {
+                "occi.core.target": net_id,
+                "occi.core.source": server_id,
+            }
+        pool = os_network.OSFloatingIPPool()
+        pool.term = 'id_public'
+        categories = {network_link.NetworkInterface.kind, pool}
+        req = fake_nets.create_req_test_occi(parameters, categories)
+        mock_assign.return_value = fake_nets.fake_build_link(
+            net_id, server_id, ip
+        )
+        ret = self.controller.create(req)
+        self.assertIsNotNone(ret)
+        link = ret.resources.pop()
+        self.assertIsInstance(link, os_network.OSNetworkInterface)
+        self.assertIsInstance(link.source, compute.ComputeResource)
+        self.assertIsInstance(link.target, network.NetworkResource)
+        self.assertEqual(net_id, link.target.id)
+        self.assertEqual(server_id, link.source.id)
+
     @mock.patch.object(helpers.OpenStackNeutron, "create_port")
     def test_create_fixed(self, mock_cre_port):
         server_id = uuid.uuid4().hex
@@ -240,31 +265,48 @@ class TestNetworkLinkController(base.TestController):
         self.assertEqual(server_id, link.source.id)
         mock_cre_port.assert_called_with(mock.ANY, parameters)
 
-    @mock.patch.object(helpers.OpenStackNeutron, "create_port")
-    def test_create_with_pool(self, mock_cre_port):
-        server_id = uuid.uuid4().hex
-        net_id = uuid.uuid4().hex
-        ip = '8.0.0.0'
-        parameters = {
-                "occi.core.target": net_id,
-                "occi.core.source": server_id,
-            }
-        pool = os_network.OSFloatingIPPool()
-        categories = {network_link.NetworkInterface.kind, pool}
-        req = fake_nets.create_req_test_occi(parameters, categories)
-        mock_cre_port.return_value = fake_nets.fake_build_link(
-            net_id, server_id, ip
-        )
-        ret = self.controller.create(req)
-        self.assertIsNotNone(ret)
-        link = ret.resources.pop()
-        self.assertIsInstance(link, os_network.OSNetworkInterface)
-        self.assertIsInstance(link.source, compute.ComputeResource)
-        self.assertIsInstance(link.target, network.NetworkResource)
-        self.assertEqual(net_id, link.target.id)
-        self.assertEqual(server_id, link.source.id)
 
-        mock_cre_port.assert_called_with(mock.ANY, parameters)
+
+    # @mock.patch.object(helpers.OpenStackHelper, "associate_floating_ip")
+    # @mock.patch.object(helpers.OpenStackHelper, "allocate_floating_ip")
+    # @mock.patch("ooi.api.helpers.get_id_with_kind")
+    # @mock.patch("ooi.occi.validator.Validator")
+    # def test_create_with_pool(self, mock_validator, mock_get_id, mock_allocate,
+    #                           mock_associate):
+    #     tenant = fakes.tenants["foo"]
+    #     req = self._build_req(tenant["id"])
+    #     net_id = "floating"
+    #     server_id = uuid.uuid4().hex
+    #     pool_name = "public"
+    #     obj = {
+    #         "attributes": {
+    #             "occi.core.target": net_id,
+    #             "occi.core.source": server_id,
+    #         },
+    #         "schemes": {
+    #             os_network.OSFloatingIPPool.scheme: [pool_name],
+    #         }
+    #     }
+    #     ips = fakes.floating_ips[fakes.tenants["baz"]["id"]]
+    #
+    #     for ip in ips:
+    #         req.get_parser = mock.MagicMock()
+    #         req.get_parser.return_value.return_value.parse.return_value = obj
+    #         mock_validator.validate.return_value = True
+    #         mock_allocate.return_value = ip
+    #         mock_associate.return_value = None
+    #         mock_get_id.side_effect = [('', net_id), ('', server_id)]
+    #
+    #         ret = self.controller.create(req, None)
+    #         link = ret.resources.pop()
+    #         self.assertIsInstance(link, os_network.OSNetworkInterface)
+    #         self.assertIsInstance(link.source, compute.ComputeResource)
+    #         self.assertIsInstance(link.target, network.NetworkResource)
+    #         self.assertEqual(net_id, link.target.id)
+    #         self.assertEqual(server_id, link.source.id)
+    #
+    #         mock_allocate.assert_called_with(mock.ANY, pool_name)
+    #         mock_associate.assert_called_with(mock.ANY, server_id, ip["ip"])
 
     # @mock.patch.object(helpers.OpenStackNeutron, "create_port")
     # def test_create_invalid_schema(self, mock_cre_port):

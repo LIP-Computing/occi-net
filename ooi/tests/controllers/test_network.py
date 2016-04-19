@@ -148,7 +148,7 @@ class TestNetworkController(base.TestController):
         }
         ret = network.process_parameters(req, occi_scheme)
         self.assertIsNotNone(ret)
-        self.assertEqual(parameters, ret)
+        self.assertEqual(parameters, ret['attributes'])
 
     def test_filter_attributes_empty(self):
         categories = {occi_network.NetworkResource.kind}
@@ -159,8 +159,8 @@ class TestNetworkController(base.TestController):
                 occi_network.ip_network,
             ]
         }
-        attributes = network.process_parameters(req, occi_scheme)
-        self.assertIsNone(attributes)
+        param = network.process_parameters(req, occi_scheme)
+        self.assertIsNone(param['attributes'])
 
     def test_run_action_invalid(self):
         tenant = fakes.tenants["foo"]
