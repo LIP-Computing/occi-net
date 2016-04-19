@@ -912,8 +912,7 @@ class OpenStackNeutron(BaseHelper):
         Returns the port information
 
         :param req: the incoming network
-        :param net_id: network id
-        :param device_id: device to connect
+        :param parameters: parameters
         """
         param_device_owner = {'device_owner': 'compute:nova'}
         attributes_port = utils.translate_parameters(
@@ -937,8 +936,7 @@ class OpenStackNeutron(BaseHelper):
         Returns the port information
 
         :param req: the incoming network
-        :param net_id: network id
-        :param device_id: device to connect
+        :param mac: mac port
         """
         attributes_port = {
             "mac_address": mac

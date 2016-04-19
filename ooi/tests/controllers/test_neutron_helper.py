@@ -17,6 +17,7 @@ import json
 
 import mock
 
+from ooi import exception
 from ooi import utils
 from ooi.api import helpers
 from ooi.tests import base
@@ -448,7 +449,37 @@ class TestNetOpenStackHelper(base.TestCase):
         self.assertEqual([], ret)
         m_add.assert_called_with(None, net_id, ip)
 
+    @mock.patch.object(helpers.OpenStackNeutron, "create_resource")
+    def test_create_port(self, m_create):
+        ip = '22.0.0.1'
+        net_id = '890234'
+        mac = '890234'
+        device_id = '234890'
+        p = {"network_id": net_id, 'device_id': device_id,
+             "fixed_ips":[{"ip_address": ip}],
+             "mac_address": mac, "status": "ACTIVE"
+             }
+        m_create.return_value = p
+        ret = self.helper.create_port(None, {'sa': 1})
+        self.assertEqual(device_id, ret['compute_id'])
+        self.assertEqual(ip, ret['ip'])
+        self.assertEqual(net_id, ret['network_id'])
+        self.assertEqual(mac, ret['mac'])
 
-    # todo(jorgesece):
-        # - create port
-        # - release port
+    @mock.patch.object(helpers.OpenStackNeutron, "list_resources")
+    @mock.patch.object(helpers.OpenStackNeutron, "delete_resource")
+    def test_create_port(self, m_delete, m_list):
+        port_id = '234890'
+        p = [{'id': port_id}]
+        m_list.return_value = p
+        m_delete.return_value = []
+        ret = self.helper.delete_port(None, None)
+        self.assertEqual([], ret)
+
+    @mock.patch.object(helpers.OpenStackNeutron, "list_resources")
+    def test_list_port_not_found(self, m_list):
+        m_list.return_value = []
+        self.assertRaises(exception.LinkNotFound,
+                          self.helper.delete_port,
+                          None,
+                          None)
