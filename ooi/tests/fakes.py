@@ -310,6 +310,10 @@ def fake_query_results():
         'scheme="http://schemas.ogf.org/occi/infrastructure/network#"; '
         'class="mixin"; title="IP Networking Mixin"')
     cats.append(
+        'osnetwork; '
+        'scheme="http://schemas.openstack.org/infrastructure/network#"; '
+        'class="mixin"; title="openstack network"')
+    cats.append(
         'up; '
         'scheme="http://schemas.ogf.org/occi/infrastructure/network/action#"; '
         'class="action"; title="up network instance"')

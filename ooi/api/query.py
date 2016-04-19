@@ -89,6 +89,7 @@ class Controller(base.Controller):
         l.append(network.NetworkResource.kind)
         l.extend(network.NetworkResource.actions)
         l.append(network.ip_network)
+        l.append(os_network.os_network)
         l.append(network_link.NetworkInterface.kind)
         l.append(network_link.ip_network_interface)
 

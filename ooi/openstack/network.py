@@ -93,6 +93,9 @@ class OSNetwork(mixin.Mixin):
             )
 
 
+os_network = OSNetwork()
+
+
 class OSNetworkResource(network.NetworkResource):
 
     attributes = attr.AttributeCollection([
