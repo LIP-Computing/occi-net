@@ -175,7 +175,7 @@ class TestComputeController(base.TestController):
             self.assertEqual([], ret)
             m_run_action.assert_called_with(mock.ANY, action, server_uuid)
 
-    @mock.patch.object(helpers.OpenStackNet, "get_network_id")
+    @mock.patch.object(helpers.OpenStackNeutron, "get_network_id")
     @mock.patch.object(helpers.OpenStackHelper, "get_server_volumes_link")
     @mock.patch.object(helpers.OpenStackHelper, "get_image")
     @mock.patch.object(helpers.OpenStackHelper, "get_flavor")
@@ -204,7 +204,7 @@ class TestComputeController(base.TestController):
                 m_image.assert_called_with(None, image["id"])
                 m_vol.assert_called_with(None, server["id"])
 
-    @mock.patch.object(helpers.OpenStackNet, "get_network_id")
+    @mock.patch.object(helpers.OpenStackNeutron, "get_network_id")
     @mock.patch.object(helpers.OpenStackHelper, "get_server_volumes_link")
     @mock.patch.object(helpers.OpenStackHelper, "get_image")
     @mock.patch.object(helpers.OpenStackHelper, "get_flavor")

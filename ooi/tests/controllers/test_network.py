@@ -30,7 +30,7 @@ class TestNetworkController(base.TestController):
         super(TestNetworkController, self).setUp()
         self.controller = network.Controller(None)
 
-    @mock.patch.object(helpers.OpenStackNet, "list_resources")
+    @mock.patch.object(helpers.OpenStackNeutron, "list_resources")
     def test_index(self, m_index):
         test_networks = [
             fakes.networks[fakes.tenants["bar"]["id"]],
@@ -38,7 +38,7 @@ class TestNetworkController(base.TestController):
         ]
         req = fakes.create_req_test(None, None)
         for nets in test_networks:
-            ooi_net = helpers.OpenStackNet._build_networks(nets)
+            ooi_net = helpers.OpenStackNeutron._build_networks(nets)
             m_index.return_value = ooi_net
             result = self.controller.index(req)
             expected = self.controller._get_network_resources(ooi_net)
@@ -47,14 +47,14 @@ class TestNetworkController(base.TestController):
             # self.assertEqual(result.resources, expected)
             m_index.assert_called_with(req, 'networks', None)
 
-    @mock.patch.object(helpers.OpenStackNet, "get_network_details")
+    @mock.patch.object(helpers.OpenStackNeutron, "get_network_details")
     def test_show(self, m_network):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         for net in test_networks:
             ret = self.controller.show(None, net["id"])
             self.assertIsInstance(ret, occi_network.NetworkResource)
 
-    @mock.patch.object(helpers.OpenStackNet, "create_network")
+    @mock.patch.object(helpers.OpenStackNeutron, "create_network")
     def test_create(self, m):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         schema1 = occi_network.NetworkResource.kind.scheme
@@ -77,7 +77,7 @@ class TestNetworkController(base.TestController):
             self.assertIsInstance(net, occi_network.NetworkResource)
             self.assertEqual(net.title, test_net['name'])
 
-    @mock.patch.object(helpers.OpenStackNet, "create_resource")
+    @mock.patch.object(helpers.OpenStackNeutron, "create_resource")
     def test_create_Error(self, m):
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
         schema1 = occi_network.NetworkResource.kind.scheme
@@ -89,7 +89,7 @@ class TestNetworkController(base.TestController):
 
         self.assertRaises(exception.Invalid, self.controller.create, req)
 
-    @mock.patch.object(helpers.OpenStackNet, "delete_network")
+    @mock.patch.object(helpers.OpenStackNeutron, "delete_network")
     def test_delete(self, m_network):
         m_network.return_value = []
         test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
@@ -104,7 +104,7 @@ class TestNetworkController(base.TestController):
         subnet = fakes.subnets
         for net in test_networks:
             net["subnet_info"] = subnet[0]
-        ooi_net = helpers.OpenStackNet._build_networks(test_networks)
+        ooi_net = helpers.OpenStackNeutron._build_networks(test_networks)
         ret = self.controller._get_network_resources(ooi_net)
         self.assertIsInstance(ret, list)
         self.assertIsNot(ret.__len__(), 0)
@@ -155,7 +155,7 @@ class TestNetworkController(base.TestController):
         tenant = fakes.tenants["foo"]
         req = self._build_req(tenant["id"], path="/network?action=up")
         server_uuid = uuid.uuid4().hex
-        self.assertRaises(exception.Forbidden,
+        self.assertRaises(exception.NotImplemented,
                           self.controller.run_action,
                           req,
                           server_uuid,

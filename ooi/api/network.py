@@ -74,7 +74,7 @@ def process_parameters(req, scheme=None):
 class Controller(ooi.api.base.Controller):
     def __init__(self, neutron_endpoint):
         super(Controller, self).__init__(app=None, openstack_version="v2.0")
-        self.os_helper = helpers.OpenStackNet(
+        self.os_helper = helpers.OpenStackNeutron(
             neutron_endpoint
         )
 
@@ -87,7 +87,7 @@ class Controller(ooi.api.base.Controller):
         """
         for at in required:
             if at not in attributes:
-                raise exception.Invalid()
+                raise exception.Invalid("Expecting %s attribute" % at)
 
     @staticmethod
     def _get_network_resources(networks_list):
@@ -178,4 +178,4 @@ class Controller(ooi.api.base.Controller):
 
         if action is None or action not in occi_actions:
             raise exception.InvalidAction(action=action)
-        raise exception.Forbidden()
+        raise exception.NotImplemented("Network actions are not implemented")

@@ -37,7 +37,7 @@ class TestNetworkLinkController(base.TestController):
         super(TestNetworkLinkController, self).setUp()
         self.controller = network_link_api.Controller(None)
 
-    @mock.patch.object(helpers.OpenStackNet, "list_compute_net_links")
+    @mock.patch.object(helpers.OpenStackNeutron, "list_compute_net_links")
     def test_index(self, mock_list):
         req = fake_nets.create_req_test(None, None)
         tenant = fake_nets.tenants['foo']
@@ -61,7 +61,7 @@ class TestNetworkLinkController(base.TestController):
             self.assertEqual([], ret.resources)
         mock_list.assert_called_with(req, None)
 
-    @mock.patch.object(helpers.OpenStackNet, "list_compute_net_links")
+    @mock.patch.object(helpers.OpenStackNeutron, "list_compute_net_links")
     def test_index_Empty(self, mock_list):
         req = fake_nets.create_req_test(None, None)
         links = []
@@ -71,7 +71,7 @@ class TestNetworkLinkController(base.TestController):
         self.assertEqual(ret.resources.__len__(), 0)
 
 
-    @mock.patch.object(helpers.OpenStackNet, "delete_port")
+    @mock.patch.object(helpers.OpenStackNeutron, "delete_port")
     @mock.patch.object(network_link_api.Controller, "_get_interface_from_id")
     def test_delete_fixed(self, mock_get, mock_remove):
         class FakeNetworkLink(object):
@@ -90,7 +90,7 @@ class TestNetworkLinkController(base.TestController):
         mock_get.assert_called_with(None, link.id)
         mock_remove.assert_called_with(None, link.mac)
 
-    @mock.patch.object(helpers.OpenStackNet, "release_floating_ip")
+    @mock.patch.object(helpers.OpenStackNeutron, "release_floating_ip")
     @mock.patch.object(network_link_api.Controller, "_get_interface_from_id")
     def test_delete_public(self, mock_get, mock_remove):
         class FakeNetworkLink(object):
@@ -109,7 +109,7 @@ class TestNetworkLinkController(base.TestController):
         mock_get.assert_called_with(None, link.id)
         mock_remove.assert_called_with(None, link.address)
 
-    @mock.patch.object(helpers.OpenStackNet, "get_compute_net_link")
+    @mock.patch.object(helpers.OpenStackNeutron, "get_compute_net_link")
     def test_show(self, mock_get):
         os_link_list = fake_nets.network_links[fake_nets.tenants['foo']['id']]
         for os_link in os_link_list:
@@ -139,7 +139,7 @@ class TestNetworkLinkController(base.TestController):
                           None,
                           "%s_1.1.1.1" % uuid.uuid4().hex)
 
-    @mock.patch.object(helpers.OpenStackNet, "get_compute_net_link")
+    @mock.patch.object(helpers.OpenStackNeutron, "get_compute_net_link")
     def test_get_interface_from_id(self, mock_get_server):
         server_id = uuid.uuid4().hex
         net_id = uuid.uuid4().hex
@@ -193,7 +193,7 @@ class TestNetworkLinkController(base.TestController):
         ret = network_link_api._get_network_link_resources(None)
         self.assertEqual(ret.__len__(), 0)
 
-    @mock.patch.object(helpers.OpenStackNet, "assign_floating_ip")
+    @mock.patch.object(helpers.OpenStackNeutron, "assign_floating_ip")
     def test_create_public(self, mock_assign):
         server_id = uuid.uuid4().hex
         net_id = network_api.PUBLIC_NETWORK
@@ -216,7 +216,7 @@ class TestNetworkLinkController(base.TestController):
         self.assertEqual(net_id, link.target.id)
         self.assertEqual(server_id, link.source.id)
 
-    @mock.patch.object(helpers.OpenStackNet, "create_port")
+    @mock.patch.object(helpers.OpenStackNeutron, "create_port")
     def test_create_fixed(self, mock_cre_port):
         server_id = uuid.uuid4().hex
         net_id = uuid.uuid4().hex
@@ -240,7 +240,7 @@ class TestNetworkLinkController(base.TestController):
         self.assertEqual(server_id, link.source.id)
         mock_cre_port.assert_called_with(mock.ANY, parameters)
 
-    @mock.patch.object(helpers.OpenStackNet, "create_port")
+    @mock.patch.object(helpers.OpenStackNeutron, "create_port")
     def test_create_with_pool(self, mock_cre_port):
         server_id = uuid.uuid4().hex
         net_id = uuid.uuid4().hex
@@ -266,7 +266,7 @@ class TestNetworkLinkController(base.TestController):
 
         mock_cre_port.assert_called_with(mock.ANY, parameters)
 
-    # @mock.patch.object(helpers.OpenStackNet, "create_port")
+    # @mock.patch.object(helpers.OpenStackNeutron, "create_port")
     # def test_create_invalid_schema(self, mock_cre_port):
     #     server_id = uuid.uuid4().hex
     #     net_id = uuid.uuid4().hex

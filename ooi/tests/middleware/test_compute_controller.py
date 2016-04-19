@@ -135,7 +135,7 @@ class TestComputeController(test_middleware.TestMiddleware):
             self.assertDefaults(resp)
             self.assertExpectedResult(expected, resp)
 
-    @mock.patch.object(helpers.OpenStackNet, "get_network_id")
+    @mock.patch.object(helpers.OpenStackNeutron, "get_network_id")
     def test_show_vm(self, mock_net):
         tenant = fakes.tenants["foo"]
         app = self.get_app()
@@ -330,7 +330,7 @@ class TestComputeController(test_middleware.TestMiddleware):
         self.assertExpectedResult(expected, resp)
         self.assertDefaults(resp)
 
-    @mock.patch.object(helpers.OpenStackNet, "get_network_id")
+    @mock.patch.object(helpers.OpenStackNeutron, "get_network_id")
     def test_vm_links(self, mock_net_id):
         tenant = fakes.tenants["baz"]
         net_id = fakes.networks[tenant["id"]][0]['id']

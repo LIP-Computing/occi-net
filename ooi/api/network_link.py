@@ -57,7 +57,7 @@ def _get_network_link_resources(link_list):
 
 class Controller(base.Controller):
     def __init__(self, neutron_endpoint):
-        self.os_neutron_helper = helpers.OpenStackNet(
+        self.os_neutron_helper = helpers.OpenStackNeutron(
             neutron_endpoint
         )
 

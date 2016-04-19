@@ -69,7 +69,7 @@ class Controller(ooi.api.base.Controller):
             self.openstack_version
         )
         if neutron_endpoint:
-            self.os_network_helper = ooi.api.helpers.OpenStackNet(
+            self.os_network_helper = ooi.api.helpers.OpenStackNeutron(
                 neutron_endpoint
             )
         else:

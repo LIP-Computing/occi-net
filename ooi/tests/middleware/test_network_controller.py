@@ -135,7 +135,7 @@ class TestNetworkController(TestMiddlewareNeutron):
     @mock.patch.object(network.Controller, "index")
     def test_list_networks(self, m):
         tenant = fakes.tenants["foo"]
-        ooi_net = helpers.OpenStackNet._build_networks(fakes.networks[tenant['id']])
+        ooi_net = helpers.OpenStackNeutron._build_networks(fakes.networks[tenant['id']])
         m.return_value = collection.Collection(
             create_occi_results(ooi_net))
         req = self._build_req(path="/network",
@@ -180,7 +180,7 @@ class TestNetworkController(TestMiddlewareNeutron):
         tenant = fakes.tenants["foo"]
 
         for n in fakes.networks[tenant["id"]]:
-            ooi_net = helpers.OpenStackNet._build_networks([n])[0]
+            ooi_net = helpers.OpenStackNeutron._build_networks([n])[0]
             m.return_value = create_occi_results([ooi_net])[0]
             req = self._build_req(path="/network/%s" % n["id"],
                                   tenant_id='X',
@@ -221,7 +221,7 @@ class TestNetworkController(TestMiddlewareNeutron):
                                       headers=headers)
                 resp = req.get_response(self.app)
                 self.assertDefaults(resp)
-                self.assertEqual(403, resp.status_code)
+                self.assertEqual(501, resp.status_code)
 
     def test_invalid_action(self):
         tenant = fakes.tenants["foo"]

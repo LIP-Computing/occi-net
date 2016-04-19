@@ -627,11 +627,11 @@ class OpenStackHelper(BaseHelper):
 # License for the specific language governing permissions and limitations
 # under the License.
 
-class OpenStackNet(BaseHelper):
+class OpenStackNeutron(BaseHelper):
     """Class to interact with the neutron API."""
 
     def __init__(self, neutron_endpoint):
-        super(OpenStackNet, self).__init__(None, None)
+        super(OpenStackNeutron, self).__init__(None, None)
         self.neutron_endpoint = neutron_endpoint
 
     translation = {
@@ -650,16 +650,16 @@ class OpenStackNet(BaseHelper):
         "networks_link": {"occi.core.target": "network_id",
                           "occi.core.source": "device_id",
                           "X_PROJECT_ID": "tenant_id"
-                     },
+                          },
     }
     required = {"networks": {"occi.core.title": "name",
-                            "org.openstack.network.ip_version": "ip_version",
-                            "occi.network.address": "cidr",
-                            }
+                             "occi.network.address": "cidr",
+                             }
                 }
 
     @staticmethod
-    def _build_link(net_id, compute_id, ip, mac=None, pool=None, state='active'):
+    def _build_link(net_id, compute_id, ip, mac=None, pool=None,
+                    state='active'):
         link = {}
         link['mac'] = mac
         link['pool'] = pool
@@ -694,9 +694,9 @@ class OpenStackNet(BaseHelper):
     def get_from_response(response, element, default):
         """Get a JSON element from a valid response or raise an exception.
 
-        This method will extract an element a JSON response (falling back to a
-        default value) if the response has a code of 200, otherwise it will
-        raise a webob.exc.exception
+        This method will extract an element a JSON response
+         (falling back to a default value) if the response has a code
+          of 200, otherwise it will raise a webob.exc.exception
 
         :param response: The webob.Response object
         :param element: The element to look for in the JSON body
@@ -915,7 +915,7 @@ class OpenStackNet(BaseHelper):
         :param net_id: network id
         :param device_id: device to connect
         """
-        param_device_owner = {'device_owner':'compute:nova'}
+        param_device_owner = {'device_owner': 'compute:nova'}
         attributes_port = utils.translate_parameters(
             self.translation['networks_link'],
             parameters)
@@ -924,11 +924,11 @@ class OpenStackNet(BaseHelper):
                                  'ports',
                                  attributes_port)
         link = self._build_link(
-                        p["network_id"],
-                        p['device_id'],
-                        p["fixed_ips"][0]["ip_address"],
-                        mac=p["mac_address"],
-                        state=utils.network_status(p["status"]))
+            p["network_id"],
+            p['device_id'],
+            p["fixed_ips"][0]["ip_address"],
+            mac=p["mac_address"],
+            state=utils.network_status(p["status"]))
         return link
 
     def delete_port(self, req, mac):
@@ -969,7 +969,7 @@ class OpenStackNet(BaseHelper):
                 'ports', attributes_port
             )
             id = ports[0]['network_id']
-        except:
+        except Exception:
             raise exception.NetworkNotFound
         return id
 
@@ -988,8 +988,8 @@ class OpenStackNet(BaseHelper):
             "port_id": port_id
         }
         floating_ip = self.create_resource(req,
-                                    'floatingips',
-                                    attributes_port)
+                                           'floatingips',
+                                           attributes_port)
         return floating_ip
 
     def _remove_floating_ip(self, req, public_net_id, ip):
@@ -1013,7 +1013,7 @@ class OpenStackNet(BaseHelper):
             response = self.delete_resource(req,
                                             'floatingips',
                                             floating_ip[0]['id'])
-        except:
+        except Exception:
             raise exception.NotFound
         return response
 
@@ -1094,14 +1094,15 @@ class OpenStackNet(BaseHelper):
                                           'routers',
                                           attributes_router)
             try:
-                #create interface to the network
+                # create interface to the network
                 self._add_router_interface(req,
-                                         router['id'],
-                                         net['subnet_info']['id']
-                                         )
+                                           router['id'],
+                                           net['subnet_info']['id']
+                                           )
             except Exception as ex:
                 self.delete_resource(req,
-                                     'routers', router['id']
+                                     'routers',
+                                     router['id']
                                      )
                 raise ex
         except Exception as ex:
@@ -1154,22 +1155,22 @@ class OpenStackNet(BaseHelper):
         attributes_port.pop('network_id')
         try:
             net_public = self._get_public_network(req)
-        except:
+        except Exception:
             raise exception.NetworkNotFound()
         try:
             ports = self.list_resources(req, 'ports', attributes_port)
             port_id = ports[0]['id']
             # subnet_id = ports[0]['fixed_ips'][0]['subnet_id']
-        except:
+        except Exception:
             raise exception.NotFound()
         response = self._add_floating_ip(req, net_public, port_id)
         try:
             link_public = self._build_link(
-                    ports[0]['network_id'],
-                    attributes_port['device_id'],
-                    response['floating_ip_address'],
-                    pool=response['floating_network_id'])
-        except:
+                ports[0]['network_id'],
+                attributes_port['device_id'],
+                response['floating_ip_address'],
+                pool=response['floating_network_id'])
+        except Exception:
             raise exception.OCCIInvalidSchema()
         return link_public
 
@@ -1182,7 +1183,7 @@ class OpenStackNet(BaseHelper):
         # net_id it is not needed if there is just one port of the VM
         try:
             net_public = self._get_public_network(req)
-        except:
+        except Exception:
             raise exception.NetworkNotFound()
         response = self._remove_floating_ip(req, net_public, ip)
 
@@ -1199,7 +1200,7 @@ class OpenStackNet(BaseHelper):
         """
         # net_id it is not needed if
         # there is just one port of the VM
-        param_port = {'device_owner':'compute:nova'}
+        param_port = {'device_owner': 'compute:nova'}
         param_common = utils.translate_parameters(
             self.translation['networks_link'], parameters)
 
@@ -1217,17 +1218,18 @@ class OpenStackNet(BaseHelper):
                 link_list.append(link_private)
                 # Query public links associated to the port
                 floating_ips = self.list_resources(req,
-                                                  'floatingips',
-                                                  {"port_id": port['id']})
+                                                   'floatingips',
+                                                   {"port_id": port['id']})
                 for f_ip in floating_ips:
                     link_public = self._build_link(
                         port["network_id"],
                         port['device_id'],
                         f_ip['floating_ip_address'],
+                        mac=port["mac_address"],
                         pool=f_ip['floating_network_id'])
                     # FIXME(jorgesece) could be port mac
                     link_list.append(link_public)
-        except:
+        except Exception:
             raise exception.NotFound()
         return link_list
 
@@ -1268,7 +1270,7 @@ class OpenStackNet(BaseHelper):
                         state=utils.network_status(p["status"]))
                     return link_private
             raise exception.NotFound()
-        except:
+        except Exception:
             raise exception.NotFound()
 
     def run_action(self, req, action, net_id):
