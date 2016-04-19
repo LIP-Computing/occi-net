@@ -64,7 +64,8 @@ class TestNetworkController(base.TestController):
                           "org.openstack.network.ip_version": 4,
                           "occi.network.address": "0.0.0.0",
                           }
-            categories = {occi_network.NetworkResource.kind}
+            categories = {occi_network.NetworkResource.kind,
+                          occi_network.ip_network}
             req = fakes.create_req_test_occi(parameters, categories)
             fake_net = fakes.fake_build_net(
                 parameters ['occi.core.title'],
@@ -88,6 +89,26 @@ class TestNetworkController(base.TestController):
         req = fakes.create_req_test(parameters, schemes)
 
         self.assertRaises(exception.Invalid, self.controller.create, req)
+
+    @mock.patch.object(helpers.OpenStackNeutron, "create_network")
+    def test_create_no_ip_mixin(self, m):
+        test_networks = fakes.networks[fakes.tenants["foo"]["id"]]
+        schema1 = occi_network.NetworkResource.kind.scheme
+        # m_network.return_value = {"id":"xxx"}
+        for test_net in test_networks:
+            parameters = {"occi.core.title": test_net["name"],
+                          "org.openstack.network.ip_version": 4,
+                          "occi.network.address": "0.0.0.0",
+                          }
+            categories = {occi_network.NetworkResource.kind}
+            req = fakes.create_req_test_occi(parameters, categories)
+            fake_net = fakes.fake_build_net(
+                parameters ['occi.core.title'],
+                parameters['org.openstack.network.ip_version'],
+                parameters['occi.network.address']
+            )
+            m.return_value = fake_net
+            self.assertRaises(exception.OCCIMissingType, self.controller.create, req)
 
     @mock.patch.object(helpers.OpenStackNeutron, "delete_network")
     def test_delete(self, m_network):

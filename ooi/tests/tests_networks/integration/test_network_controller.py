@@ -95,7 +95,8 @@ class TestIntegrationNetwork(TestIntegration):
                     "occi.network.address": cidr,
                     "occi.network.gateway": gateway,
                      }
-        categories = {network.NetworkResource.kind}
+        categories = {network.NetworkResource.kind,
+                      network.ip_network}
         self.req.headers = fakes.create_header_occi(parameters, categories)
         ret = self.controller.create(self.req)
         net = ret.resources.pop()

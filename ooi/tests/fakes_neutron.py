@@ -190,8 +190,6 @@ def create_header_occi(params, category, project=None):
     if category is not None:
         cat = ""
         for c in category:
-            if c.occi_class != 'kind':
-                c.term = 'mixin'
             cat = "%s%s; scheme=%s; class=%s, " % (
                 cat,
                 c.term, c.scheme, c.occi_class)

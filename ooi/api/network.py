@@ -145,8 +145,11 @@ class Controller(ooi.api.base.Controller):
         """
         scheme = {
             "category": network.NetworkResource.kind,
-            "optional_mixins": [
+            "mixins": [
                 network.ip_network,
+            ],
+            "optional_mixins": [
+                os_network.OSNetwork()
             ]
         }
         attributes = process_parameters(req, scheme)
