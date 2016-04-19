@@ -167,27 +167,6 @@ class OCCIMiddleware(object):
                             action="run_action",
                             conditions=dict(method=["POST"]))
 
-    def _setup_neutron_resources_routes(self, resource, controller):
-        path = "/" + resource
-        # These two could be removed for total OCCI compliance
-        self.mapper.connect(resource, path, controller=controller,
-                       action="index", conditions=dict(method=["GET"]))
-        self.mapper.connect(resource, path, controller=controller,
-                       action="create", conditions=dict(method=["POST"]))
-        # OK
-        self.mapper.connect(resource, path + "/", controller=controller,
-                       action="index", conditions=dict(method=["GET"]))
-        self.mapper.connect(resource, path + "/", controller=controller,
-                       action="create", conditions=dict(method=["POST"]))
-        self.mapper.connect(resource, path + "/{id}", controller=controller,
-                       action="show", conditions=dict(method=["GET"]))
-        self.mapper.connect(resource, path + "/{id}", controller=controller,
-                       action="delete", conditions=dict(method=["DELETE"]))
-        # Actions
-        self.mapper.connect(path + "/{id}", controller=controller,
-                            action="run_action",
-                            conditions=dict(method=["POST"]))
-
     def _setup_routes(self):
         """Setup the mapper routes.
 
@@ -244,14 +223,10 @@ class OCCIMiddleware(object):
             ooi.api.storage_link.Controller)
         self._setup_resource_routes("storagelink",
                                     self.resources["storagelink"])
-
-        # FIXME(jorgesece): control and improved it
         self.resources["networklink"] = self._create_resource(
             ooi.api.network_link.Controller, self.neutron_ooi_endpoint)
         self._setup_resource_routes("networklink",
                                     self.resources["networklink"])
-
-        # FIXME(jorgesece): control and improved it
         self.resources["network"] = self._create_resource(
             ooi.api.network.Controller, self.neutron_ooi_endpoint)
         self._setup_resource_routes("network", self.resources["network"])
