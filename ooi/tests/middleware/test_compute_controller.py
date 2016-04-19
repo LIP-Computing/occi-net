@@ -363,8 +363,10 @@ class TestComputeController(test_middleware.TestMiddleware):
             addresses = server.get("addresses", {})
             for addr_set in addresses.values():
                 for addr in addr_set:
+                    if addr['OS-EXT-IPS:type'] == 'floating':
+                        net_id = 'PUBLIC'
                     ip = addr["addr"]
-                    link_id = '_'.join([server["id"],net_id, ip])
+                    link_id = '_'.join([server["id"], net_id, ip])
                     target = utils.join_url(self.application_url + "/",
                                             "network/%s" % net_id)
                     self.assertResultIncludesLink(link_id, source, target,

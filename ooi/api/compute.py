@@ -266,9 +266,12 @@ class Controller(ooi.api.base.Controller):
         if addresses:
             for addr_set in addresses.values():
                 for addr in addr_set:
-                    net_id = self.os_network_helper.get_network_id(
-                        req, addr['OS-EXT-IPS-MAC:mac_addr']
-                    )
+                    if addr["OS-EXT-IPS:type"] == "floating":
+                        net_id = network_api.PUBLIC_NETWORK
+                    else:
+                        net_id = self.os_network_helper.get_network_id(
+                            req, addr['OS-EXT-IPS-MAC:mac_addr']
+                        )
                     comp.add_link(_create_network_link(addr, comp, net_id))
 
         return [comp]
