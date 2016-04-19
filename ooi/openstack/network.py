@@ -87,10 +87,9 @@ class OSNetwork(mixin.Mixin):
             term=term,
             title=title,
             attributes=attr.AttributeCollection([
-                             "org.openstack.network.public",
-                             "org.openstack.network.shared",
-                             "org.openstack.network.ip_version"])
-            )
+                "org.openstack.network.public"
+            ])
+        )
 
 
 os_network = OSNetwork()
@@ -99,8 +98,6 @@ os_network = OSNetwork()
 class OSNetworkResource(network.NetworkResource):
 
     attributes = attr.AttributeCollection([
-                                           "org.openstack.network.public",
-                                           "org.openstack.network.shared",
                                            "org.openstack.network.ip_version",
                                            "occi.network.address",
                                            "occi.network.gateway",
@@ -109,7 +106,6 @@ class OSNetworkResource(network.NetworkResource):
 
     def __init__(self, title=None, summary=None,
                  id=None, vlan=None, label=None, state=None,
-                 shared=False, public=False,
                  address=None, gateway=None, ip_version=None, allocation=None):
 
         super(OSNetworkResource,
@@ -117,11 +113,6 @@ class OSNetworkResource(network.NetworkResource):
                              summary=summary, id=id, vlan=vlan,
                              label=label, state=state,
                              mixins=[network.ip_network, OSNetwork()])
-
-        self.attributes["org.openstack.network.shared"] = attr.MutableAttribute(
-            "org.openstack.network.shared", shared)
-        self.attributes["org.openstack.network.public"] = attr.MutableAttribute(
-            "org.openstack.network.public", public)
         # subnet
         self.attributes["org.openstack.network.ip_version"] = (
             attr.MutableAttribute(
@@ -135,22 +126,6 @@ class OSNetworkResource(network.NetworkResource):
         self.attributes["occi.network.allocation"] = (
             attr.MutableAttribute(
                 "occi.network.allocation", allocation))
-
-    @property
-    def shared(self):
-        return self.attributes["org.openstack.network.shared"].value
-
-    @shared.setter
-    def shared(self, value):
-        self.attributes["org.openstack.network.shared"].value = value
-
-    @property
-    def public(self):
-        return self.attributes["org.openstack.network.public"].value
-
-    @public.setter
-    def public(self, value):
-        self.attributes["org.openstack.network.public"].value = value
 
     @property
     def ip_version(self):
