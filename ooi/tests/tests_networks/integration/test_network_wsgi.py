@@ -66,4 +66,9 @@ class TestMiddleware(TestIntegration):
     def test_run_up_network(self):
         req = KeySession().create_request(self.session, path="/network/%s?action=up" % self.public_network, method="POST")
         result = req.get_response(self.app)
-        self.assertEqual(404, result.status_code)
+        self.assertEqual(403, result.status_code)
+
+    def test_run_up_invalid(self):
+        req = KeySession().create_request(self.session, path="/network/%s?action=no" % self.public_network, method="POST")
+        result = req.get_response(self.app)
+        self.assertEqual(400, result.status_code)

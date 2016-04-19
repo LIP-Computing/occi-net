@@ -14,11 +14,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import mock
+import uuid
 
 from ooi import exception
 from ooi.api import helpers
 from ooi.api import network
-from ooi.occi.core import collection
 from ooi.occi.infrastructure import network as occi_network
 from ooi.tests import base
 from ooi.tests import fakes_neutron as fakes
@@ -140,3 +140,23 @@ class TestNetworkController(base.TestController):
         }
         attributes = network.process_parameters(req, occi_scheme)
         self.assertIsNone(attributes)
+
+    def test_run_action_invalid(self):
+        tenant = fakes.tenants["foo"]
+        req = self._build_req(tenant["id"], path="/network?action=start")
+        server_uuid = uuid.uuid4().hex
+        self.assertRaises(exception.InvalidAction,
+                          self.controller.run_action,
+                          req,
+                          server_uuid,
+                          None)
+
+    def test_run_action_up(self):
+        tenant = fakes.tenants["foo"]
+        req = self._build_req(tenant["id"], path="/network?action=up")
+        server_uuid = uuid.uuid4().hex
+        self.assertRaises(exception.Forbidden,
+                          self.controller.run_action,
+                          req,
+                          server_uuid,
+                          None)

@@ -72,7 +72,7 @@ class TestIntegrationNetwork(TestIntegration):
                                        self.public_network, body)
         except Exception as e:
             out = e
-        self.assertIsInstance(out, exception.NotFound)
+        self.assertIsInstance(out, exception.InvalidAction)
 
     def test_create_network_no_subnetwork(self):
         #Create

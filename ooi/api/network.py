@@ -166,5 +166,16 @@ class Controller(ooi.api.base.Controller):
         response = self.os_helper.delete_network(req, id)
         return response
 
-    def run_action(self, req, id, body, parameters=None):
-        raise exception.NotFound()
+    def run_action(self, req, id, body):
+        """ Run action over the network
+
+        :param req: current request
+        :param id: network identification
+        :param body: body
+        """
+        action = req.GET.get("action", None)
+        occi_actions = [a.term for a in network.NetworkResource.actions]
+
+        if action is None or action not in occi_actions:
+            raise exception.InvalidAction(action=action)
+        raise exception.Forbidden()

@@ -203,6 +203,38 @@ class TestNetworkController(TestMiddlewareNeutron):
             self.assertEqual(204, resp.status_code)
             self.assertDefaults(resp)
 
+    def test_action_net(self):
+        tenant = fakes.tenants["foo"]
+
+        for action in ("up", "down"):
+            headers = {
+                'Category': (
+                    '%s;'
+                    'scheme="http://schemas.ogf.org/occi/infrastructure/'
+                    'network/action#";'
+                    'class="action"' % action)
+            }
+            for net in fakes.networks[tenant["id"]]:
+                req = self._build_req("/network/%s?action=%s" % (net["id"],
+                                                                 action),
+                                      tenant_id=tenant["id"], method="POST",
+                                      headers=headers)
+                resp = req.get_response(self.app)
+                self.assertDefaults(resp)
+                self.assertEqual(403, resp.status_code)
+
+    def test_invalid_action(self):
+        tenant = fakes.tenants["foo"]
+
+        action = "foo"
+        for net in fakes.networks[tenant["id"]]:
+            req = self._build_req("/network/%s?action=%s" % (net["id"],
+                                                             action),
+                                  tenant["id"], method="POST")
+            resp = req.get_response(self.app)
+            self.assertDefaults(resp)
+            self.assertEqual(400, resp.status_code)
+
 
 class NetworkControllerTextPlain(test_middleware.TestMiddlewareTextPlain,
                                  TestNetworkController):

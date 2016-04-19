@@ -183,6 +183,10 @@ class OCCIMiddleware(object):
                        action="show", conditions=dict(method=["GET"]))
         self.mapper.connect(resource, path + "/{id}", controller=controller,
                        action="delete", conditions=dict(method=["DELETE"]))
+        # Actions
+        self.mapper.connect(path + "/{id}", controller=controller,
+                            action="run_action",
+                            conditions=dict(method=["POST"]))
 
     def _setup_routes(self):
         """Setup the mapper routes.
@@ -250,7 +254,7 @@ class OCCIMiddleware(object):
         # FIXME(jorgesece): control and improved it
         self.resources["network"] = self._create_resource(
             ooi.api.network.Controller, self.neutron_ooi_endpoint)
-        self._setup_neutron_resources_routes("network", self.resources["network"])
+        self._setup_resource_routes("network", self.resources["network"])
 
     @webob.dec.wsgify(RequestClass=Request)
     def __call__(self, req):
