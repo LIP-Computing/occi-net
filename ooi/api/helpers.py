@@ -1250,26 +1250,33 @@ class OpenStackNeutron(BaseHelper):
             flo_ips = self.list_resources(req,
                                           'floatingips',
                                           param)
-            for f_ip in flo_ips:
-                link_public = self._build_link(
+            if flo_ips:
+                f_ip = flo_ips[0]
+                param_ports = {
+                    'id': f_ip['port_id']
+                }
+                ports = self.list_resources(req, 'ports', param_ports)
+                link = self._build_link(
                     network_id,
                     compute_id,
                     f_ip['floating_ip_address'],
+                    mac=ports[0]["mac_address"],
                     pool=f_ip['floating_network_id'])
-                return link_public
-            # if it is not public, check in the private ips
-            param_ports = {'device_id': compute_id, 'network_id': network_id}
-            ports = self.list_resources(req, 'ports', param_ports)
-            for p in ports:
-                if ip == p["fixed_ips"][0]["ip_address"]:
-                    link_private = self._build_link(
+            else:
+                # if it is not public, check in the private ips
+                param_ports = {'device_id': compute_id, 'network_id': network_id}
+                ports = self.list_resources(req, 'ports', param_ports)
+                if ports and ip == ports[0]["fixed_ips"][0]["ip_address"]:
+                    p = ports[0]
+                    link = self._build_link(
                         p["network_id"],
                         p['device_id'],
                         p["fixed_ips"][0]["ip_address"],
                         mac=p["mac_address"],
                         state=utils.network_status(p["status"]))
-                    return link_private
-            raise exception.NotFound()
+                else:
+                    raise exception.NotFound()
+            return link
         except Exception:
             raise exception.NotFound()
 

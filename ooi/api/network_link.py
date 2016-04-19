@@ -88,7 +88,9 @@ class Controller(base.Controller):
         :param req: request object
         """
         attributes = network_api.process_parameters(req)
-        link_list = self.os_neutron_helper.list_compute_net_links(req, attributes)
+        link_list = self.os_neutron_helper.list_compute_net_links(
+            req,
+            attributes)
         occi_link_resources = _get_network_link_resources(link_list)
         return collection.Collection(resources=occi_link_resources)
 
@@ -118,10 +120,8 @@ class Controller(base.Controller):
         parameters = network_api.process_parameters(req, scheme)
         net_id = parameters['occi.core.target']
 
-        # todo(jorgesece): check if about pools
-        # pool_name = None
-        # if os_network.OSFloatingIPPool.scheme in obj["schemes"]:
-        #     pool_name = obj["schemes"][os_network.OSFloatingIPPool.scheme][0]
+        # todo(jorgesece): only support one public network,
+        # so, supports only one pool. Discuss about pools
 
         # Allocate public IP and associate it ot the server
         if net_id == network_api.PUBLIC_NETWORK:
@@ -146,5 +146,6 @@ class Controller(base.Controller):
             os_link = self.os_neutron_helper.release_floating_ip(
                 req, iface.address)
         else:
-            os_link = self.os_neutron_helper.delete_port(req, iface.mac)
+            os_link = self.os_neutron_helper.delete_port(
+                req, iface.mac)
         return os_link
