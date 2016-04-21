@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright 2015 Spanish National Research Council
+# Copyright 2016 LIP
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -22,6 +23,7 @@ import six.moves.urllib.parse as urlparse
 
 from ooi import exception
 from ooi.log import log as logging
+from ooi.openstack import helpers as os_helpers
 from ooi import utils
 
 import webob.exc
@@ -675,7 +677,7 @@ class OpenStackNeutron(BaseHelper):
         for net in networks:
             ooi_net = {}
             status = net.get("status", None)
-            ooi_net["state"] = utils.network_status(status)
+            ooi_net["state"] = os_helpers.network_status(status)
             public = net.get('router:external', None)
             if public:
                 ooi_net["id"] = 'PUBLIC'
@@ -927,7 +929,7 @@ class OpenStackNeutron(BaseHelper):
             p['device_id'],
             p["fixed_ips"][0]["ip_address"],
             mac=p["mac_address"],
-            state=utils.network_status(p["status"]))
+            state=os_helpers.network_status(p["status"]))
         return link
 
     def delete_port(self, req, mac):
@@ -1214,7 +1216,7 @@ class OpenStackNeutron(BaseHelper):
                     port['device_id'],
                     port["fixed_ips"][0]["ip_address"],
                     mac=port["mac_address"],
-                    state=utils.network_status(port["status"]))
+                    state=os_helpers.network_status(port["status"]))
                 link_list.append(link_private)
                 # Query public links associated to the port
                 floating_ips = self.list_resources(req,
@@ -1273,7 +1275,7 @@ class OpenStackNeutron(BaseHelper):
                         p['device_id'],
                         p["fixed_ips"][0]["ip_address"],
                         mac=p["mac_address"],
-                        state=utils.network_status(p["status"]))
+                        state=os_helpers.network_status(p["status"]))
                 else:
                     raise exception.NotFound()
             return link

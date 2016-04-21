@@ -70,16 +70,11 @@ def get_query_string(parameters):
 
     :param parameters: list of parameters
     """
-    query_string = ""
     if parameters is None:
-        return None
-
-    for key in parameters.keys():
-        query_string = ("%s%s=%s&" %
-                        (query_string, key, parameters[key]))
-
-    # delete last character
-    return query_string[:-1]
+        query_string = None
+    else:
+        query_string = urlparse.urlencode(parameters)
+    return query_string
 
 
 def translate_parameters(translation, parameters):
