@@ -14,15 +14,16 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+
 import mock
 
+from ooi.api import helpers
+from ooi.api import network
+from ooi.occi.core import collection
+from ooi.tests import fakes_neutron as fakes
+from ooi.tests.middleware import test_middleware
 from ooi import utils
 from ooi import wsgi
-from ooi.api import network
-from ooi.api import helpers
-from ooi.occi.core import collection
-from ooi.tests.middleware import test_middleware
-from ooi.tests import fakes_neutron as fakes
 
 
 def build_occi_network(network):
@@ -133,7 +134,9 @@ class TestNetworkController(TestMiddlewareNeutron):
     @mock.patch.object(network.Controller, "index")
     def test_list_networks(self, m):
         tenant = fakes.tenants["foo"]
-        ooi_net = helpers.OpenStackNeutron._build_networks(fakes.networks[tenant['id']])
+        ooi_net = helpers.OpenStackNeutron._build_networks(
+            fakes.networks[tenant['id']]
+        )
         m.return_value = collection.Collection(
             create_occi_results(ooi_net))
         req = self._build_req(path="/network",
@@ -161,7 +164,10 @@ class TestNetworkController(TestMiddlewareNeutron):
                         ' class=mixin',
             'X_Occi_Attribute': 'project=%s' % tenant["id"],
         }
-        req = self._build_req(path="/network", tenant_id='X', method="POST", headers=headers)
+        req = self._build_req(path="/network",
+                              tenant_id='X',
+                              method="POST",
+                              headers=headers)
         fake_net = fakes.fake_network_occi(
             fakes.networks[tenant['id']]
         )[0]

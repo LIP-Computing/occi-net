@@ -16,8 +16,8 @@
 
 from ooi.occi.core import attribute as attr
 from ooi.occi.core import mixin
-from ooi.occi.infrastructure import network_link
 from ooi.occi.infrastructure import network
+from ooi.occi.infrastructure import network_link
 from ooi.openstack import helpers
 
 
@@ -33,7 +33,8 @@ class OSNetworkInterface(network_link.NetworkInterface):
                                            "occi.networkinterface.gateway",
                                            "occi.networkinterface.allocation"])
 
-    def __init__(self, source, target, mac, address, ip_id=None, pool=None, state='active'):
+    def __init__(self, source, target, mac, address, ip_id=None,
+                 pool=None, state='active'):
         link_id = '_'.join([source.id, target.id, address])
         mixins = [network_link.ip_network_interface]
         if pool:
@@ -87,7 +88,7 @@ class OSNetwork(mixin.Mixin):
             term=term,
             title=title,
             attributes=attr.AttributeCollection([
-                "org.openstack.network.public"
+                "org.openstack.network.ip_version"
             ])
         )
 
@@ -98,11 +99,11 @@ os_network = OSNetwork()
 class OSNetworkResource(network.NetworkResource):
 
     attributes = attr.AttributeCollection([
-                                           "org.openstack.network.ip_version",
-                                           "occi.network.address",
-                                           "occi.network.gateway",
-                                           "occi.network.allocation",
-                                           ])
+        "org.openstack.network.ip_version",
+        "occi.network.address",
+        "occi.network.gateway",
+        "occi.network.allocation",
+    ])
 
     def __init__(self, title=None, summary=None,
                  id=None, vlan=None, label=None, state=None,
@@ -148,7 +149,7 @@ class OSNetworkResource(network.NetworkResource):
         return self.attributes["occi.network.gateway"].value
 
     @gateway.setter
-    def gateway(self,value):
+    def gateway(self, value):
         self.attributes["occi.network.gateway"].value = value
 
     @property
@@ -158,4 +159,3 @@ class OSNetworkResource(network.NetworkResource):
     @allocation.setter
     def allocation(self, value):
         self.attributes["occi.network.network.allocation"] = value
-

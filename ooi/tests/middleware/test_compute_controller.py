@@ -14,8 +14,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
 import uuid
+
+import mock
 
 from ooi.api import helpers
 from ooi.tests import fakes
@@ -139,8 +140,7 @@ class TestComputeController(test_middleware.TestMiddleware):
     def test_show_vm(self, mock_net):
         tenant = fakes.tenants["foo"]
         app = self.get_app()
-        net_id = '84848'
-        ip = '9393'
+        net_id = uuid.uuid4().hex
         for server in fakes.servers[tenant["id"]]:
             req = self._build_req("/compute/%s" % server["id"],
                                   tenant["id"], method="GET")

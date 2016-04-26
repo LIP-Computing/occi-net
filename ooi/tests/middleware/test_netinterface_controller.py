@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright 2015 Spanish National Research Council
+# Copyright 2016 LIP - Lisbon
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -14,9 +15,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import copy
-import mock
 import uuid
+
+import mock
 
 from ooi.api import network_link
 from ooi import exception
@@ -56,8 +57,10 @@ class TestNetInterfaceController(test_middleware.TestMiddleware):
     @mock.patch.object(network_link.Controller, "index")
     def test_list_ifaces(self, mock_index):
         tenant = fakes.tenants["foo"]
-        mock_index.return_value = collection.Collection(fakes.fake_network_link_occi(
-            fakes.network_links[tenant['id']])
+        mock_index.return_value = collection.Collection(
+            fakes.fake_network_link_occi(
+                fakes.network_links[tenant['id']]
+            )
         )
 
         for url in ("/networklink/", "/networklink"):
@@ -69,8 +72,10 @@ class TestNetInterfaceController(test_middleware.TestMiddleware):
             expected = []
             for ip in fakes.network_links[tenant["id"]]:
                 if ip["instance_id"]:
-                # fixme(jorgesece): test in case of instance None
-                    link_id = '_'.join([ip["instance_id"], ip["network_id"], ip["ip"]])
+                    # fixme(jorgesece): test in case of instance None
+                    link_id = '_'.join([ip["instance_id"],
+                                        ip["network_id"],
+                                        ip["ip"]])
                     expected.append(
                         ("X-OCCI-Location",
                          utils.join_url(self.application_url + "/",
@@ -87,7 +92,10 @@ class TestNetInterfaceController(test_middleware.TestMiddleware):
 
         for ip in fakes.network_links[tenant["id"]]:
             if ip["instance_id"] is not None:
-                link_id = '_'.join([ip["instance_id"], ip["network_id"], ip["ip"]])
+                link_id = '_'.join([ip["instance_id"],
+                                    ip["network_id"],
+                                    ip["ip"]]
+                                   )
                 req = self._build_req("/networklink/%s" % link_id,
                                       tenant["id"], method="GET")
 
@@ -119,7 +127,7 @@ class TestNetInterfaceController(test_middleware.TestMiddleware):
         m_create.side_effect = exception.Invalid
         net_id = fakes.network_links[tenant['id']][0]['network_id']
         occi_net_id = utils.join_url(self.application_url + "/",
-                                "network/%s" % net_id)
+                                     "network/%s" % net_id)
         headers = {
             'Category': (
                 'networkinterface;'
@@ -162,9 +170,10 @@ class TestNetInterfaceController(test_middleware.TestMiddleware):
     @mock.patch.object(network_link.Controller, "create")
     def test_create_link_with_pool(self, m_create):
         tenant = fakes.tenants["foo"]
-        m_create.return_value = collection.Collection([fakes.fake_network_link_occi(
-            fakes.network_links[tenant['id']]
-        )[0]])
+        m_create.return_value = collection.Collection(
+            [fakes.fake_network_link_occi(
+                fakes.network_links[tenant['id']]
+            )[0]])
         link_info = fakes.network_links[tenant['id']][0]
 
         server_url = utils.join_url(self.application_url + "/",
@@ -189,7 +198,9 @@ class TestNetInterfaceController(test_middleware.TestMiddleware):
                               headers=headers)
         resp = req.get_response(self.app)
 
-        link_id = '_'.join([link_info['instance_id'], link_info['network_id'], link_info['ip']])
+        link_id = '_'.join([link_info['instance_id'],
+                            link_info['network_id'],
+                            link_info['ip']])
         expected = [("X-OCCI-Location",
                      utils.join_url(self.application_url + "/",
                                     "networklink/%s" % link_id))]
@@ -205,7 +216,9 @@ class TestNetInterfaceController(test_middleware.TestMiddleware):
         for n in fakes.network_links[tenant["id"]]:
             if n["network_id"] != "PUBLIC":
                 if n["instance_id"]:
-                    link_id = '_'.join([n["instance_id"], n["network_id"], n["ip"]])
+                    link_id = '_'.join([n["instance_id"],
+                                        n["network_id"],
+                                        n["ip"]])
                     req = self._build_req("/networklink/%s" % link_id,
                                           tenant["id"], method="DELETE")
                     resp = req.get_response(self.app)
@@ -220,13 +233,14 @@ class TestNetInterfaceController(test_middleware.TestMiddleware):
         for n in fakes.network_links[tenant["id"]]:
             if n["network_id"] != "PUBLIC":
                 if n["instance_id"]:
-                    link_id = '_'.join([n["instance_id"], n["network_id"], n["ip"]])
+                    link_id = '_'.join([n["instance_id"],
+                                        n["network_id"],
+                                        n["ip"]])
                     req = self._build_req("/networklink/%s" % link_id,
                                           tenant["id"], method="DELETE")
                     resp = req.get_response(self.app)
                     self.assertContentType(resp)
                     self.assertEqual(204, resp.status_code)
-
 
 
 class NetInterfaceControllerTextPlain(test_middleware.TestMiddlewareTextPlain,

@@ -15,18 +15,27 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import ooi.api.base
-
+from ooi.api import base
 from ooi.api import helpers
 from ooi import exception
 from ooi.occi.core import collection
 from ooi.occi.infrastructure import network
 from ooi.occi import validator as occi_validator
 from ooi.openstack import network as os_network
-from ooi import utils
 
 
 PUBLIC_NETWORK = "PUBLIC"
+
+
+def _build_network(name, prefix=None):
+    if prefix:
+        network_id = '/'.join([prefix, name])
+    else:
+        network_id = name
+    return network.NetworkResource(title=name,
+                                   id=network_id,
+                                   state="active",
+                                   mixins=[network.ip_network])
 
 
 def parse_validate_schema(req, scheme=None):
@@ -71,7 +80,7 @@ def process_parameters(req, scheme=None):
     return attributes
 
 
-class Controller(ooi.api.base.Controller):
+class Controller(base.Controller):
     def __init__(self, neutron_endpoint):
         super(Controller, self).__init__(app=None, openstack_version="v2.0")
         self.os_helper = helpers.OpenStackNeutron(
@@ -106,10 +115,10 @@ class Controller(ooi.api.base.Controller):
                 n_ip_version = s.get("ip_version", None)
                 n_gateway = s.get("gateway", None)
                 s = os_network.OSNetworkResource(title=n_name,
-                                                     id=n_id, state=n_state,
-                                                     ip_version=n_ip_version,
-                                                     address=n_address,
-                                                     gateway=n_gateway)
+                                                 id=n_id, state=n_state,
+                                                 ip_version=n_ip_version,
+                                                 address=n_address,
+                                                 gateway=n_gateway)
                 occi_network_resources.append(s)
         return occi_network_resources
 
@@ -170,7 +179,7 @@ class Controller(ooi.api.base.Controller):
         return response
 
     def run_action(self, req, id, body):
-        """ Run action over the network
+        """Run action over the network
 
         :param req: current request
         :param id: network identification

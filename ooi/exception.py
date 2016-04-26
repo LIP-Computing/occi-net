@@ -103,10 +103,6 @@ class NotImplemented(OCCIException):
     msg_fmt = "Action not implemented."
     code = 501
 
-class NetworkNotSuported(OCCIException):
-    msg_fmt = "Neutron not supported."
-    code = 501
-
 
 class OCCIInvalidSchema(Invalid):
     msg_fmt = "Found invalid schema: '%(msg)s'."

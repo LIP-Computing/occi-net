@@ -20,8 +20,8 @@ import uuid
 import webob.dec
 import webob.exc
 
-from ooi.api import network_link
 from ooi.api import network
+from ooi.api import network_link
 from ooi import wsgi
 
 
@@ -38,14 +38,14 @@ tenants = {
 
 subnets = [
     {
-        "id": 1,
+        "id": uuid.uuid4().hex,
         "name": "private-subnet",
         "cidr": "33.0.0.1/24",
         "ip_version": "IPv4",
         "gateway_ip": "33.0.0.1",
     },
     {
-        "id": 2,
+        "id": uuid.uuid4().hex,
         "name": "public-subnet",
         "cidr": "44.0.0.1/24",
         "ip_version": "IPv4",
@@ -120,10 +120,11 @@ network_links = {
             "ip": "192.168.253.1",
             "network_id": 'PUBLIC',
             "pool": pools[tenants["foo"]["id"]][0]["name"],
-            'status':'active'
+            'status': 'active'
         },
     ],
 }
+
 
 def create_fake_json_resp(data, status=200):
     r = webob.Response()
@@ -166,7 +167,7 @@ def create_header(params, schemes, project=None):
             sch = "%s, %s:%s" % (sch, k, v)
             cat = "%s, %s%s" % (cat, k, v)
         headers["schemes"] = sch
-        #headers['Category']= cat
+        # headers['Category']= cat
     if project is not None:
         headers["X_PROJECT_ID"] = project
     return headers
@@ -181,7 +182,6 @@ def create_req_test_occi(params, category):
 
 def create_header_occi(params, category, project=None):
     headers = {}
-    class_type = "kind"
     att = ""
     if params is not None:
         for k, v in params.items():
@@ -193,13 +193,14 @@ def create_header_occi(params, category, project=None):
             cat = "%s%s; scheme=%s; class=%s, " % (
                 cat,
                 c.term, c.scheme, c.occi_class)
-        headers['Category']= cat[:-1]
+        headers['Category'] = cat[:-1]
     if project is not None:
         headers['X_PROJECT_ID'] = project
     return headers
 
 
-def fake_build_link(net_id, compute_id, ip, mac=None, pool=None, state='active'):
+def fake_build_link(net_id, compute_id, ip, mac=None,
+                    pool=None, state='active'):
     link = {}
     link['mac'] = mac
     link['pool'] = pool
@@ -214,10 +215,13 @@ def fake_network_link_occi(os_list_net):
     list_links = []
     for l in os_list_net:
         if l['instance_id']:
-            list_links.append(fake_build_link(l['network_id'], l['instance_id'], l['ip']))
-    return  network_link._get_network_link_resources(list_links)
+            list_links.append(fake_build_link(l['network_id'],
+                                              l['instance_id'], l['ip']))
+    return network_link._get_network_link_resources(list_links)
 
-def fake_build_net(name, ip_version=4, address='0.0.0.11', gateway='0.0.0.1', id=33, state='active'):
+
+def fake_build_net(name, ip_version=4, address='0.0.0.11', gateway='0.0.0.1',
+                   id=33, state='active'):
     link = {}
     link['id'] = id
     link['name'] = name

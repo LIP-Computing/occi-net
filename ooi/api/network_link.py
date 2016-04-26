@@ -39,7 +39,7 @@ def _get_network_link_resources(link_list):
             net_pool = l['pool']
             ip = l['ip']
             state = l['state']
-            if net_pool: # mac only in the public
+            if net_pool:  # mac is public network id
                 net_id = network_api.PUBLIC_NETWORK
             else:
                 net_id = l['network_id']
@@ -78,7 +78,7 @@ class Controller(base.Controller):
                 network_id,
                 server_addr)
             occi_instance = _get_network_link_resources([link])[0]
-        except:
+        except Exception:
             raise exception.LinkNotFound(link_id=id)
         return occi_instance
 

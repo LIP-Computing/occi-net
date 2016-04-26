@@ -87,11 +87,8 @@ class TestQueryController(base.TestController):
             network.up,
             network.down,
             network.ip_network,
-            os_network.os_network,
             network_link.NetworkInterface.kind,
             network_link.ip_network_interface,
-
-
 
             # OCCI infra compute mixins
             infra_templates.os_tpl,
@@ -100,8 +97,6 @@ class TestQueryController(base.TestController):
             # OpenStack Contextualization
             contextualization.user_data,
             contextualization.public_key,
-
-
         ]
 
         ret = self.controller.index(req)

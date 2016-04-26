@@ -34,7 +34,6 @@ from ooi import version
 from ooi.wsgi import parsers
 from ooi.wsgi import serializers
 
-
 LOG = logging.getLogger(__name__)
 
 occi_opts = [
@@ -112,7 +111,6 @@ class OCCIMiddleware(object):
 
     def __init__(self, application, openstack_version="/v2.1",
                  neutron_ooi_endpoint="http://127.0.0.1:9696/v2.0"):
-        # todo(jorgesece): set default neturon endpoint None when add another driver
         self.application = application
         self.openstack_version = openstack_version
         self.neutron_ooi_endpoint = neutron_ooi_endpoint
@@ -120,8 +118,6 @@ class OCCIMiddleware(object):
 
         self.mapper = routes.Mapper()
         self._setup_routes()
-        # OCCINetworkMiddleware(neutron_ooi_endpoint).setup_net_routes(
-        #     mapper=self.mapper, resources=self.resources)
 
     def _create_resource(self, controller, neutron_ooi_endpoint=None):
         if neutron_ooi_endpoint:
@@ -132,11 +128,8 @@ class OCCIMiddleware(object):
             else:
                 return Resource(controller(self.neutron_ooi_endpoint))
         else:
-            return Resource(controller(self.application, self.openstack_version))
-
-    def _create_net_resource(self, controller):
-        # fixme(jorgesece): wsgi unitttest do not work, it is not using FakeApp
-        return Resource(controller(self.neutron_ooi_endpoint))
+            return Resource(controller(self.application,
+                                       self.openstack_version))
 
     def _setup_resource_routes(self, resource, controller):
         path = "/" + resource
@@ -223,13 +216,16 @@ class OCCIMiddleware(object):
             ooi.api.storage_link.Controller)
         self._setup_resource_routes("storagelink",
                                     self.resources["storagelink"])
+
         self.resources["networklink"] = self._create_resource(
             ooi.api.network_link.Controller, self.neutron_ooi_endpoint)
         self._setup_resource_routes("networklink",
                                     self.resources["networklink"])
+
         self.resources["network"] = self._create_resource(
             ooi.api.network.Controller, self.neutron_ooi_endpoint)
-        self._setup_resource_routes("network", self.resources["network"])
+        self._setup_resource_routes("network",
+                                    self.resources["network"])
 
     @webob.dec.wsgify(RequestClass=Request)
     def __call__(self, req):
@@ -519,5 +515,3 @@ class Fault(webob.exc.HTTPException):
 
     def __str__(self):
         return self.wrapped_exc.__str__()
-
-

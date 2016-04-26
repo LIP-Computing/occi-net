@@ -31,13 +31,14 @@ from ooi.openstack import contextualization
 from ooi.openstack import templates
 from ooi.tests import base
 from ooi.tests import fakes
-from ooi.tests import fakes_neutron
 
 
 class TestComputeController(base.TestController):
     def setUp(self):
         super(TestComputeController, self).setUp()
-        self.controller = compute.Controller(mock.MagicMock(), None, 'http://neutron/v2')
+        self.controller = compute.Controller(mock.MagicMock(),
+                                             None,
+                                             'http://neutron/v2')
 
     @mock.patch.object(helpers.OpenStackHelper, "index")
     def test_index(self, m_index):
