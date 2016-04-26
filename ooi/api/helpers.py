@@ -167,18 +167,12 @@ class BaseHelper(object):
 
 class OpenStackNovaNetwork(BaseHelper):
     """Class to interact with the neutron API."""
-
-    def __init__(self, neutron_endpoint):
-        super(OpenStackNovaNetwork, self).__init__(None, None)
-        self.neutron_endpoint = neutron_endpoint
-
     translation = {
         "networks": {"occi.core.title": "label",
                      "occi.core.id": "id",
                      "occi.network.address": "cidr",
                      "occi.network.gateway": "gateway",
                      "org.openstack.network.shared": "share_address",
-                     "X_PROJECT_ID": "tenant_id",
                      },
         "networks_link": {"occi.core.target": "network_id",
                           "occi.core.source": "device_id",
@@ -189,6 +183,24 @@ class OpenStackNovaNetwork(BaseHelper):
                              "occi.network.address": "cidr",
                              }
                 }
+
+    @staticmethod
+    def get_from_response(response, element, default):
+        """Get a JSON element from a valid response or raise an exception.
+
+        This method will extract an element a JSON response (falling back to a
+        default value) if the response has a code of 200, otherwise it will
+        raise a webob.exc.exception
+
+        :param response: The webob.Response object
+        :param element: The element to look for in the JSON body
+        :param default: The default element to be returned if not found.
+        """
+        if response.status_int in [200, 201, 202, 204]:
+            return response.json_body.get(element, default)
+        else:
+            raise exception_from_response(response)
+
 
     @staticmethod
     def _build_networks(networks):
@@ -230,7 +242,7 @@ class OpenStackNovaNetwork(BaseHelper):
         :param tenant: include tenant in the query parameters
         """
         tenant_id = self.tenant_from_req(req)
-        path = "%s/%s" %(tenant_id, path)
+        path = "/%s/%s" %(tenant_id, path)
         query_string = utils.get_query_string(parameters)
         return self._get_req(req, path=path,
                              query_string=query_string, method="GET")
@@ -246,7 +258,7 @@ class OpenStackNovaNetwork(BaseHelper):
         :param parameters: parameters with values
         """
         tenant_id = self.tenant_from_req(req)
-        path = "%s/%s" %(tenant_id, path)
+        path = "/%s/%s" %(tenant_id, path)
         body = utils.make_body(resource, parameters)
         return self._get_req(req, path=path,
                              content_type="application/json",
@@ -261,7 +273,7 @@ class OpenStackNovaNetwork(BaseHelper):
         :param path: element location
         """
         tenant_id = self.tenant_from_req(req)
-        path = "%s/%s/%s" %(tenant_id, path, id)
+        path = "/%s/%s/%s" %(tenant_id, path, id)
         return self._get_req(req, path=path, method="DELETE")
 
     def _make_put_request(self, req, path, parameters):
@@ -273,7 +285,7 @@ class OpenStackNovaNetwork(BaseHelper):
         :param path: element location
         """
         tenant_id = self.tenant_from_req(req)
-        path = "%s/%s" %(tenant_id, path)
+        path = "/%s/%s" %(tenant_id, path)
         body = utils.make_body(None, parameters)
         return self._get_req(req, path=path,
                              content_type="application/json",
@@ -301,10 +313,11 @@ class OpenStackNovaNetwork(BaseHelper):
         """
         net_param = utils.translate_parameters(
             self.translation['networks'], parameters)
-        path = "os-networks"
-        os_req = self._make_get_request(req, path, parameters)
+        path = "os-tenant-networks"
+        os_req = self._make_get_request(req, path, net_param)
         response = os_req.get_response()
-        return self.get_from_response(response, "networks", [])
+        nets = self.get_from_response(response, "networks", [])
+        ooi_networks = self._build_networks(nets)
         return ooi_networks
 
     def get_network_details(self, req, id):
@@ -349,12 +362,79 @@ class OpenStackNovaNetwork(BaseHelper):
         net_param = utils.translate_parameters(
             self.translation['networks'], parameters)
         path = "os-networks"
-        os_req = self._make_create_request(req, path, net_param)
+        os_req = self._make_create_request(req, path, "network", net_param)
         response = os_req.get_response()
         net = self.get_from_response(
             response, "network", {})
         ooi_net = self._build_networks([net])
         return ooi_net[0]
+
+    def create_port(self, req, parameters):
+        """Add a port to the subnet
+
+        Returns the port information
+
+        :param req: the incoming network
+        :param parameters: list of parameters
+        """
+        param_device_owner = {'device_owner': 'compute:nova'}
+        attributes_port = utils.translate_parameters(
+            self.translation['networks_link'],
+            parameters)
+        attributes_port.update(param_device_owner)
+        p = self.create_resource(req,
+                                 'ports',
+                                 attributes_port)
+        link = self._build_link(
+            p["network_id"],
+            p['device_id'],
+            p["fixed_ips"][0]["ip_address"],
+            mac=p["mac_address"],
+            state=os_helpers.network_status(p["status"]))
+        return link
+
+    def delete_port(self, req, mac):
+        """Delete a port to the subnet
+
+        Returns the port information
+
+        :param req: the incoming network
+        :param mac: interface mac
+        """
+        attributes_port = {
+            "mac_address": mac
+        }
+        ports = self.list_resources(
+            req,
+            'ports', attributes_port
+        )
+        if ports.__len__() == 0:
+            raise exception.LinkNotFound(
+                "Interface %s not found" % mac
+            )
+        out = self.delete_resource(req,
+                                   'ports',
+                                   ports[0]['id'])
+        return out
+
+    def get_network_id(self, req, mac):
+        """Get the Network ID from the mac port
+
+        :param req: the incoming network
+        :param mac: mac port
+        """
+        try:
+            attributes_port = {
+                "mac_address": mac
+            }
+            ports = self.list_resources(
+                req,
+                'ports', attributes_port
+            )
+            id = ports[0]['network_id']
+        except Exception:
+            raise exception.NetworkNotFound
+        return id
 
 
 

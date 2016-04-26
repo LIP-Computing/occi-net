@@ -25,19 +25,18 @@ from ooi.tests.tests_networks.integration.keystone.session import KeySession
 from ooi.tests import fakes_neutron as fakes
 
 
-class TestIntegrationNetwork(TestIntegration):
+class TestIntegrationNetworkNeutron(TestIntegration):
 
     def setUp(self):
-        super(TestIntegrationNetwork, self).setUp()
+        super(TestIntegrationNetworkNeutron, self).setUp()
         self.req = Request(
-            KeySession().create_request_nova(self.session, path="/",
-                                        base_url='http://127.0.0.1:8774/v2.1',
+            KeySession().create_request(self.session, path="/",
                                         environ={},
                                         headers={
                                             "X_PROJECT_ID": self.project_id
                                         }).environ)
 
-        self.controller = net_controler.Controller(app=None,openstack_version="/v2.1")
+        self.controller = net_controler.Controller(neutron_endpoint="http://127.0.0.1:9696/v2.0")
 
     def test_list(self):
         list = self.controller.index(self.req)
@@ -94,22 +93,22 @@ class TestIntegrationNetwork(TestIntegration):
         parameters ={"occi.core.title": self.new_network_name,
                     "org.openstack.network.ip_version": ip_version,
                     "occi.network.address": cidr,
-                  #  "occi.network.gateway": gateway,
+                    "occi.network.gateway": gateway,
                      }
         categories = {network.NetworkResource.kind,
                       network.ip_network}
-        # self.req.headers = fakes.create_header_occi(parameters, categories)
-        # ret = self.controller.create(self.req)
-        # net = ret.resources.pop()
-        # self.assertEqual(self.new_network_name, net.title)
-        # self.req.headers.pop("X-OCCI-Attribute")
-        # list2 = self.controller.index(self.req)
-        # self.assertEqual(list1.resources.__len__() + 1,
-        #                  list2.resources.__len__())
+        self.req.headers = fakes.create_header_occi(parameters, categories)
+        ret = self.controller.create(self.req)
+        net = ret.resources.pop()
+        self.assertEqual(self.new_network_name, net.title)
+        self.req.headers.pop("X-OCCI-Attribute")
+        list2 = self.controller.index(self.req)
+        self.assertEqual(list1.resources.__len__() + 1,
+                         list2.resources.__len__())
 
          # Delete
-        id = '51e774aa-5ed4-4cd7-b5ee-69f66c2f7267'
-        response = self.controller.delete(self.req, id)
+        #id = 'c9b50445-9d6f-402a-91cd-d7c323402f96'
+        response = self.controller.delete(self.req, net.id)
         self.assertIsInstance(response, list)
         list3 = self.controller.index(self.req)
         self.assertEqual(list1.resources.__len__(), list3.resources.__len__())

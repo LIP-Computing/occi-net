@@ -81,11 +81,17 @@ def process_parameters(req, scheme=None):
 
 
 class Controller(base.Controller):
-    def __init__(self, neutron_endpoint):
-        super(Controller, self).__init__(app=None, openstack_version="v2.0")
-        self.os_helper = helpers.OpenStackNeutron(
-            neutron_endpoint
-        )
+    def __init__(self, app=None, openstack_version=None, neutron_endpoint=None):
+        super(Controller, self).__init__(app=None, openstack_version=openstack_version)
+        if neutron_endpoint :
+            self.os_helper = helpers.OpenStackNeutron(
+                neutron_endpoint
+            )
+        else:
+            self.os_helper = helpers.OpenStackNovaNetwork(
+                self.app,
+                self.openstack_version
+            )
 
     @staticmethod
     def _validate_attributes(required, attributes):
