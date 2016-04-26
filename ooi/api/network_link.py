@@ -69,26 +69,34 @@ class Controller(base.Controller):
                 self.openstack_version
             )
 
+    @staticmethod
+    def parse_id(id):
+        try:
+            server_id, network_id, server_addr = id.split('_', 2)
+            return {"server_id": server_id,
+                    'network_id': network_id,
+                    'server_addr': server_addr}
+        except ValueError:
+            raise exception.LinkNotFound(link_id=id)
+
+
     def _get_interface_from_id(self, req, id):
         """Get interface from id
 
         :param req: request object
         :param id: network link identification
         """
-        try:
-            server_id, network_id, server_addr = id.split('_', 2)
-        except ValueError:
-            raise exception.LinkNotFound(link_id=id)
+        info_id = self.parse_id(id)
         try:
             link = self.os_neutron_helper.get_compute_net_link(
                 req,
-                server_id,
-                network_id,
-                server_addr)
-            occi_instance = _get_network_link_resources([link])[0]
+                info_id['server_id'],
+                info_id['network_id'],
+                info_id['server_addr'])
+
         except Exception:
             raise exception.LinkNotFound(link_id=id)
-        return occi_instance
+        return link
 
     def index(self, req):
         """List networksLinks
@@ -108,7 +116,9 @@ class Controller(base.Controller):
         :param req: request object
         :param id: networkLink identification
         """
-        return self._get_interface_from_id(req, id)
+        link = self._get_interface_from_id(req, id)
+        occi_instance = _get_network_link_resources([link])[0]
+        return occi_instance
 
     def create(self, req, body=None):
         """Create a networkLink
@@ -150,12 +160,10 @@ class Controller(base.Controller):
         :param id: identification
         """
         iface = self._get_interface_from_id(req, id)
-        if iface.target.id == network_api.PUBLIC_NETWORK:
+        if iface['network_id'] == network_api.PUBLIC_NETWORK:
             os_link = self.os_neutron_helper.release_floating_ip(
-                req, iface.address)
+                req, iface)
         else:
             os_link = self.os_neutron_helper.delete_port(
-                req,
-                compute_id=iface.source.id,
-                mac=iface.mac)
+                req, iface)
         return os_link

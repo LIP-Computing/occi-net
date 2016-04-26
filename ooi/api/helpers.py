@@ -314,7 +314,7 @@ class OpenStackNovaNetwork(BaseHelper):
             self.translation['networks'], parameters)
         path = "os-networks"
         os_req = self._make_get_request(req, path, net_param)
-        response = os_req.get_response()
+        response = os_req.get_response(self.app)
         nets = self.get_from_response(response, "networks", [])
         ooi_networks = self._build_networks(nets)
         return ooi_networks
@@ -330,7 +330,7 @@ class OpenStackNovaNetwork(BaseHelper):
         """
         path = "os-networks/%s" % id
         os_req = self._make_get_request(req, path)
-        response = os_req.get_response()
+        response = os_req.get_response(self.app)
         net = self.get_from_response(response, "network", {})
         ooi_networks = self._build_networks([net])
         return ooi_networks[0]
@@ -346,7 +346,7 @@ class OpenStackNovaNetwork(BaseHelper):
         """
         path = "os-networks"
         os_req = self._make_delete_request(req, path, id)
-        response = os_req.get_response()
+        response = os_req.get_response(self.app)
         net = self.get_from_response(response, "network", {})
         return net
 
@@ -361,7 +361,7 @@ class OpenStackNovaNetwork(BaseHelper):
             self.translation['networks'], parameters)
         path = "os-networks"
         os_req = self._make_create_request(req, path, "network", net_param)
-        response = os_req.get_response()
+        response = os_req.get_response(self.app)
         net = self.get_from_response(
             response, "network", {})
         ooi_net = self._build_networks([net])
@@ -370,13 +370,13 @@ class OpenStackNovaNetwork(BaseHelper):
     def _get_servers(self, req):
         path = "servers"
         os_req = self._make_get_request(req, path)
-        response = os_req.get_response()
+        response = os_req.get_response(self.app)
         return self.get_from_response(response, "servers", {})
 
     def _get_ports(self, req, compute_id):
         path = "servers/%s/os-interface" % compute_id
         os_req = self._make_get_request(req, path)
-        response = os_req.get_response()
+        response = os_req.get_response(self.app)
         return self.get_from_response(response, "interfaceAttachments", {})
 
     def get_compute_net_link(self, req, compute_id, network_id,
@@ -442,7 +442,7 @@ class OpenStackNovaNetwork(BaseHelper):
         compute_id = param_port.pop("server_id")
         path = "servers/%s/os-interface" % compute_id
         os_req = self._make_create_request(req, path, "interfaceAttachment", param_port)
-        response = os_req.get_response()
+        response = os_req.get_response(self.app)
         port = self.get_from_response(response, "interfaceAttachment", {})
         for ip in port["fixed_ips"]:
             return self._build_link(port["net_id"],
@@ -451,14 +451,13 @@ class OpenStackNovaNetwork(BaseHelper):
                                     mac=port['mac_addr'],
                                     state=port["port_state"])
 
-    def delete_port(self, req, compute_id, mac):
+    def delete_port(self, req, iface):
         """Delete a port to the subnet
 
         Returns the port information
 
         :param req: the incoming network
-        :param compute_id: server id
-        :param mac: interface mac
+        :param iface: link information
         """
         #
         #         {
@@ -466,12 +465,14 @@ class OpenStackNovaNetwork(BaseHelper):
         #         "address": "10.0.0.4"
         #     }
         # }
+        compute_id = iface['compute_id']
+        mac = iface['mac']
         ports = self._get_ports(req, compute_id)
         path = "servers/%s/os-interface" % compute_id
         for p in ports:
             if p["mac_addr"] == mac:
                 os_req = self._make_delete_request(req, path, p['port_id'])
-                os_req.get_response() # 202
+                os_req.get_response(self.app) # 202
                 return []
 
         raise exception.LinkNotFound(
@@ -492,6 +493,93 @@ class OpenStackNovaNetwork(BaseHelper):
 #         "address": "172.24.4.4"
 #     }
 # }
+    def _associate_floating_ip(self, req, server, address):
+        """Associate a floating ip to a server.
+        :param req: the incoming request
+        :param server: the server to associate the ip to
+        :param address: ip to associate to the server
+        """
+        tenant_id = self.tenant_from_req(req)
+        body = {"addFloatingIp": {"address": address}}
+        path = "/%s/servers/%s/action" % (tenant_id, server)
+        req = self._get_req(req, path=path, body=json.dumps(body),
+                             method="POST")
+        response = req.get_response(self.app)
+        if response.status_int != 202:
+            raise exception_from_response(response)
+
+    def _allocate_floating_ip(self, req, pool=None):
+        """Allocate a floating ip from a pool.
+        :param req: the incoming request
+        :param pool: floating ip pool to get the IP from
+        """
+        tenant_id = self.tenant_from_req(req)
+        path = "/%s/os-floating-ips" % tenant_id
+        body = {"pool": pool}
+        req = self._get_req(req, path=path, body=json.dumps(body),
+                             method="POST")
+        response = req.get_response(self.app)
+        return self.get_from_response(response, "floating_ip", {})
+
+    def assign_floating_ip(self, req, parameters):
+        """assign floating ip to a server
+
+        :param req: the incoming request
+        :param paramet: network and compute identification
+        """
+        # net_id it is not needed if
+        # there is just one port of the VM
+        attributes_port = utils.translate_parameters(
+            self.translation['networks_link'],
+            parameters)
+        net_id = attributes_port.pop('network_id')
+        server_id = attributes_port.pop('device_id')
+
+        try:
+            ip = self._allocate_floating_ip(req)
+            # Add it to server
+            self._associate_floating_ip(req, server_id, ip["ip"])
+
+            link_public = self._build_link(
+                net_id,
+                server_id,
+                ip["ip"],
+                pool=ip["pool"])
+        except Exception:
+            raise exception.OCCIInvalidSchema()
+        return link_public
+
+    def _remove_floating_ip(self, req, server, address):
+        """Remove a floating ip to a server.
+
+        :param req: the incoming request
+        :param server: the server to remove the ip from
+        :param address: ip to remove from the server
+        """
+        tenant_id = self.tenant_from_req(req)
+        body = {"removeFloatingIp": {"address": address}}
+        path = "/%s/servers/%s/action" % (tenant_id, server)
+        req = self._get_req(req, path=path, body=json.dumps(body),
+                             method="POST")
+        response = req.get_response(self.app)
+        if response.status_int != 202:
+            raise exception_from_response(response)
+
+    def release_floating_ip(self, req, iface):
+        """release floating ip from a server
+
+        :param req: the incoming request
+        :param iface: link information
+        """
+        # net_id it is not needed if there is just one port of the VM
+        try:
+            net_public = self._get_public_network(req)
+        except Exception:
+            raise exception.NetworkNotFound()
+        response = self._remove_floating_ip(req, net_public, iface['ip'])
+
+        return response
+
     def get_network_id(self, req, mac):
         """Get the Network ID from the mac port
 
@@ -510,6 +598,7 @@ class OpenStackNovaNetwork(BaseHelper):
         except Exception:
             raise exception.NetworkNotFound
         return id
+
 
 
 
@@ -869,13 +958,13 @@ class OpenStackHelper(BaseHelper):
         path = "/%s/os-floating-ips/%s" % (tenant_id, ip)
         return self._get_req(req, path=path, method="DELETE")
 
-    def release_floating_ip(self, req, ip):
+    def release_floating_ip(self, req, iface):
         """Release a floating ip.
 
         :param req: the incoming request
-        :param ip: floating ip pool to release
+        :param iface: link information
         """
-        req = self._get_floating_ip_release_req(req, ip)
+        req = self._get_floating_ip_release_req(req, iface['ip'])
         response = req.get_response(self.app)
         if response.status_int != 202:
             raise exception_from_response(response)
@@ -985,7 +1074,6 @@ class OpenStackNeutron(BaseHelper):
                     },
         "networks_link": {"occi.core.target": "network_id",
                           "occi.core.source": "device_id",
-                          "X_PROJECT_ID": "tenant_id"
                           },
     }
     required = {"networks": {"occi.core.title": "name",
@@ -1266,15 +1354,15 @@ class OpenStackNeutron(BaseHelper):
             state=os_helpers.network_status(p["status"]))
         return link
 
-    def delete_port(self, req, compute_id, mac):
+    def delete_port(self, req, iface):
         """Delete a port to the subnet
 
         Returns the port information
 
         :param req: the incoming network
-        :param compute_id: server id
-        :param mac: interface mac
+        :param iface: link information
         """
+        mac = iface['mac']
         attributes_port = {
             "mac_address": mac
         }
@@ -1512,18 +1600,18 @@ class OpenStackNeutron(BaseHelper):
             raise exception.OCCIInvalidSchema()
         return link_public
 
-    def release_floating_ip(self, req, ip):
+    def release_floating_ip(self, req, iface):
         """release floating ip from a server
 
         :param req: the incoming request
-        :param ip: floating ip
+        :param iface: link information
         """
         # net_id it is not needed if there is just one port of the VM
         try:
             net_public = self._get_public_network(req)
         except Exception:
             raise exception.NetworkNotFound()
-        response = self._remove_floating_ip(req, net_public, ip)
+        response = self._remove_floating_ip(req, net_public, iface['ip'])
 
         return response
 
