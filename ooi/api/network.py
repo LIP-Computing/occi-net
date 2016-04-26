@@ -82,7 +82,7 @@ def process_parameters(req, scheme=None):
 
 class Controller(base.Controller):
     def __init__(self, app=None, openstack_version=None, neutron_endpoint=None):
-        super(Controller, self).__init__(app=None, openstack_version=openstack_version)
+        super(Controller, self).__init__(app=app, openstack_version=openstack_version)
         if neutron_endpoint :
             self.os_helper = helpers.OpenStackNeutron(
                 neutron_endpoint

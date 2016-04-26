@@ -25,15 +25,14 @@ from ooi.tests.tests_networks.integration.keystone.session import KeySession
 from ooi.tests import fakes_neutron as fakes
 
 
-class TestIntegrationNetworkLink(TestIntegration):
+class TestIntegrationNetworkLinkNeutron(TestIntegration):
 
     def setUp(self):
-        super(TestIntegrationNetworkLink, self).setUp()
-        self.req = Request(KeySession().create_request_nova(self.session, path="/",
-                                                            environ={},
-                                                            headers={"X_PROJECT_ID": self.project_id}
-                                                            ).environ)
-        self.controller = link_controller.Controller(app=None,openstack_version="/v2.1")
+        super(TestIntegrationNetworkLinkNeutron, self).setUp()
+        self.req = Request(KeySession().create_request(self.session, path="/",
+                                                       environ={},
+                                                       headers={"X_PROJECT_ID": self.project_id}).environ)
+        self.controller = link_controller.Controller(neutron_endpoint="http://127.0.0.1:9696/v2.0")
 
     def test_index(self):
         occi = self.controller.index(self.req)

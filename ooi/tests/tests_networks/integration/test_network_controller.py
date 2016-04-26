@@ -31,7 +31,6 @@ class TestIntegrationNetwork(TestIntegration):
         super(TestIntegrationNetwork, self).setUp()
         self.req = Request(
             KeySession().create_request_nova(self.session, path="/",
-                                        base_url='http://127.0.0.1:8774/v2.1',
                                         environ={},
                                         headers={
                                             "X_PROJECT_ID": self.project_id

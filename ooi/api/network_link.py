@@ -56,10 +56,18 @@ def _get_network_link_resources(link_list):
 
 
 class Controller(base.Controller):
-    def __init__(self, neutron_endpoint):
-        self.os_neutron_helper = helpers.OpenStackNeutron(
-            neutron_endpoint
-        )
+
+    def __init__(self, app=None, openstack_version=None, neutron_endpoint=None):
+        super(Controller, self).__init__(app=app, openstack_version=openstack_version)
+        if neutron_endpoint :
+            self.os_helper = helpers.OpenStackNeutron(
+                neutron_endpoint
+            )
+        else:
+            self.os_helper = helpers.OpenStackNovaNetwork(
+                self.app,
+                self.openstack_version
+            )
 
     def _get_interface_from_id(self, req, id):
         """Get interface from id
@@ -147,5 +155,7 @@ class Controller(base.Controller):
                 req, iface.address)
         else:
             os_link = self.os_neutron_helper.delete_port(
-                req, iface.mac)
+                req,
+                compute_id=iface.source.id,
+                mac=iface.mac)
         return os_link

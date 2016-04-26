@@ -174,9 +174,8 @@ class OpenStackNovaNetwork(BaseHelper):
                      "occi.network.gateway": "gateway",
                      "org.openstack.network.shared": "share_address",
                      },
-        "networks_link": {"occi.core.target": "network_id",
-                          "occi.core.source": "device_id",
-                          "X_PROJECT_ID": "tenant_id"
+        "networks_link": {"occi.core.target": "server_id",
+                          "occi.core.source": "net_id",
                           },
     }
     required = {"networks": {"occi.core.title": "label",
@@ -313,7 +312,7 @@ class OpenStackNovaNetwork(BaseHelper):
         """
         net_param = utils.translate_parameters(
             self.translation['networks'], parameters)
-        path = "os-tenant-networks"
+        path = "os-networks"
         os_req = self._make_get_request(req, path, net_param)
         response = os_req.get_response()
         nets = self.get_from_response(response, "networks", [])
@@ -355,7 +354,6 @@ class OpenStackNovaNetwork(BaseHelper):
         """Create a network in nova-network.
 
         :param req: the incoming request
-        :param resource: network resource to manage
         :param parameters: parameters with values
          for the new network
         """
@@ -369,6 +367,67 @@ class OpenStackNovaNetwork(BaseHelper):
         ooi_net = self._build_networks([net])
         return ooi_net[0]
 
+    def _get_servers(self, req):
+        path = "servers"
+        os_req = self._make_get_request(req, path)
+        response = os_req.get_response()
+        return self.get_from_response(response, "servers", {})
+
+    def _get_ports(self, req, compute_id):
+        path = "servers/%s/os-interface" % compute_id
+        os_req = self._make_get_request(req, path)
+        response = os_req.get_response()
+        return self.get_from_response(response, "interfaceAttachments", {})
+
+    def get_compute_net_link(self, req, compute_id, network_id,
+                             address, parameters=None):
+        """Get a specific network/server link
+
+        It shows a specific link (either private or public ip)
+
+        :param req: the incoming request
+        :param compute_id: server id
+        :param network_id: network id
+        :param address: ip connected
+        :param parameters: the incoming parameters
+
+        """
+        ports = self._get_ports(req, compute_id)
+        for p in ports:
+            if p["net_id"] == network_id:
+                for ip in p["fixed_ips"]:
+                    if ip['ip_address'] == address:
+                        mac = p['mac_addr']
+                        state = p["port_state"]
+                        return self._build_link(network_id,
+                                            compute_id,
+                                            address,
+                                            mac=mac,
+                                            state=state)
+        raise exception.NotFound()
+
+    def list_compute_net_links(self, req, parameters=None):
+        """Get floating IPs for the tenant.
+
+        :param req: the incoming request
+        :param parameters: paramaters
+        """
+        servers = self._get_servers(req)
+        link_list = []
+        for s in servers:
+            ports = self._get_ports(req, s['id'])
+            for p in ports:
+                for ip in p["fixed_ips"]:
+                    mac = p['mac_addr']
+                    state = p["port_state"]
+                    link = self._build_link(p["net_id"],
+                                    s['id'],
+                                    ip['ip_address'],
+                                    mac=mac,
+                                    state=state)
+                link_list.append(link)
+        return  link_list
+
     def create_port(self, req, parameters):
         """Add a port to the subnet
 
@@ -377,46 +436,62 @@ class OpenStackNovaNetwork(BaseHelper):
         :param req: the incoming network
         :param parameters: list of parameters
         """
-        param_device_owner = {'device_owner': 'compute:nova'}
-        attributes_port = utils.translate_parameters(
+        param_port = utils.translate_parameters(
             self.translation['networks_link'],
             parameters)
-        attributes_port.update(param_device_owner)
-        p = self.create_resource(req,
-                                 'ports',
-                                 attributes_port)
-        link = self._build_link(
-            p["network_id"],
-            p['device_id'],
-            p["fixed_ips"][0]["ip_address"],
-            mac=p["mac_address"],
-            state=os_helpers.network_status(p["status"]))
-        return link
+        compute_id = param_port.pop("server_id")
+        path = "servers/%s/os-interface" % compute_id
+        os_req = self._make_create_request(req, path, "interfaceAttachment", param_port)
+        response = os_req.get_response()
+        port = self.get_from_response(response, "interfaceAttachment", {})
+        for ip in port["fixed_ips"]:
+            return self._build_link(port["net_id"],
+                                    port["server_id"],
+                                    ip['ip_address'],
+                                    mac=port['mac_addr'],
+                                    state=port["port_state"])
 
-    def delete_port(self, req, mac):
+    def delete_port(self, req, compute_id, mac):
         """Delete a port to the subnet
 
         Returns the port information
 
         :param req: the incoming network
+        :param compute_id: server id
         :param mac: interface mac
         """
-        attributes_port = {
-            "mac_address": mac
-        }
-        ports = self.list_resources(
-            req,
-            'ports', attributes_port
-        )
-        if ports.__len__() == 0:
-            raise exception.LinkNotFound(
+        #
+        #         {
+        #     "removeFixedIp": {
+        #         "address": "10.0.0.4"
+        #     }
+        # }
+        ports = self._get_ports(req, compute_id)
+        path = "servers/%s/os-interface" % compute_id
+        for p in ports:
+            if p["mac_addr"] == mac:
+                os_req = self._make_delete_request(req, path, p['port_id'])
+                os_req.get_response() # 202
+                return []
+
+        raise exception.LinkNotFound(
                 "Interface %s not found" % mac
             )
-        out = self.delete_resource(req,
-                                   'ports',
-                                   ports[0]['id'])
-        return out
 
+# fixed_address = fixed ips
+# address = (floating IP address)
+# {
+#     "addFloatingIp": {
+#         "address": "172.24.4.4"
+#     }
+# }
+
+
+# {
+#     "removeFloatingIp": {
+#         "address": "172.24.4.4"
+#     }
+# }
     def get_network_id(self, req, mac):
         """Get the Network ID from the mac port
 
@@ -1191,12 +1266,13 @@ class OpenStackNeutron(BaseHelper):
             state=os_helpers.network_status(p["status"]))
         return link
 
-    def delete_port(self, req, mac):
+    def delete_port(self, req, compute_id, mac):
         """Delete a port to the subnet
 
         Returns the port information
 
         :param req: the incoming network
+        :param compute_id: server id
         :param mac: interface mac
         """
         attributes_port = {
