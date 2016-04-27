@@ -32,7 +32,7 @@ class TestIntegrationNetworkLinkNeutron(TestIntegration):
         self.req = Request(KeySession().create_request(self.session, path="/",
                                                        environ={},
                                                        headers={"X_PROJECT_ID": self.project_id}).environ)
-        self.controller = link_controller.Controller(neutron_endpoint="http://127.0.0.1:9696/v2.0")
+        self.controller = link_controller.Controller(neutron_ooi_endpoint="http://127.0.0.1:9696/v2.0")
 
     def test_index(self):
         occi = self.controller.index(self.req)

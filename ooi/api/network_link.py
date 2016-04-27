@@ -57,11 +57,11 @@ def _get_network_link_resources(link_list):
 
 class Controller(base.Controller):
 
-    def __init__(self, app=None, openstack_version=None, neutron_endpoint=None):
+    def __init__(self, app=None, openstack_version=None, neutron_ooi_endpoint=None):
         super(Controller, self).__init__(app=app, openstack_version=openstack_version)
-        if neutron_endpoint :
+        if neutron_ooi_endpoint :
             self.os_helper = helpers.OpenStackNeutron(
-                neutron_endpoint
+                neutron_ooi_endpoint
             )
         else:
             self.os_helper = helpers.OpenStackNovaNetwork(
@@ -80,7 +80,7 @@ class Controller(base.Controller):
         except ValueError:
             raise exception.LinkNotFound(link_id=id)
         try:
-            link = self.os_neutron_helper.get_compute_net_link(
+            link = self.os_helper.get_compute_net_link(
                 req,
                 server_id,
                 network_id,
@@ -96,7 +96,7 @@ class Controller(base.Controller):
         :param req: request object
         """
         attributes = network_api.process_parameters(req)
-        link_list = self.os_neutron_helper.list_compute_net_links(
+        link_list = self.os_helper.list_compute_net_links(
             req,
             attributes)
         occi_link_resources = _get_network_link_resources(link_list)
@@ -135,12 +135,12 @@ class Controller(base.Controller):
 
         # Allocate public IP and associate it ot the server
         if net_id == network_api.PUBLIC_NETWORK:
-            os_link = self.os_neutron_helper.assign_floating_ip(
+            os_link = self.os_helper.assign_floating_ip(
                 req,
                 parameters)
         else:
             # Allocate private network
-            os_link = self.os_neutron_helper.create_port(
+            os_link = self.os_helper.create_port(
                 req, parameters)
         occi_link = _get_network_link_resources([os_link])
         return collection.Collection(resources=occi_link)
@@ -153,9 +153,9 @@ class Controller(base.Controller):
         """
         iface = self._get_interface_from_id(req, id)
         if iface['network_id'] == network_api.PUBLIC_NETWORK:
-            os_link = self.os_neutron_helper.release_floating_ip(
+            os_link = self.os_helper.release_floating_ip(
                 req, iface)
         else:
-            os_link = self.os_neutron_helper.delete_port(
+            os_link = self.os_helper.delete_port(
                 req, iface)
         return os_link

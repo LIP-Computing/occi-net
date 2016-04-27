@@ -13,7 +13,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+import webob
 
 from ooi.tests.tests_networks.integration import  TestIntegration
 
@@ -56,9 +56,9 @@ class TestIntegrationNetwork(TestIntegration):
       #  self.assertEqual("public", sortedList[0].title)
 
     def test_list_by_tenant_error(self):
-        self.req.headers = fakes.create_header(None, None, "noexits")
-        list = self.controller.index(self.req)
-        self.assertIs(0, list.resources.__len__())
+        self.req.headers.update(fakes.create_header(None, None, "noexits"))
+        self.assertRaises(webob.exc.HTTPBadRequest, self.controller.index, self.req)
+
 
     def test_show_network(self):
         net = self.controller.show(self.req, self.public_network)
@@ -84,33 +84,25 @@ class TestIntegrationNetwork(TestIntegration):
             out = e
         self.assertIsInstance(out, exception.Invalid)
 
-    def test_create_delete_network_with_all(self):
-        list1 = self.controller.index(self.req)
+    def test_create(self):
         ip_version = 4
         cidr = "12.0.0.1/24"
         gateway = "12.0.0.3"
         #Create
         parameters ={"occi.core.title": self.new_network_name,
-                    "org.openstack.network.ip_version": ip_version,
                     "occi.network.address": cidr,
-                  #  "occi.network.gateway": gateway,
                      }
         categories = {network.NetworkResource.kind,
                       network.ip_network}
-        # self.req.headers = fakes.create_header_occi(parameters, categories)
-        # ret = self.controller.create(self.req)
-        # net = ret.resources.pop()
-        # self.assertEqual(self.new_network_name, net.title)
-        # self.req.headers.pop("X-OCCI-Attribute")
-        # list2 = self.controller.index(self.req)
-        # self.assertEqual(list1.resources.__len__() + 1,
-        #                  list2.resources.__len__())
+        self.req.headers = fakes.create_header_occi(parameters, categories)
 
-         # Delete
-        id = '51e774aa-5ed4-4cd7-b5ee-69f66c2f7267'
-        response = self.controller.delete(self.req, id)
-        self.assertIsInstance(response, list)
-        list3 = self.controller.index(self.req)
-        self.assertEqual(list1.resources.__len__(), list3.resources.__len__())
+        self.assertRaises(exception.NotImplemented,
+                          self.controller.create,
+                          self.req,
+                          parameters)
 
-
+    def test_delete(self):
+        self.assertRaises(exception.NotImplemented,
+                          self.controller.delete,
+                          self.req,
+                          None)

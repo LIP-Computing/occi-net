@@ -36,7 +36,7 @@ class TestIntegrationNetworkNeutron(TestIntegration):
                                             "X_PROJECT_ID": self.project_id
                                         }).environ)
 
-        self.controller = net_controler.Controller(neutron_endpoint="http://127.0.0.1:9696/v2.0")
+        self.controller = net_controler.Controller(neutron_ooi_endpoint="http://127.0.0.1:9696/v2.0")
 
     def test_list(self):
         list = self.controller.index(self.req)

@@ -126,7 +126,8 @@ class OCCIMiddleware(object):
                                            self.openstack_version,
                                            self.neutron_ooi_endpoint))
             else:
-                return Resource(controller(self.neutron_ooi_endpoint))
+                return Resource(controller(
+                    neutron_ooi_endpoint=self.neutron_ooi_endpoint))
         else:
             return Resource(controller(self.application,
                                        self.openstack_version))

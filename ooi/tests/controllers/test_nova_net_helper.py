@@ -101,33 +101,17 @@ class TestNovaNetOpenStackHelper(base.TestCase):
                       "occi.network.address": cidr,
                       "occi.network.gateway": gate_way
                       }
-        resp = fakes.create_fake_json_resp(
-            {"network": {"id": net_id,
-                         "label": name,
-                         "cidr": cidr,
-                         "gateway": gate_way}}, 201
-        )
-        req_mock = mock.MagicMock()
-        req_mock.get_response.return_value = resp
-        m.return_value = req_mock
-        ret = self.helper.create_network(None, parameters)
-        self.assertEqual(net_id, ret["id"])
-        self.assertEqual(cidr, ret['address'])
-        self.assertEqual(gate_way, ret['gateway'])
-        param = utils.translate_parameters(
-            self.translation["networks"], parameters)
-        m.assert_called_with(None, "os-networks", "network", param)
+        self.assertRaises(exception.NotImplemented,
+                          self.helper.create_network,
+                          None,
+                          parameters)
 
     @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_delete_request")
     def test_delete_network(self, m):
         id = uuid.uuid4().hex
-        resp = fakes.create_fake_json_resp({"network": []}, 204)
-        req_mock = mock.MagicMock()
-        req_mock.get_response.return_value = resp
-        m.return_value = req_mock
-        ret = self.helper.delete_network(None, id)
-        self.assertEqual(ret, [])
-        m.assert_called_with(None, "os-networks", id)
+        self.assertRaises(exception.NotImplemented,
+                          self.helper.delete_network, None,
+                          id)
 
     @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_create_request")
     def test_create_port(self, m_create):

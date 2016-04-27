@@ -80,6 +80,7 @@ class TestIntegrationNetworkLink(TestIntegration):
         self.assertIsNotNone(out)
         self.assertIsNotNone(out.resources)
         link_id = out.resources[0].id
+
         out = self.controller.delete(self.req, link_id)
         self.assertEqual([], out)
 

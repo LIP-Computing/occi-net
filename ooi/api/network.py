@@ -81,11 +81,11 @@ def process_parameters(req, scheme=None):
 
 
 class Controller(base.Controller):
-    def __init__(self, app=None, openstack_version=None, neutron_endpoint=None):
+    def __init__(self, app=None, openstack_version=None, neutron_ooi_endpoint=None):
         super(Controller, self).__init__(app=app, openstack_version=openstack_version)
-        if neutron_endpoint :
+        if neutron_ooi_endpoint:
             self.os_helper = helpers.OpenStackNeutron(
-                neutron_endpoint
+                neutron_ooi_endpoint
             )
         else:
             self.os_helper = helpers.OpenStackNovaNetwork(
@@ -133,7 +133,8 @@ class Controller(base.Controller):
 
         :param req: request object
         """
-        occi_networks = self.os_helper.index(req)
+        attributes = process_parameters(req)
+        occi_networks = self.os_helper.index(req, attributes)
         occi_network_resources = self._get_network_resources(
             occi_networks)
 

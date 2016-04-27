@@ -289,13 +289,14 @@ class OpenStackNovaNetwork(BaseHelper):
                              content_type="application/json",
                              body=json.dumps(body), method="PUT")
 
-    def index(self, req):
+    def index(self, req, parameters=None):
         """Get a list of servers for a tenant.
 
         :param req: the incoming request
+        :param parameters: parameters with tenant
         """
         path = "os-networks"
-        os_req = self._make_get_request(req, path)
+        os_req = self._make_get_request(req, path, parameters)
         response = os_req.get_response(self.app)
         nets = self.get_from_response(response, "networks", [])
         ooi_networks = self._build_networks(nets)
@@ -308,7 +309,6 @@ class OpenStackNovaNetwork(BaseHelper):
 
         :param req: the incoming network
         :param id: net identification
-        :param parameters: parameters with tenant
         """
         path = "os-networks/%s" % id
         os_req = self._make_get_request(req, path)
@@ -318,6 +318,9 @@ class OpenStackNovaNetwork(BaseHelper):
         return ooi_networks[0]
 
     def delete_network(self, req, id):
+        raise exception.NotImplemented("Nova Netrwork not supported")
+
+    def delete_network_prototype(self, req, id):
         """Delete a network.
 
         It returns json code from the server
@@ -333,6 +336,9 @@ class OpenStackNovaNetwork(BaseHelper):
         return net
 
     def create_network(self, req, parameters):
+        raise exception.NotImplemented("Nova Netrwork not supported")
+
+    def create_network_prototype(self, req, parameters):
         """Create a network in nova-network.
 
         :param req: the incoming request
@@ -372,20 +378,30 @@ class OpenStackNovaNetwork(BaseHelper):
         :param network_id: network id
         :param address: ip connected
         :param parameters: the incoming parameters
-
         """
-        ports = self._get_ports(req, compute_id)
-        for p in ports:
-            if p["net_id"] == network_id:
-                for ip in p["fixed_ips"]:
-                    if ip['ip_address'] == address:
-                        mac = p['mac_addr']
-                        state = p["port_state"]
-                        return self._build_link(network_id,
-                                            compute_id,
-                                            address,
-                                            mac=mac,
-                                            state=state)
+        if network_id == "PUBLIC":
+           floating_ips = self.get_floating_ips(req)
+           for ip in floating_ips:
+               if address == ip['ip']:
+                   link = self._build_link(network_id,
+                            compute_id,
+                            ip['ip'],
+                            pool=ip["pool"]
+                            )
+                   return link
+        else:
+            ports = self._get_ports(req, compute_id)
+            for p in ports:
+                if p["net_id"] == network_id:
+                    for ip in p["fixed_ips"]:
+                        if ip['ip_address'] == address:
+                            mac = p['mac_addr']
+                            state = p["port_state"]
+                            return self._build_link(network_id,
+                                                compute_id,
+                                                address,
+                                                mac=mac,
+                                                state=state)
         raise exception.NotFound()
 
     def list_compute_net_links(self, req, parameters=None):
@@ -394,9 +410,13 @@ class OpenStackNovaNetwork(BaseHelper):
         :param req: the incoming request
         :param parameters: paramaters
         """
+        floating_ips = self.get_floating_ips(req)
+        float_list = {}
+        for ip in floating_ips:
+            if ip["instance_id"]:
+                float_list.update({ip['fixed_ip']: ip})
         servers = self._get_servers(req)
         link_list = []
-        # todo: include floating IPs
         for s in servers:
             ports = self._get_ports(req, s['id'])
             for p in ports:
@@ -408,8 +428,16 @@ class OpenStackNovaNetwork(BaseHelper):
                                     ip['ip_address'],
                                     mac=mac,
                                     state=state)
-                link_list.append(link)
-        return  link_list
+                    link_list.append(link)
+                    float_ip = float_list.get(ip['ip_address'], None)
+                    if float_ip:
+                        link = self._build_link(p["net_id"],
+                                                float_ip['instance_id'],
+                                                float_ip['ip'],
+                                                pool=float_ip["pool"]
+                                                )
+                        link_list.append(link)
+        return link_list
 
     def create_port(self, req, parameters):
         """Add a port to the subnet
@@ -536,10 +564,10 @@ class OpenStackNovaNetwork(BaseHelper):
         :param req: the incoming request
         :param iface: link information
         """
-        response = self._remove_floating_ip(
-            req, iface['server_id'], iface['ip']
+        self._remove_floating_ip(
+            req, iface['compute_id'], iface['ip']
         )
-        return response
+        return []
 
     def get_network_id(self, req, mac, server_id):
         """Get the Network ID from the mac port
@@ -555,6 +583,34 @@ class OpenStackNovaNetwork(BaseHelper):
                 return p['net_id']
 
         raise exception.NetworkNotFound
+
+    def _get_floating_ips_req(self, req):
+        tenant_id = self.tenant_from_req(req)
+        path = "/%s/os-floating-ips" % tenant_id
+        return self._get_req(req, path=path, method="GET")
+
+    def get_floating_ips(self, req):
+        """Get floating IPs for the tenant.
+
+        :param req: the incoming request
+        """
+        req = self._get_floating_ips_req(req)
+        response = req.get_response(self.app)
+        return self.get_from_response(response, "floating_ips", [])
+
+    def _get_floating_ip_pools_req(self, req):
+        tenant_id = self.tenant_from_req(req)
+        path = "/%s/os-floating-ip-pools" % tenant_id
+        return self._get_req(req, path=path, method="GET")
+
+    def get_floating_ip_pools(self, req):
+        """Get floating IP pools for the tenant.
+
+        :param req: the incoming request
+        """
+        req = self._get_floating_ip_pools_req(req)
+        response = req.get_response(self.app)
+        return self.get_from_response(response, "floating_ip_pools", [])
 
 
 class OpenStackHelper(BaseHelper):
@@ -818,34 +874,6 @@ class OpenStackHelper(BaseHelper):
         response = req.get_response(self.app)
         if response.status_int not in [202]:
             raise exception_from_response(response)
-
-    def _get_floating_ips_req(self, req):
-        tenant_id = self.tenant_from_req(req)
-        path = "/%s/os-floating-ips" % tenant_id
-        return self._get_req(req, path=path, method="GET")
-
-    def get_floating_ips(self, req):
-        """Get floating IPs for the tenant.
-
-        :param req: the incoming request
-        """
-        req = self._get_floating_ips_req(req)
-        response = req.get_response(self.app)
-        return self.get_from_response(response, "floating_ips", [])
-
-    def _get_floating_ip_pools_req(self, req):
-        tenant_id = self.tenant_from_req(req)
-        path = "/%s/os-floating-ip-pools" % tenant_id
-        return self._get_req(req, path=path, method="GET")
-
-    def get_floating_ip_pools(self, req):
-        """Get floating IP pools for the tenant.
-
-        :param req: the incoming request
-        """
-        req = self._get_floating_ip_pools_req(req)
-        response = req.get_response(self.app)
-        return self.get_from_response(response, "floating_ip_pools", [])
 
     def _get_volume_delete_req(self, req, vol_id):
         tenant_id = self.tenant_from_req(req)
@@ -1555,29 +1583,30 @@ class OpenStackNeutron(BaseHelper):
         :param parameters: the incoming parameters
         """
         try:
-            param = {'floating_ip_address': ip}
-            flo_ips = self.list_resources(req,
-                                          'floatingips',
-                                          param)
-            for f_ip in flo_ips:
-                link_public = self._build_link(
-                    network_id,
-                    compute_id,
-                    f_ip['floating_ip_address'],
-                    pool=f_ip['floating_network_id'])
-                return link_public
-            # if it is not public, check in the private ips
-            param_ports = {'device_id': compute_id, 'network_id': network_id}
-            ports = self.list_resources(req, 'ports', param_ports)
-            for p in ports:
-                if ip == p["fixed_ips"][0]["ip_address"]:
-                    link_private = self._build_link(
-                        p["network_id"],
-                        p['device_id'],
-                        p["fixed_ips"][0]["ip_address"],
-                        mac=p["mac_address"],
-                        state=os_helpers.network_status(p["status"]))
-                    return link_private
+            if network_id == "PUBLIC":
+                param = {'floating_ip_address': ip}
+                flo_ips = self.list_resources(req,
+                                              'floatingips',
+                                              param)
+                for f_ip in flo_ips:
+                    link_public = self._build_link(
+                        network_id,
+                        compute_id,
+                        f_ip['floating_ip_address'],
+                        pool=f_ip['floating_network_id'])
+                    return link_public
+            else:
+                param_ports = {'device_id': compute_id, 'network_id': network_id}
+                ports = self.list_resources(req, 'ports', param_ports)
+                for p in ports:
+                    if ip == p["fixed_ips"][0]["ip_address"]:
+                        link_private = self._build_link(
+                            p["network_id"],
+                            p['device_id'],
+                            p["fixed_ips"][0]["ip_address"],
+                            mac=p["mac_address"],
+                            state=os_helpers.network_status(p["status"]))
+                        return link_private
             raise exception.NotFound()
         except Exception:
             raise exception.NotFound()
