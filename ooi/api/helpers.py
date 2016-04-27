@@ -174,8 +174,8 @@ class OpenStackNovaNetwork(BaseHelper):
                      "occi.network.gateway": "gateway",
                      "org.openstack.network.shared": "share_address",
                      },
-        "networks_link": {"occi.core.target": "server_id",
-                          "occi.core.source": "net_id",
+        "networks_link": {"occi.core.target": "net_id",
+                          "occi.core.source": "server_id",
                           },
     }
     required = {"networks": {"occi.core.title": "label",
@@ -199,7 +199,6 @@ class OpenStackNovaNetwork(BaseHelper):
             return response.json_body.get(element, default)
         else:
             raise exception_from_response(response)
-
 
     @staticmethod
     def _build_networks(networks):
@@ -290,30 +289,13 @@ class OpenStackNovaNetwork(BaseHelper):
                              content_type="application/json",
                              body=json.dumps(body), method="PUT")
 
-    # def list_resources(self, req, tenant_id, parameters=None):
-    #     """List resources.
-    #
-    #     It returns json code from the server
-    #
-    #     :param req: the incoming request
-    #     :param tenant_id: project Id
-    #     :param parameters: query parameters
-    #     """
-    #     path = "/%s/os-networks" % tenant_id
-    #     os_req = self._make_create_request(path, parameters)
-    #     response = os_req.get_response()
-    #     return self.get_from_response(response, "networks", [])
-
-    def index(self, req, parameters):
+    def index(self, req):
         """Get a list of servers for a tenant.
 
         :param req: the incoming request
-        :param parameters: parameters with tenant and filters
         """
-        net_param = utils.translate_parameters(
-            self.translation['networks'], parameters)
         path = "os-networks"
-        os_req = self._make_get_request(req, path, net_param)
+        os_req = self._make_get_request(req, path)
         response = os_req.get_response(self.app)
         nets = self.get_from_response(response, "networks", [])
         ooi_networks = self._build_networks(nets)
@@ -377,7 +359,7 @@ class OpenStackNovaNetwork(BaseHelper):
         path = "servers/%s/os-interface" % compute_id
         os_req = self._make_get_request(req, path)
         response = os_req.get_response(self.app)
-        return self.get_from_response(response, "interfaceAttachments", {})
+        return self.get_from_response(response, "interfaceAttachments", [])
 
     def get_compute_net_link(self, req, compute_id, network_id,
                              address, parameters=None):
@@ -414,6 +396,7 @@ class OpenStackNovaNetwork(BaseHelper):
         """
         servers = self._get_servers(req)
         link_list = []
+        # todo: include floating IPs
         for s in servers:
             ports = self._get_ports(req, s['id'])
             for p in ports:
@@ -441,12 +424,14 @@ class OpenStackNovaNetwork(BaseHelper):
             parameters)
         compute_id = param_port.pop("server_id")
         path = "servers/%s/os-interface" % compute_id
-        os_req = self._make_create_request(req, path, "interfaceAttachment", param_port)
+        os_req = self._make_create_request(req, path,
+                                           "interfaceAttachment",
+                                           param_port)
         response = os_req.get_response(self.app)
         port = self.get_from_response(response, "interfaceAttachment", {})
         for ip in port["fixed_ips"]:
             return self._build_link(port["net_id"],
-                                    port["server_id"],
+                                    compute_id,
                                     ip['ip_address'],
                                     mac=port['mac_addr'],
                                     state=port["port_state"])
@@ -459,12 +444,6 @@ class OpenStackNovaNetwork(BaseHelper):
         :param req: the incoming network
         :param iface: link information
         """
-        #
-        #         {
-        #     "removeFixedIp": {
-        #         "address": "10.0.0.4"
-        #     }
-        # }
         compute_id = iface['compute_id']
         mac = iface['mac']
         ports = self._get_ports(req, compute_id)
@@ -479,20 +458,6 @@ class OpenStackNovaNetwork(BaseHelper):
                 "Interface %s not found" % mac
             )
 
-# fixed_address = fixed ips
-# address = (floating IP address)
-# {
-#     "addFloatingIp": {
-#         "address": "172.24.4.4"
-#     }
-# }
-
-
-# {
-#     "removeFloatingIp": {
-#         "address": "172.24.4.4"
-#     }
-# }
     def _associate_floating_ip(self, req, server, address):
         """Associate a floating ip to a server.
         :param req: the incoming request
@@ -532,14 +497,13 @@ class OpenStackNovaNetwork(BaseHelper):
         attributes_port = utils.translate_parameters(
             self.translation['networks_link'],
             parameters)
-        net_id = attributes_port.pop('network_id')
-        server_id = attributes_port.pop('device_id')
+        net_id = attributes_port.pop('net_id')
+        server_id = attributes_port.pop('server_id')
+        ip = self._allocate_floating_ip(req)
+            # Add it to server
+        self._associate_floating_ip(req, server_id, ip["ip"])
 
         try:
-            ip = self._allocate_floating_ip(req)
-            # Add it to server
-            self._associate_floating_ip(req, server_id, ip["ip"])
-
             link_public = self._build_link(
                 net_id,
                 server_id,
@@ -559,8 +523,9 @@ class OpenStackNovaNetwork(BaseHelper):
         tenant_id = self.tenant_from_req(req)
         body = {"removeFloatingIp": {"address": address}}
         path = "/%s/servers/%s/action" % (tenant_id, server)
-        req = self._get_req(req, path=path, body=json.dumps(body),
-                             method="POST")
+        req = self._get_req(req, path=path,
+                            body=json.dumps(body),
+                            method="POST")
         response = req.get_response(self.app)
         if response.status_int != 202:
             raise exception_from_response(response)
@@ -571,36 +536,25 @@ class OpenStackNovaNetwork(BaseHelper):
         :param req: the incoming request
         :param iface: link information
         """
-        # net_id it is not needed if there is just one port of the VM
-        try:
-            net_public = self._get_public_network(req)
-        except Exception:
-            raise exception.NetworkNotFound()
-        response = self._remove_floating_ip(req, net_public, iface['ip'])
-
+        response = self._remove_floating_ip(
+            req, iface['server_id'], iface['ip']
+        )
         return response
 
-    def get_network_id(self, req, mac):
+    def get_network_id(self, req, mac, server_id):
         """Get the Network ID from the mac port
 
         :param req: the incoming network
         :param mac: mac port
+        :param server_id: server id
         """
-        try:
-            attributes_port = {
-                "mac_address": mac
-            }
-            ports = self.list_resources(
-                req,
-                'ports', attributes_port
-            )
-            id = ports[0]['network_id']
-        except Exception:
-            raise exception.NetworkNotFound
-        return id
+        ports = self._get_ports(req, server_id)
+        for p in ports:
+            server_mac = p['mac_addr']
+            if server_mac == mac:
+                return p['net_id']
 
-
-
+        raise exception.NetworkNotFound
 
 
 class OpenStackHelper(BaseHelper):
@@ -935,77 +889,6 @@ class OpenStackHelper(BaseHelper):
         response = req.get_response(self.app)
         # We only get one volume
         return self.get_from_response(response, "volume", {})
-
-    def _get_floating_ip_allocate_req(self, req, pool=None):
-        tenant_id = self.tenant_from_req(req)
-        path = "/%s/os-floating-ips" % tenant_id
-        body = {"pool": pool}
-        return self._get_req(req, path=path, body=json.dumps(body),
-                             method="POST")
-
-    def allocate_floating_ip(self, req, pool=None):
-        """Allocate a floating ip from a pool.
-
-        :param req: the incoming request
-        :param pool: floating ip pool to get the IP from
-        """
-        req = self._get_floating_ip_allocate_req(req, pool)
-        response = req.get_response(self.app)
-        return self.get_from_response(response, "floating_ip", {})
-
-    def _get_floating_ip_release_req(self, req, ip):
-        tenant_id = self.tenant_from_req(req)
-        path = "/%s/os-floating-ips/%s" % (tenant_id, ip)
-        return self._get_req(req, path=path, method="DELETE")
-
-    def release_floating_ip(self, req, iface):
-        """Release a floating ip.
-
-        :param req: the incoming request
-        :param iface: link information
-        """
-        req = self._get_floating_ip_release_req(req, iface['ip'])
-        response = req.get_response(self.app)
-        if response.status_int != 202:
-            raise exception_from_response(response)
-
-    def _get_associate_floating_ip_req(self, req, server, address):
-        tenant_id = self.tenant_from_req(req)
-        body = {"addFloatingIp": {"address": address}}
-        path = "/%s/servers/%s/action" % (tenant_id, server)
-        return self._get_req(req, path=path, body=json.dumps(body),
-                             method="POST")
-
-    def associate_floating_ip(self, req, server, address):
-        """Associate a floating ip to a server.
-
-        :param req: the incoming request
-        :param server: the server to associate the ip to
-        :param address: ip to associate to the server
-        """
-        req = self._get_associate_floating_ip_req(req, server, address)
-        response = req.get_response(self.app)
-        if response.status_int != 202:
-            raise exception_from_response(response)
-
-    def _get_remove_floating_ip_req(self, req, server, address):
-        tenant_id = self.tenant_from_req(req)
-        body = {"removeFloatingIp": {"address": address}}
-        path = "/%s/servers/%s/action" % (tenant_id, server)
-        return self._get_req(req, path=path, body=json.dumps(body),
-                             method="POST")
-
-    def remove_floating_ip(self, req, server, address):
-        """Remove a floating ip to a server.
-
-        :param req: the incoming request
-        :param server: the server to remove the ip from
-        :param address: ip to remove from the server
-        """
-        req = self._get_remove_floating_ip_req(req, server, address)
-        response = req.get_response(self.app)
-        if response.status_int != 202:
-            raise exception_from_response(response)
 
     def _get_keypair_create_req(self, req, name, public_key=None):
         tenant_id = self.tenant_from_req(req)
@@ -1379,11 +1262,12 @@ class OpenStackNeutron(BaseHelper):
                                    ports[0]['id'])
         return out
 
-    def get_network_id(self, req, mac):
+    def get_network_id(self, req, mac, server_id=None):
         """Get the Network ID from the mac port
 
         :param req: the incoming network
         :param mac: mac port
+        :param server_id: id not use in neutron
         """
         try:
             attributes_port = {

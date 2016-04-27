@@ -44,7 +44,7 @@ class TestIntegrationNetwork(TestIntegration):
         sortedList = sorted(list.resources,
                             key=lambda Network: Network.title,
                             reverse=True)
-        self.assertEqual("private", sortedList[0].title)
+        self.assertEqual("public", sortedList[0].title)
 
     def test_list_by_tenant(self):
         self.req.headers = fakes.create_header(None, None, self.project_id)

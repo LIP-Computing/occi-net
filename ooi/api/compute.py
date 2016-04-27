@@ -54,8 +54,10 @@ class Controller(ooi.api.base.Controller):
                 neutron_endpoint
             )
         else:
-            self.os_network_helper = None
-            raise exception.NetworkNotSuported
+            self.os_network_helper = ooi.api.helpers.OpenStack(
+                self.app,
+                self.openstack_version
+            )
 
     def _get_compute_resources(self, servers):
         occi_compute_resources = []
@@ -272,13 +274,9 @@ class Controller(ooi.api.base.Controller):
     def _release_floating_ips(self, req, server_id):
         server_ips = self._get_server_floating_ips(req, server_id)
         if server_ips:
-            floating_ips = self.os_helper.get_floating_ips(req)
             for server_ip in server_ips:
-                for ip in floating_ips:
-                    if server_ip == ip["ip"]:
-                        self.os_helper.remove_floating_ip(req, server_id,
-                                                          ip["ip"])
-                        self.os_helper.release_floating_ip(req, ip["id"])
+                iface = {"ip":server_ip}
+                self.os_helper.release_floating_ip(req, iface)
 
     def _delete(self, req, server_ids):
         for server_id in server_ids:

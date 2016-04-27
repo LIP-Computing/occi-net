@@ -450,10 +450,11 @@ class TestNetOpenStackHelper(base.TestCase):
     def test_release_floating_ip(self, m_add, m_get_net):
         ip = '22.0.0.1'
         net_id = 'PUBLIC'
-
+        iface = {'net_id': net_id,
+                 'ip': ip}
         m_get_net.return_value = net_id
         m_add.return_value = []
-        ret = self.helper.release_floating_ip(None, ip)
+        ret = self.helper.release_floating_ip(None, iface)
         self.assertEqual([], ret)
         m_add.assert_called_with(None, net_id, ip)
 
@@ -481,13 +482,17 @@ class TestNetOpenStackHelper(base.TestCase):
         p = [{'id': port_id}]
         m_list.return_value = p
         m_delete.return_value = []
-        ret = self.helper.delete_port(None, None)
+        iface = {'compute_id': None,
+                 'mac': None}
+        ret = self.helper.delete_port(None, iface)
         self.assertEqual([], ret)
 
     @mock.patch.object(helpers.OpenStackNeutron, "list_resources")
     def test_list_port_not_found(self, m_list):
+        iface = {'compute_id': None,
+                 'mac': None}
         m_list.return_value = []
         self.assertRaises(exception.LinkNotFound,
                           self.helper.delete_port,
                           None,
-                          None)
+                          iface)
