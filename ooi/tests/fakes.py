@@ -152,6 +152,34 @@ networks = {
         {"id": uuid.uuid4().hex}
         ]
 }
+
+ports = {
+    tenants["foo"]["id"]: [
+        {
+            "id": uuid.uuid4().hex,
+            "fixed_ips":
+                [{"ip_address": uuid.uuid4().hex}]
+            ,
+            "mac_addr": uuid.uuid4().hex,
+            "port_state": "DOWN",
+            "net_id": uuid.uuid4().hex
+        },
+    ],
+    tenants["bar"]["id"]: [],
+    tenants["baz"]["id"]: [
+        {
+            "id": uuid.uuid4().hex,
+            "fixed_ips": [
+                {"ip_address": uuid.uuid4().hex}
+            ],
+            "mac_addr": uuid.uuid4().hex,
+            "port_state": "ACTIVE",
+            "net_id": uuid.uuid4().hex
+        },
+
+    ],
+}
+
 servers = {
     tenants["foo"]["id"]: [
         {
@@ -189,9 +217,14 @@ servers = {
             ],
             "addresses": {
                 "private": [
-                    {"addr": floating_ips[tenants["baz"]["id"]][0]["fixed_ip"],
+                    {"addr": (
+                        ports[tenants["baz"]["id"]][0]["fixed_ips"][0]["ip_address"]
+                    ),
                      "OS-EXT-IPS:type": "fixed",
-                     "OS-EXT-IPS-MAC:mac_addr": "1234"},
+                     "OS-EXT-IPS-MAC:mac_addr": (
+                         ports[tenants["baz"]["id"]][0]["mac_addr"]
+                     )
+                    },
                     {"addr": floating_ips[tenants["baz"]["id"]][0]["ip"],
                      "OS-EXT-IPS:type": "floating",
                      "OS-EXT-IPS-MAC:mac_addr": "1234"},
@@ -215,40 +248,7 @@ volumes[tenants["baz"]["id"]][0]["attachments"] = [{
     "id": volumes[tenants["baz"]["id"]][0]["id"],
 }]
 
-ports = {
-    tenants["foo"]["id"]: [
-        {
-            "id": uuid.uuid4().hex,
-            "fixed_ips":
-                [{"ip_address": uuid.uuid4().hex}]
-            ,
-            "mac_addr": uuid.uuid4().hex,
-            "port_state": "DOWN",
-            "net_id": uuid.uuid4().hex
-        },
-        {
-            "id": uuid.uuid4().hex,
-            "fixed_ips":
-                [{"ip_address": uuid.uuid4().hex}]
-            ,
-            "mac_addr": uuid.uuid4().hex,
-            "port_state": "DOWN",
-            "net_id": uuid.uuid4().hex
-        }
-    ],
-    tenants["bar"]["id"]: [],
-    tenants["baz"]["id"]: [
-        {
-            "id": uuid.uuid4().hex,
-            "fixed_ips": [
-                {"ip_address": uuid.uuid4().hex}
-            ],
-            "mac_addr": uuid.uuid4().hex,
-            "port_state": "ACTIVE",
-            "net_id": uuid.uuid4().hex
-        },
-    ],
-}
+
 
 def fake_query_results():
     cats = []

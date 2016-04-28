@@ -719,10 +719,10 @@ class OpenStackHelper(BaseHelper):
         param_port = utils.translate_parameters(
             translation,
             parameters)
-        compute_id = param_port.pop("server_id")
+        compute_id = param_port.get("server_id")
         tenant_id = self.tenant_from_req(req)
         path = "/%s/servers/%s/os-interface" % (tenant_id, compute_id)
-        body = utils.make_body("interfaceAttachment", parameters)
+        body = utils.make_body("interfaceAttachment", param_port)
         os_req = self._get_req(req, path=path,
                                content_type="application/json",
                                body=json.dumps(body), method="POST")
