@@ -159,7 +159,7 @@ class Controller(base.Controller):
         """
         iface = self._get_interface_from_id(req, id)
         server = iface.source.id
-        if iface.target.id== network_api.PUBLIC_NETWORK:
+        if iface.target.id == network_api.PUBLIC_NETWORK:
             # remove floating IP
             self.os_helper.remove_floating_ip(req,
                                               server,
@@ -168,6 +168,6 @@ class Controller(base.Controller):
             # release IP
             self.os_helper.release_floating_ip(req, iface.ip_id)
         else:
-            os_link = self.os_helper.delete_port(
+            self.os_helper.delete_port(
                 req, server, iface.mac)
         return []

@@ -17,13 +17,12 @@
 import copy
 import json
 
+import webob.exc
+
 from ooi.api import helpers
 from ooi import exception
-
 from ooi.openstack import helpers as os_helpers
 from ooi import utils
-
-import webob.exc
 
 
 class OpenStackNeutron(helpers.BaseHelper):
@@ -654,7 +653,8 @@ class OpenStackNeutron(helpers.BaseHelper):
                         pool=f_ip['floating_network_id'])
                     return link_public
             else:
-                param_ports = {'device_id': compute_id, 'network_id': network_id}
+                param_ports = {'device_id': compute_id,
+                               'network_id': network_id}
                 ports = self.list_resources(req, 'ports', param_ports)
                 for p in ports:
                     if ip == p["fixed_ips"][0]["ip_address"]:

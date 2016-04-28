@@ -17,7 +17,6 @@
 
 import mock
 
-from ooi.api import helpers
 from ooi.api import helpers_neutron
 from ooi.api import network
 from ooi.occi.core import collection

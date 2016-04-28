@@ -23,7 +23,6 @@ import six.moves.urllib.parse as urlparse
 
 from ooi import exception
 from ooi.log import log as logging
-from ooi.openstack import helpers as os_helpers
 from ooi import utils
 
 import webob.exc
@@ -646,15 +645,15 @@ class OpenStackHelper(BaseHelper):
         :param parameters: the incoming parameters
         """
         if network_id == "PUBLIC":
-           floating_ips = self.get_floating_ips(req)
-           for ip in floating_ips:
-               if address == ip['ip']:
-                   link = self._build_link(network_id,
-                            compute_id,
-                            ip['ip'],
-                            pool=ip["pool"]
-                            )
-                   return link
+            floating_ips = self.get_floating_ips(req)
+            for ip in floating_ips:
+                if address == ip['ip']:
+                    link = self._build_link(network_id,
+                                            compute_id,
+                                            ip['ip'],
+                                            pool=ip["pool"]
+                                            )
+                    return link
         else:
             ports = self._get_ports(req, compute_id)
             for p in ports:
@@ -664,10 +663,10 @@ class OpenStackHelper(BaseHelper):
                             mac = p['mac_addr']
                             state = p["port_state"]
                             return self._build_link(network_id,
-                                                compute_id,
-                                                address,
-                                                mac=mac,
-                                                state=state)
+                                                    compute_id,
+                                                    address,
+                                                    mac=mac,
+                                                    state=state)
         raise exception.NotFound()
 
     def list_compute_net_links(self, req, parameters=None):
@@ -690,10 +689,10 @@ class OpenStackHelper(BaseHelper):
                     mac = p['mac_addr']
                     state = p["port_state"]
                     link = self._build_link(p["net_id"],
-                                    s['id'],
-                                    ip['ip_address'],
-                                    mac=mac,
-                                    state=state)
+                                            s['id'],
+                                            ip['ip_address'],
+                                            mac=mac,
+                                            state=state)
                     link_list.append(link)
                     float_ip = float_list.get(ip['ip_address'], None)
                     if float_ip:
@@ -749,14 +748,14 @@ class OpenStackHelper(BaseHelper):
         for p in ports:
             if p["mac_addr"] == mac:
                 tenant_id = self.tenant_from_req(req)
-                path = "/%s/%s/%s" %(tenant_id, path, p['port_id'])
+                path = "/%s/%s/%s" % (tenant_id, path, p['port_id'])
                 os_req = self._get_req(req, path=path, method="DELETE")
-                os_req.get_response(self.app) # 202
+                os_req.get_response(self.app)
                 return []
 
         raise exception.LinkNotFound(
-                "Interface %s not found" % mac
-            )
+            "Interface %s not found" % mac
+        )
 
     def get_network_id(self, req, mac, server_id):
         """Get the Network ID from the mac port
@@ -785,7 +784,7 @@ class OpenStackHelper(BaseHelper):
         server_id = parameters.get('occi.core.source')
         pool_name = parameters.get("pool_name", None)
         ip = self.allocate_floating_ip(req, pool_name)
-            # Add it to server
+        # Add it to server
         self.associate_floating_ip(req, server_id, ip["ip"])
 
         try:
@@ -821,16 +820,21 @@ class OpenStackNovaNetwork(BaseHelper):
     def get_from_response(response, element, default):
         """Get a JSON element from a valid response or raise an exception.
 
-        This method will extract an element a JSON response (falling back to a
-        default value) if the response has a code of 200, otherwise it will
-        raise a webob.exc.exception
+        This method will extract an element a JSON response
+         (falling back to a default value) if the response has a code
+          of 200, otherwise it will raise a webob.exc.exception
 
         :param response: The webob.Response object
         :param element: The element to look for in the JSON body
         :param default: The default element to be returned if not found.
         """
-        if response.status_int in [200, 201, 202, 204]:
-            return response.json_body.get(element, default)
+        if response.status_int in [200, 201, 202]:
+            if element:
+                return response.json_body.get(element, default)
+            else:
+                return response.json_body
+        elif response.status_int in [204]:
+            return []
         else:
             raise exception_from_response(response)
 
@@ -842,9 +846,6 @@ class OpenStackNovaNetwork(BaseHelper):
             ooi_net = {}
             ooi_net["address"] = net.get("cidr", None)
             ooi_net["state"] = "active"
-            # if public:
-            # ooi_net["id"] = 'PUBLIC'
-            #ooi_net["ip_version"] = sub.get("ip_version", None)
             ooi_net["id"] = net["id"]
             ooi_net["name"] = net.get("label", None)
             ooi_net["gateway"] = net.get("gateway", None)
@@ -874,7 +875,7 @@ class OpenStackNovaNetwork(BaseHelper):
         :param tenant: include tenant in the query parameters
         """
         tenant_id = self.tenant_from_req(req)
-        path = "/%s/%s" %(tenant_id, path)
+        path = "/%s/%s" % (tenant_id, path)
         query_string = utils.get_query_string(parameters)
         return self._get_req(req, path=path,
                              query_string=query_string, method="GET")
@@ -890,7 +891,7 @@ class OpenStackNovaNetwork(BaseHelper):
         :param parameters: parameters with values
         """
         tenant_id = self.tenant_from_req(req)
-        path = "/%s/%s" %(tenant_id, path)
+        path = "/%s/%s" % (tenant_id, path)
         body = utils.make_body(resource, parameters)
         return self._get_req(req, path=path,
                              content_type="application/json",
@@ -905,7 +906,7 @@ class OpenStackNovaNetwork(BaseHelper):
         :param path: element location
         """
         tenant_id = self.tenant_from_req(req)
-        path = "/%s/%s/%s" %(tenant_id, path, id)
+        path = "/%s/%s/%s" % (tenant_id, path, id)
         return self._get_req(req, path=path, method="DELETE")
 
     def _make_put_request(self, req, path, parameters):
@@ -917,7 +918,7 @@ class OpenStackNovaNetwork(BaseHelper):
         :param path: element location
         """
         tenant_id = self.tenant_from_req(req)
-        path = "/%s/%s" %(tenant_id, path)
+        path = "/%s/%s" % (tenant_id, path)
         body = utils.make_body(None, parameters)
         return self._get_req(req, path=path,
                              content_type="application/json",

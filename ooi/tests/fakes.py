@@ -158,8 +158,7 @@ ports = {
         {
             "id": uuid.uuid4().hex,
             "fixed_ips":
-                [{"ip_address": uuid.uuid4().hex}]
-            ,
+                [{"ip_address": uuid.uuid4().hex}],
             "mac_addr": uuid.uuid4().hex,
             "port_state": "DOWN",
             "net_id": uuid.uuid4().hex
@@ -218,12 +217,13 @@ servers = {
             "addresses": {
                 "private": [
                     {"addr": (
-                        ports[tenants["baz"]["id"]][0]["fixed_ips"][0]["ip_address"]
+                        (ports[tenants["baz"]["id"]]
+                         [0]["fixed_ips"][0]["ip_address"])
                     ),
-                     "OS-EXT-IPS:type": "fixed",
-                     "OS-EXT-IPS-MAC:mac_addr": (
-                         ports[tenants["baz"]["id"]][0]["mac_addr"]
-                     )
+                        "OS-EXT-IPS:type": "fixed",
+                        "OS-EXT-IPS-MAC:mac_addr": (
+                            ports[tenants["baz"]["id"]][0]["mac_addr"]
+                        )
                     },
                     {"addr": floating_ips[tenants["baz"]["id"]][0]["ip"],
                      "OS-EXT-IPS:type": "floating",
@@ -458,7 +458,8 @@ class FakeApp(object):
                            "os-floating-ip-pools")
             self._populate(path, "floating_ip", floating_ips[tenant["id"]],
                            "os-floating-ips")
-            self._populate_ports(path, servers[tenant["id"]], ports[tenant["id"]])
+            self._populate_ports(path, servers[tenant["id"]],
+                                 ports[tenant["id"]])
             # NOTE(aloga): dict_values un Py3 is not serializable in JSON
             self._populate(path, "image", list(images.values()))
             self._populate(path, "flavor", list(flavors.values()))
@@ -505,12 +506,13 @@ class FakeApp(object):
     def _populate_ports(self, path, servers_list, ports_list):
         if servers_list:
             for p in ports_list:
-                path_base = "%s/servers/%s/%s" % (path,
-                                              servers_list[0]["id"],
-                                              "os-interface"
-                                              )
+                path_base = "%s/servers/%s/%s" % (
+                    path,
+                    servers_list[0]["id"],
+                    "os-interface"
+                )
                 self.routes[path_base] = create_fake_json_resp(
-                        {"interfaceAttachments": [p]})
+                    {"interfaceAttachments": [p]})
 
     @webob.dec.wsgify()
     def __call__(self, req):

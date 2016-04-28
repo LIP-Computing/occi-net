@@ -123,7 +123,9 @@ class TestNetworkControllerNeutron(base.TestController):
         subnet = fakes.subnets
         for net in test_networks:
             net["subnet_info"] = subnet[0]
-        ooi_net = helpers_neutron.OpenStackNeutron._build_networks(test_networks)
+        ooi_net = (
+            helpers_neutron.OpenStackNeutron._build_networks(
+                test_networks))
         ret = self.controller._get_network_resources(ooi_net)
         self.assertIsInstance(ret, list)
         self.assertIsNot(ret.__len__(), 0)

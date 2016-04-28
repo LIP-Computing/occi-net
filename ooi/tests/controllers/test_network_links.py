@@ -70,13 +70,16 @@ class TestNetworkLinkController(base.TestController):
         self.assertIsInstance(ret, collection.Collection)
         self.assertEqual(ret.resources.__len__(), 0)
 
-    @mock.patch.object(helpers.OpenStackHelper, "delete_port")
-    @mock.patch.object(network_link_api.Controller, "_get_interface_from_id")
+    @mock.patch.object(helpers.OpenStackHelper,
+                       "delete_port")
+    @mock.patch.object(network_link_api.Controller,
+                       "_get_interface_from_id")
     def test_delete_fixed(self, mock_get, mock_delete):
         net_id = uuid.uuid4().hex
         server_id = uuid.uuid4().hex
         server_addr = "192.168.253.1"
-        link_id = "%s_%s_%s" % (server_id, net_id,server_addr)
+        link_id = "%s_%s_%s" % (
+            server_id, net_id, server_addr)
         mac_id = uuid.uuid4().hex
 
         class FakeNetworkLink(object):
@@ -94,7 +97,6 @@ class TestNetworkLinkController(base.TestController):
         mock_get.assert_called_with(None, link_id)
         mock_delete.assert_called_with(None, server_id, mac_id)
 
-
     @mock.patch.object(helpers.OpenStackHelper, "release_floating_ip")
     @mock.patch.object(helpers.OpenStackHelper, "remove_floating_ip")
     @mock.patch.object(network_link_api.Controller, "_get_interface_from_id")
@@ -102,7 +104,7 @@ class TestNetworkLinkController(base.TestController):
         net_id = "PUBLIC"
         server_id = uuid.uuid4().hex
         server_addr = "192.168.253.1"
-        link_id = "%s_%s_%s" % (server_id, net_id,server_addr)
+        link_id = "%s_%s_%s" % (server_id, net_id, server_addr)
         mac_id = uuid.uuid4().hex
 
         class FakeNetworkLink(object):

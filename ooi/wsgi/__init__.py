@@ -120,14 +120,8 @@ class OCCIMiddleware(object):
         self._setup_routes()
 
     def _create_resource(self, controller, neutron_ooi_endpoint=None):
-            return Resource(controller(self.application,
-                                       self.openstack_version))
-
-    def _create_resource_network(self, controller, neutron_ooi_endpoint=None):
         if neutron_ooi_endpoint:
-            return Resource(controller(
-                neutron_ooi_endpoint=neutron_ooi_endpoint)
-            )
+            return Resource(controller(self.neutron_ooi_endpoint))
         else:
             return Resource(controller(self.application,
                                        self.openstack_version))
@@ -206,7 +200,7 @@ class OCCIMiddleware(object):
                             action="index")
 
         self.resources["compute"] = self._create_resource(
-            ooi.api.compute.Controller, self.neutron_ooi_endpoint)
+            ooi.api.compute.Controller)
         self._setup_resource_routes("compute", self.resources["compute"])
 
         self.resources["storage"] = self._create_resource(
@@ -219,11 +213,11 @@ class OCCIMiddleware(object):
                                     self.resources["storagelink"])
 
         self.resources["networklink"] = self._create_resource(
-            ooi.api.network_link.Controller, self.neutron_ooi_endpoint)
+            ooi.api.network_link.Controller)
         self._setup_resource_routes("networklink",
                                     self.resources["networklink"])
 
-        self.resources["network"] = self._create_resource_network(
+        self.resources["network"] = self._create_resource(
             ooi.api.network.Controller, self.neutron_ooi_endpoint)
         self._setup_resource_routes("network",
                                     self.resources["network"])

@@ -71,11 +71,6 @@ def process_parameters(req, scheme=None):
     parameters = parse_validate_schema(req, scheme)
     try:
         attributes = {}
-        if "schemes" in parameters:
-            if os_network.OSFloatingIPPool.scheme in parameters["schemes"]:
-                attributes["pool_name"] = (
-                    parameters["schemes"][os_network.OSFloatingIPPool.scheme][0]
-                )
         if 'X_PROJECT_ID' in req.headers:
             attributes["X_PROJECT_ID"] = req.headers["X_PROJECT_ID"]
         if "attributes" in parameters:
@@ -89,8 +84,11 @@ def process_parameters(req, scheme=None):
 
 
 class Controller(base.Controller):
-    def __init__(self, app=None, openstack_version=None, neutron_ooi_endpoint=None):
-        super(Controller, self).__init__(app=app, openstack_version=openstack_version)
+    def __init__(self, app=None, openstack_version=None,
+                 neutron_ooi_endpoint=None):
+        super(Controller, self).__init__(
+            app=app,
+            openstack_version=openstack_version)
         if neutron_ooi_endpoint:
             self.os_helper = helpers_neutron.OpenStackNeutron(
                 neutron_ooi_endpoint

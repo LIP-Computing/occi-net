@@ -14,7 +14,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import uuid
-import webob
 
 import mock
 
@@ -22,7 +21,6 @@ from ooi.api import helpers
 from ooi import exception
 from ooi.tests import base
 from ooi.tests import fakes_neutron as fakes
-from ooi import utils
 
 
 class TestNovaNetOpenStackHelper(base.TestCase):
@@ -30,13 +28,13 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         super(TestNovaNetOpenStackHelper, self).setUp()
         self.version = "version foo bar baz"
         self.helper = helpers.OpenStackNovaNetwork(None, self.version)
-        self.translation = {"networks": {"occi.core.title": "label",
-                                         "occi.core.id": "id",
-                                         "occi.network.address": "cidr",
-                                         "occi.network.gateway": "gateway",
-                                         "org.openstack.network.shared": "share_address",
-                                         }
-                            }
+        self.translation = {"networks": {
+            "occi.core.title": "label",
+            "occi.core.id": "id",
+            "occi.network.address": "cidr",
+            "occi.network.gateway": "gateway",
+        }
+        }
 
     @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_get_request")
     def test_index(self, m):
@@ -71,9 +69,9 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         tenant_id = uuid.uuid4().hex
         m_t.return_value = tenant_id
         resp = fakes.create_fake_json_resp(
-            {"network": { "id": id, "label": label,
-                          "cidr": address,
-                          "gateway": gateway}}, 200
+            {"network": {"id": id, "label": label,
+                         "cidr": address,
+                         "gateway": gateway}}, 200
         )
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
@@ -83,17 +81,15 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         self.assertEqual(address, ret["address"])
         self.assertEqual(gateway, ret["gateway"])
         self.assertEqual(label, ret["name"])
-        m_rq.assert_called_with(None, method="GET",
-                             path="/%s/os-networks/%s" % (tenant_id, id),
-                             query_string=None)
+        m_rq.assert_called_with(
+            None, method="GET",
+            path="/%s/os-networks/%s" % (tenant_id, id),
+            query_string=None)
 
     @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_create_request")
     def test_create_net(self, m):
         name = "name_net"
         net_id = uuid.uuid4().hex
-        state = "ACTIVE"
-        project = "project_id"
-        ip_version = 4
         cidr = "0.0.0.0"
         gate_way = "0.0.0.1"
         parameters = {"occi.core.title": name,
@@ -105,6 +101,3 @@ class TestNovaNetOpenStackHelper(base.TestCase):
                           self.helper.create_network,
                           None,
                           parameters)
-
-
-

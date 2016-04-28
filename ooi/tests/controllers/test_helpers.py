@@ -1225,10 +1225,11 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         net_id = uuid.uuid4().hex
         mac = '890234'
         device_id = uuid.uuid4().hex
-        p = {"interfaceAttachment": {"net_id": net_id,
-             "fixed_ips": [{"ip_address": ip}],
-             "mac_addr": mac, "port_state": "ACTIVE"
-             }}
+        p = {"interfaceAttachment": {
+            "net_id": net_id,
+            "fixed_ips": [{"ip_address": ip}],
+            "mac_addr": mac, "port_state": "ACTIVE"
+        }}
         response = fakes.create_fake_json_resp(p, 200)
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = response
@@ -1248,8 +1249,6 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         mac = '890234'
         device_id = uuid.uuid4().hex
         port_id = uuid.uuid4().hex
-        iface = {'compute_id': device_id,
-                 'mac': mac}
         p = [{"net_id": net_id,
               "fixed_ips": [{"ip_address": ip}],
               "mac_addr": mac, "port_id": port_id
@@ -1263,7 +1262,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         self.assertEqual([], ret)
 
     @mock.patch.object(helpers.OpenStackHelper,
-                        "_get_req")
+                       "_get_req")
     @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
     def test_get_network_id(self, m_ten, m_req):
         m_ten.return_value = uuid.uuid4().hex
@@ -1271,7 +1270,8 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         device_id = uuid.uuid4().hex
         net_id = uuid.uuid4().hex
         ip = uuid.uuid4().hex
-        p = {"interfaceAttachments": [{"net_id": net_id,
+        p = {"interfaceAttachments": [
+            {"net_id": net_id,
              "fixed_ips": [{"ip_address": ip}],
              "mac_addr": mac, "port_state": "ACTIVE"
              }]}
@@ -1289,8 +1289,6 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         m_ten.return_value = uuid.uuid4().hex
         mac = uuid.uuid4().hex
         device_id = uuid.uuid4().hex
-        net_id = uuid.uuid4().hex
-        ip = uuid.uuid4().hex
         p = {"interfaceAttachments": []}
         resp = fakes.create_fake_json_resp(p, 200)
 
@@ -1327,8 +1325,8 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         req_all.get_response.return_value = resp
         req_ass = mock.MagicMock()
         req_ass.get_response.return_value = resp_ass
-        m_req.side_effect =[req_all,
-                            req_ass]
+        m_req.side_effect = [req_all,
+                             req_ass]
         self.assertRaises(webob.exc.HTTPInternalServerError,
                           self.helper.assign_floating_ip,
                           None,
@@ -1341,8 +1339,6 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         m_ten.return_value = uuid.uuid4().hex
         net_id = uuid.uuid4().hex
         device_id = uuid.uuid4().hex
-        ip = uuid.uuid4().hex
-        pool = uuid.uuid4().hex
         params = {"occi.core.source": device_id,
                   "occi.core.target": net_id}
         fault = {"computeFault": {"message": "bad", "code": 500}}
@@ -1352,8 +1348,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         )
         req_all = mock.MagicMock()
         req_all.get_response.return_value = resp
-        m_req.side_effect =[req_all
-                            ]
+        m_req.side_effect = [req_all]
         self.assertRaises(webob.exc.HTTPInternalServerError,
                           self.helper.assign_floating_ip,
                           None,
@@ -1379,8 +1374,8 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         resp_ass = fakes.create_fake_json_resp({}, 202)
         req_ass = mock.MagicMock()
         req_ass.get_response.return_value = resp_ass
-        m_req.side_effect =[req_all,
-                            req_ass]
+        m_req.side_effect = [req_all,
+                             req_ass]
         ret = self.helper.assign_floating_ip(None, params)
         self.assertIsNotNone(ret)
         self.assertEqual(net_id, ret['network_id'])
