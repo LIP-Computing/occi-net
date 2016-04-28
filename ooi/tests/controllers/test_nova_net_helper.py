@@ -106,220 +106,220 @@ class TestNovaNetOpenStackHelper(base.TestCase):
                           None,
                           parameters)
 
-    @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_delete_request")
-    def test_delete_network(self, m):
-        id = uuid.uuid4().hex
-        self.assertRaises(exception.NotImplemented,
-                          self.helper.delete_network, None,
-                          id)
-
-    @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_create_request")
-    def test_create_port(self, m_create):
-        ip = '22.0.0.1'
-        net_id = uuid.uuid4().hex
-        mac = '890234'
-        device_id = uuid.uuid4().hex
-        p = {"interfaceAttachment": {"net_id": net_id,
-             "fixed_ips": [{"ip_address": ip}],
-             "mac_addr": mac, "port_state": "ACTIVE"
-             }}
-        response = fakes.create_fake_json_resp(p, 200)
-        req_mock = mock.MagicMock()
-        req_mock.get_response.return_value = response
-        m_create.return_value = req_mock
-        ret = self.helper.create_port(None, {'occi.core.source': device_id})
-        self.assertEqual(device_id, ret['compute_id'])
-        self.assertEqual(ip, ret['ip'])
-        self.assertEqual(net_id, ret['network_id'])
-        self.assertEqual(mac, ret['mac'])
-
-    @mock.patch.object(helpers.OpenStackNovaNetwork, "_get_ports")
-    @mock.patch.object(helpers.OpenStackNovaNetwork,
-                       "_make_delete_request")
-    def test_delete_port(self, m_delete, m_ports):
-        ip = '22.0.0.1'
-        net_id = uuid.uuid4().hex
-        mac = '890234'
-        device_id = uuid.uuid4().hex
-        port_id = uuid.uuid4().hex
-        iface = {'compute_id': device_id,
-                 'mac': mac}
-        p = [{"net_id": net_id,
-              "fixed_ips": [{"ip_address": ip}],
-              "mac_addr": mac, "port_id": port_id
-              }]
-        m_ports.return_value = p
-        response = fakes.create_fake_json_resp({}, 202)
-        req_mock = mock.MagicMock()
-        req_mock.get_response.return_value = response
-        m_delete.return_value = req_mock
-        ret = self.helper.delete_port(None, iface)
-        self.assertEqual([], ret)
-
-    @mock.patch.object(helpers.OpenStackNovaNetwork,
-                       "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
-    def test_associate_floating_ip(self, m_ten, m_req):
-        m_ten.return_value = uuid.uuid4().hex
-        net_id = uuid.uuid4().hex
-        device_id = uuid.uuid4().hex
-        ip = uuid.uuid4().hex
-        pool = uuid.uuid4().hex
-        params = {"occi.core.source": device_id,
-                  "occi.core.target": net_id}
-        resp = fakes.create_fake_json_resp(
-            {"floating_ip": {"ip": ip, "pool": pool}},
-            202
-        )
-        req_all = mock.MagicMock()
-        req_all.get_response.return_value = resp
-        resp_ass = fakes.create_fake_json_resp({}, 202)
-        req_ass = mock.MagicMock()
-        req_ass.get_response.return_value = resp_ass
-        m_req.side_effect =[req_all,
-                            req_ass]
-        ret = self.helper.assign_floating_ip(None, params)
-        self.assertIsNotNone(ret)
-        self.assertEqual(net_id, ret['network_id'])
-        self.assertEqual(device_id, ret['compute_id'])
-        self.assertEqual(ip, ret['ip'])
-        self.assertEqual(pool, ret['pool'])
-
-    @mock.patch.object(helpers.OpenStackNovaNetwork,
-                       "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
-    def test_associate_associate_err(self, m_ten, m_req):
-        m_ten.return_value = uuid.uuid4().hex
-        net_id = uuid.uuid4().hex
-        device_id = uuid.uuid4().hex
-        ip = uuid.uuid4().hex
-        pool = uuid.uuid4().hex
-        params = {"occi.core.source": device_id,
-                  "occi.core.target": net_id}
-        resp = fakes.create_fake_json_resp(
-            {"floating_ip": {"ip": ip, "pool": pool}},
-            202
-        )
-        fault = {"computeFault": {"message": "bad", "code": 500}}
-        resp_ass = fakes.create_fake_json_resp(
-            fault,
-            500
-        )
-        req_all = mock.MagicMock()
-        req_all.get_response.return_value = resp
-        req_ass = mock.MagicMock()
-        req_ass.get_response.return_value = resp_ass
-        m_req.side_effect =[req_all,
-                            req_ass]
-        self.assertRaises(webob.exc.HTTPInternalServerError,
-                          self.helper.assign_floating_ip,
-                          None,
-                          params)
-
-    @mock.patch.object(helpers.OpenStackNovaNetwork,
-                       "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
-    def test_associate_all_err(self, m_ten, m_req):
-        m_ten.return_value = uuid.uuid4().hex
-        net_id = uuid.uuid4().hex
-        device_id = uuid.uuid4().hex
-        ip = uuid.uuid4().hex
-        pool = uuid.uuid4().hex
-        params = {"occi.core.source": device_id,
-                  "occi.core.target": net_id}
-        fault = {"computeFault": {"message": "bad", "code": 500}}
-        resp = fakes.create_fake_json_resp(
-            fault,
-            500
-        )
-        req_all = mock.MagicMock()
-        req_all.get_response.return_value = resp
-        m_req.side_effect =[req_all
-                            ]
-        self.assertRaises(webob.exc.HTTPInternalServerError,
-                          self.helper.assign_floating_ip,
-                          None,
-                          params)
-
-    @mock.patch.object(helpers.OpenStackNovaNetwork,
-                       "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
-    def test_floating_ip_release(self, m_ten, m_req):
-        m_ten.return_value = uuid.uuid4().hex
-        mac = uuid.uuid4().hex
-        device_id = uuid.uuid4().hex
-        ip = uuid.uuid4().hex
-        iface = {'server_id': device_id,
-                 'mac': mac,
-                 'ip': ip
-                 }
-        resp = fakes.create_fake_json_resp(None, 202)
-        req_mock = mock.MagicMock()
-        req_mock.get_response.return_value = resp
-        m_req.return_value = req_mock
-        ret = self.helper.release_floating_ip(None, iface)
-        self.assertIsNone(ret)
-
-    @mock.patch.object(helpers.OpenStackNovaNetwork,
-                       "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
-    def test_floating_ip_release_err(self, m_ten, m_req):
-        m_ten.return_value = uuid.uuid4().hex
-        mac = uuid.uuid4().hex
-        device_id = uuid.uuid4().hex
-        ip = uuid.uuid4().hex
-        iface = {'server_id': device_id,
-                 'mac': mac,
-                 'ip': ip
-                 }
-        resp = fakes.create_fake_json_resp(None, 204)
-        req_mock = mock.MagicMock()
-        req_mock.get_response.return_value = resp
-        m_req.return_value = req_mock
-        self.assertRaises(webob.exc.HTTPInternalServerError,
-                          self.helper.release_floating_ip,
-                          None,
-                          iface)
-
-    @mock.patch.object(helpers.OpenStackNovaNetwork,
-                       "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
-    def test_get_network_id(self, m_ten, m_req):
-        m_ten.return_value = uuid.uuid4().hex
-        mac = uuid.uuid4().hex
-        device_id = uuid.uuid4().hex
-        net_id = uuid.uuid4().hex
-        ip = uuid.uuid4().hex
-        p = {"interfaceAttachments": [{"net_id": net_id,
-             "fixed_ips": [{"ip_address": ip}],
-             "mac_addr": mac, "port_state": "ACTIVE"
-             }]}
-        resp = fakes.create_fake_json_resp(p, 200)
-        req_mock = mock.MagicMock()
-        req_mock.get_response.return_value = resp
-        m_req.return_value = req_mock
-        ret = self.helper.get_network_id(None, mac, device_id)
-        self.assertEqual(net_id, ret)
-
-    @mock.patch.object(helpers.OpenStackNovaNetwork,
-                       "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
-    def test_get_network_id_empty(self, m_ten, m_req):
-        m_ten.return_value = uuid.uuid4().hex
-        mac = uuid.uuid4().hex
-        device_id = uuid.uuid4().hex
-        net_id = uuid.uuid4().hex
-        ip = uuid.uuid4().hex
-        p = {"interfaceAttachments": []}
-        resp = fakes.create_fake_json_resp(p, 204)
-        req_mock = mock.MagicMock()
-        req_mock.get_response.return_value = resp
-        m_req.return_value = req_mock
-        self.assertRaises(exception.NetworkNotFound,
-                          self.helper.get_network_id,
-                          None,
-                          mac,
-                          device_id)
+    # @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_delete_request")
+    # def test_delete_network(self, m):
+    #     id = uuid.uuid4().hex
+    #     self.assertRaises(exception.NotImplemented,
+    #                       self.helper.delete_network, None,
+    #                       id)
+    #
+    # @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_create_request")
+    # def test_create_port(self, m_create):
+    #     ip = '22.0.0.1'
+    #     net_id = uuid.uuid4().hex
+    #     mac = '890234'
+    #     device_id = uuid.uuid4().hex
+    #     p = {"interfaceAttachment": {"net_id": net_id,
+    #          "fixed_ips": [{"ip_address": ip}],
+    #          "mac_addr": mac, "port_state": "ACTIVE"
+    #          }}
+    #     response = fakes.create_fake_json_resp(p, 200)
+    #     req_mock = mock.MagicMock()
+    #     req_mock.get_response.return_value = response
+    #     m_create.return_value = req_mock
+    #     ret = self.helper.create_port(None, {'occi.core.source': device_id})
+    #     self.assertEqual(device_id, ret['compute_id'])
+    #     self.assertEqual(ip, ret['ip'])
+    #     self.assertEqual(net_id, ret['network_id'])
+    #     self.assertEqual(mac, ret['mac'])
+    #
+    # @mock.patch.object(helpers.OpenStackNovaNetwork, "_get_ports")
+    # @mock.patch.object(helpers.OpenStackNovaNetwork,
+    #                    "_make_delete_request")
+    # def test_delete_port(self, m_delete, m_ports):
+    #     ip = '22.0.0.1'
+    #     net_id = uuid.uuid4().hex
+    #     mac = '890234'
+    #     device_id = uuid.uuid4().hex
+    #     port_id = uuid.uuid4().hex
+    #     iface = {'compute_id': device_id,
+    #              'mac': mac}
+    #     p = [{"net_id": net_id,
+    #           "fixed_ips": [{"ip_address": ip}],
+    #           "mac_addr": mac, "port_id": port_id
+    #           }]
+    #     m_ports.return_value = p
+    #     response = fakes.create_fake_json_resp({}, 202)
+    #     req_mock = mock.MagicMock()
+    #     req_mock.get_response.return_value = response
+    #     m_delete.return_value = req_mock
+    #     ret = self.helper.delete_port(None, iface)
+    #     self.assertEqual([], ret)
+    #
+    # @mock.patch.object(helpers.OpenStackNovaNetwork,
+    #                    "_get_req")
+    # @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    # def test_associate_floating_ip(self, m_ten, m_req):
+    #     m_ten.return_value = uuid.uuid4().hex
+    #     net_id = uuid.uuid4().hex
+    #     device_id = uuid.uuid4().hex
+    #     ip = uuid.uuid4().hex
+    #     pool = uuid.uuid4().hex
+    #     params = {"occi.core.source": device_id,
+    #               "occi.core.target": net_id}
+    #     resp = fakes.create_fake_json_resp(
+    #         {"floating_ip": {"ip": ip, "pool": pool}},
+    #         202
+    #     )
+    #     req_all = mock.MagicMock()
+    #     req_all.get_response.return_value = resp
+    #     resp_ass = fakes.create_fake_json_resp({}, 202)
+    #     req_ass = mock.MagicMock()
+    #     req_ass.get_response.return_value = resp_ass
+    #     m_req.side_effect =[req_all,
+    #                         req_ass]
+    #     ret = self.helper.assign_floating_ip(None, params)
+    #     self.assertIsNotNone(ret)
+    #     self.assertEqual(net_id, ret['network_id'])
+    #     self.assertEqual(device_id, ret['compute_id'])
+    #     self.assertEqual(ip, ret['ip'])
+    #     self.assertEqual(pool, ret['pool'])
+    #
+    # @mock.patch.object(helpers.OpenStackNovaNetwork,
+    #                    "_get_req")
+    # @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    # def test_associate_associate_err(self, m_ten, m_req):
+    #     m_ten.return_value = uuid.uuid4().hex
+    #     net_id = uuid.uuid4().hex
+    #     device_id = uuid.uuid4().hex
+    #     ip = uuid.uuid4().hex
+    #     pool = uuid.uuid4().hex
+    #     params = {"occi.core.source": device_id,
+    #               "occi.core.target": net_id}
+    #     resp = fakes.create_fake_json_resp(
+    #         {"floating_ip": {"ip": ip, "pool": pool}},
+    #         202
+    #     )
+    #     fault = {"computeFault": {"message": "bad", "code": 500}}
+    #     resp_ass = fakes.create_fake_json_resp(
+    #         fault,
+    #         500
+    #     )
+    #     req_all = mock.MagicMock()
+    #     req_all.get_response.return_value = resp
+    #     req_ass = mock.MagicMock()
+    #     req_ass.get_response.return_value = resp_ass
+    #     m_req.side_effect =[req_all,
+    #                         req_ass]
+    #     self.assertRaises(webob.exc.HTTPInternalServerError,
+    #                       self.helper.assign_floating_ip,
+    #                       None,
+    #                       params)
+    #
+    # @mock.patch.object(helpers.OpenStackNovaNetwork,
+    #                    "_get_req")
+    # @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    # def test_associate_all_err(self, m_ten, m_req):
+    #     m_ten.return_value = uuid.uuid4().hex
+    #     net_id = uuid.uuid4().hex
+    #     device_id = uuid.uuid4().hex
+    #     ip = uuid.uuid4().hex
+    #     pool = uuid.uuid4().hex
+    #     params = {"occi.core.source": device_id,
+    #               "occi.core.target": net_id}
+    #     fault = {"computeFault": {"message": "bad", "code": 500}}
+    #     resp = fakes.create_fake_json_resp(
+    #         fault,
+    #         500
+    #     )
+    #     req_all = mock.MagicMock()
+    #     req_all.get_response.return_value = resp
+    #     m_req.side_effect =[req_all
+    #                         ]
+    #     self.assertRaises(webob.exc.HTTPInternalServerError,
+    #                       self.helper.assign_floating_ip,
+    #                       None,
+    #                       params)
+    #
+    # @mock.patch.object(helpers.OpenStackNovaNetwork,
+    #                    "_get_req")
+    # @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    # def test_floating_ip_release(self, m_ten, m_req):
+    #     m_ten.return_value = uuid.uuid4().hex
+    #     mac = uuid.uuid4().hex
+    #     device_id = uuid.uuid4().hex
+    #     ip = uuid.uuid4().hex
+    #     iface = {'server_id': device_id,
+    #              'mac': mac,
+    #              'ip': ip
+    #              }
+    #     resp = fakes.create_fake_json_resp(None, 202)
+    #     req_mock = mock.MagicMock()
+    #     req_mock.get_response.return_value = resp
+    #     m_req.return_value = req_mock
+    #     ret = self.helper.release_floating_ip(None, iface)
+    #     self.assertIsNone(ret)
+    #
+    # @mock.patch.object(helpers.OpenStackNovaNetwork,
+    #                    "_get_req")
+    # @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    # def test_floating_ip_release_err(self, m_ten, m_req):
+    #     m_ten.return_value = uuid.uuid4().hex
+    #     mac = uuid.uuid4().hex
+    #     device_id = uuid.uuid4().hex
+    #     ip = uuid.uuid4().hex
+    #     iface = {'server_id': device_id,
+    #              'mac': mac,
+    #              'ip': ip
+    #              }
+    #     resp = fakes.create_fake_json_resp(None, 204)
+    #     req_mock = mock.MagicMock()
+    #     req_mock.get_response.return_value = resp
+    #     m_req.return_value = req_mock
+    #     self.assertRaises(webob.exc.HTTPInternalServerError,
+    #                       self.helper.release_floating_ip,
+    #                       None,
+    #                       iface)
+    #
+    # @mock.patch.object(helpers.OpenStackNovaNetwork,
+    #                    "_get_req")
+    # @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    # def test_get_network_id(self, m_ten, m_req):
+    #     m_ten.return_value = uuid.uuid4().hex
+    #     mac = uuid.uuid4().hex
+    #     device_id = uuid.uuid4().hex
+    #     net_id = uuid.uuid4().hex
+    #     ip = uuid.uuid4().hex
+    #     p = {"interfaceAttachments": [{"net_id": net_id,
+    #          "fixed_ips": [{"ip_address": ip}],
+    #          "mac_addr": mac, "port_state": "ACTIVE"
+    #          }]}
+    #     resp = fakes.create_fake_json_resp(p, 200)
+    #     req_mock = mock.MagicMock()
+    #     req_mock.get_response.return_value = resp
+    #     m_req.return_value = req_mock
+    #     ret = self.helper.get_network_id(None, mac, device_id)
+    #     self.assertEqual(net_id, ret)
+    #
+    # @mock.patch.object(helpers.OpenStackNovaNetwork,
+    #                    "_get_req")
+    # @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    # def test_get_network_id_empty(self, m_ten, m_req):
+    #     m_ten.return_value = uuid.uuid4().hex
+    #     mac = uuid.uuid4().hex
+    #     device_id = uuid.uuid4().hex
+    #     net_id = uuid.uuid4().hex
+    #     ip = uuid.uuid4().hex
+    #     p = {"interfaceAttachments": []}
+    #     resp = fakes.create_fake_json_resp(p, 204)
+    #     req_mock = mock.MagicMock()
+    #     req_mock.get_response.return_value = resp
+    #     m_req.return_value = req_mock
+    #     self.assertRaises(exception.NetworkNotFound,
+    #                       self.helper.get_network_id,
+    #                       None,
+    #                       mac,
+    #                       device_id)
 
 
     # class TestOpenStackHelperNetReqs(base.TestCase):

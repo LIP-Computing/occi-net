@@ -40,24 +40,14 @@ def _create_network_link(addr, comp, net_id):
                                          addr["OS-EXT-IPS-MAC:mac_addr"],
                                          addr["addr"])
 
-
 class Controller(ooi.api.base.Controller):
-    def __init__(self, app, openstack_version, neutron_endpoint=None):
-        super(Controller, self).__init__(app, openstack_version)
+    def __init__(self, *args, **kwargs):
+        super(Controller, self).__init__(*args, **kwargs)
         self.compute_actions = compute.ComputeResource.actions
         self.os_helper = ooi.api.helpers.OpenStackHelper(
             self.app,
             self.openstack_version
         )
-        if neutron_endpoint:
-            self.os_network_helper = ooi.api.helpers.OpenStackNeutron(
-                neutron_endpoint
-            )
-        else:
-            self.os_network_helper = ooi.api.helpers.OpenStack(
-                self.app,
-                self.openstack_version
-            )
 
     def _get_compute_resources(self, servers):
         occi_compute_resources = []
@@ -249,12 +239,12 @@ class Controller(ooi.api.base.Controller):
         if addresses:
             for addr_set in addresses.values():
                 for addr in addr_set:
-                    # TODO(jorgesece): pool could be the networ_id
+                    # TODO(jorgesece): pool?
                     if addr["OS-EXT-IPS:type"] == "floating":
                         net_id = network_api.PUBLIC_NETWORK
                     else:
-                        net_id = self.os_network_helper.get_network_id(
-                            req, addr['OS-EXT-IPS-MAC:mac_addr']
+                        net_id = self.os_helper.get_network_id(
+                            req, addr['OS-EXT-IPS-MAC:mac_addr'], id
                         )
                     comp.add_link(_create_network_link(addr, comp, net_id))
 
@@ -274,9 +264,13 @@ class Controller(ooi.api.base.Controller):
     def _release_floating_ips(self, req, server_id):
         server_ips = self._get_server_floating_ips(req, server_id)
         if server_ips:
+            floating_ips = self.os_helper.get_floating_ips(req)
             for server_ip in server_ips:
-                iface = {"ip":server_ip}
-                self.os_helper.release_floating_ip(req, iface)
+                for ip in floating_ips:
+                    if server_ip == ip["ip"]:
+                        self.os_helper.remove_floating_ip(req, server_id,
+                                                          ip["ip"])
+                        self.os_helper.release_floating_ip(req, ip["id"])
 
     def _delete(self, req, server_ids):
         for server_id in server_ids:

@@ -16,9 +16,6 @@
 
 import uuid
 
-import mock
-
-from ooi.api import helpers
 from ooi.tests import fakes
 from ooi.tests.middleware import test_middleware
 from ooi import utils
@@ -136,15 +133,14 @@ class TestComputeController(test_middleware.TestMiddleware):
             self.assertDefaults(resp)
             self.assertExpectedResult(expected, resp)
 
-    @mock.patch.object(helpers.OpenStackNeutron, "get_network_id")
-    def test_show_vm(self, mock_net):
+    def test_show_vm(self):
         tenant = fakes.tenants["foo"]
         app = self.get_app()
-        net_id = uuid.uuid4().hex
+
         for server in fakes.servers[tenant["id"]]:
             req = self._build_req("/compute/%s" % server["id"],
                                   tenant["id"], method="GET")
-            mock_net.return_value = net_id
+
             resp = req.get_response(app)
             expected = build_occi_server(server)
             self.assertDefaults(resp)
@@ -330,11 +326,9 @@ class TestComputeController(test_middleware.TestMiddleware):
         self.assertExpectedResult(expected, resp)
         self.assertDefaults(resp)
 
-    @mock.patch.object(helpers.OpenStackNeutron, "get_network_id")
-    def test_vm_links(self, mock_net_id):
+    def test_vm_links(self):
         tenant = fakes.tenants["baz"]
-        net_id = fakes.networks[tenant["id"]][0]['id']
-        mock_net_id.return_value = net_id
+
         app = self.get_app()
 
         for server in fakes.servers[tenant["id"]]:
@@ -363,10 +357,12 @@ class TestComputeController(test_middleware.TestMiddleware):
             addresses = server.get("addresses", {})
             for addr_set in addresses.values():
                 for addr in addr_set:
-                    if addr['OS-EXT-IPS:type'] == 'floating':
-                        net_id = 'PUBLIC'
                     ip = addr["addr"]
-                    link_id = '_'.join([server["id"], net_id, ip])
+                    link_id = '_'.join([server["id"], ip])
+                    if addr["OS-EXT-IPS:type"] == "fixed":
+                        net_id = "fixed"
+                    else:
+                        net_id = "floating"
                     target = utils.join_url(self.application_url + "/",
                                             "network/%s" % net_id)
                     self.assertResultIncludesLink(link_id, source, target,
