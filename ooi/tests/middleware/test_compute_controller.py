@@ -16,7 +16,6 @@
 
 import uuid
 
-from ooi.api import compute
 from ooi.tests import fakes
 from ooi.tests.middleware import test_middleware
 from ooi import utils

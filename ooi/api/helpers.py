@@ -748,7 +748,9 @@ class OpenStackHelper(BaseHelper):
         path = "servers/%s/os-interface" % compute_id
         for p in ports:
             if p["mac_addr"] == mac:
-                os_req = self._make_delete_request(req, path, p['port_id'])
+                tenant_id = self.tenant_from_req(req)
+                path = "/%s/%s/%s" %(tenant_id, path, p['port_id'])
+                os_req = self._get_req(req, path=path, method="DELETE")
                 os_req.get_response(self.app) # 202
                 return []
 
@@ -769,7 +771,7 @@ class OpenStackHelper(BaseHelper):
             if server_mac == mac:
                 return p['net_id']
 
-        raise exception.NetworkNotFound
+        raise webob.exc.HTTPNotFound
 
     def assign_floating_ip(self, req, parameters):
         """assign floating ip to a server

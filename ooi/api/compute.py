@@ -40,6 +40,7 @@ def _create_network_link(addr, comp, net_id):
                                          addr["OS-EXT-IPS-MAC:mac_addr"],
                                          addr["addr"])
 
+
 class Controller(ooi.api.base.Controller):
     def __init__(self, *args, **kwargs):
         super(Controller, self).__init__(*args, **kwargs)

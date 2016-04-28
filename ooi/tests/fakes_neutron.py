@@ -175,7 +175,7 @@ def create_header(params, schemes, project=None):
 
 def create_req_test_occi(params, category):
     headers = create_header_occi(params, category)
-    req = webob.Request.blank(path="",)
+    req = webob.Request.blank(path="")
     req.headers = headers
     return wsgi.Request(req.environ)
 

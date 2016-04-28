@@ -249,7 +249,6 @@ volumes[tenants["baz"]["id"]][0]["attachments"] = [{
 }]
 
 
-
 def fake_query_results():
     cats = []
     # OCCI Core
