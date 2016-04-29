@@ -177,7 +177,7 @@ class Controller(ooi.api.base.Controller):
                                               public_key=key_data)
 
         block_device_mapping_v2 = self._build_block_mapping(req, obj)
-
+        # fixme: add network id
         server = self.os_helper.create_server(
             req,
             name,

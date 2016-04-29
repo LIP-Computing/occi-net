@@ -39,6 +39,8 @@ def _get_network_link_resources(link_list):
             net_pool = l.get('pool', None)
             ip = l.get('ip', None)
             state = l.get('state', None)
+            # fixme: translate state.
+            # fixme: add interface id.
             if net_pool:  # mac is public network id
                 net_id = network_api.PUBLIC_NETWORK
             else:

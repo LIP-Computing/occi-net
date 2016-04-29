@@ -120,6 +120,7 @@ class OCCIMiddleware(object):
         self._setup_routes()
 
     def _create_resource(self, controller, neutron_ooi_endpoint=None):
+            # fixme: delete neutron attibute
             return Resource(controller(self.application,
                                        self.openstack_version))
 

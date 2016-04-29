@@ -257,7 +257,9 @@ class OpenStackHelper(BaseHelper):
             "imageRef": image,
             "flavorRef": flavor,
         }}
-
+        # fixme: add network:
+        # if net_id:
+        # body['server']['network'] = {'uuid': net_id}
         if user_data is not None:
             body["server"]["user_data"] = user_data
         if key_name is not None:
@@ -829,12 +831,7 @@ class OpenStackNovaNetwork(BaseHelper):
         :param default: The default element to be returned if not found.
         """
         if response.status_int in [200, 201, 202]:
-            if element:
-                return response.json_body.get(element, default)
-            else:
-                return response.json_body
-        elif response.status_int in [204]:
-            return []
+            return response.json_body.get(element, default)
         else:
             raise exception_from_response(response)
 
