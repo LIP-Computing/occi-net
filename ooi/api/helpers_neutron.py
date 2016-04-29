@@ -29,13 +29,7 @@ LOG = logging.getLogger(__name__)
 
 
 def exception_from_response(response):
-    """Convert an OpenStack V2 Fault into a webob exception.
-
-    Since we are calling the OpenStack API we should process the Faults
-    produced by them. Extract the Fault information according to [1] and
-    convert it back to a webob exception.
-
-    [1] http://docs.openstack.org/developer/nova/v2/faults.html
+    """Manage exception from the response
 
     :param response: a webob.Response containing an exception
     :returns: a webob.exc.exception object
@@ -55,6 +49,7 @@ def exception_from_response(response):
         503: webob.exc.HTTPServiceUnavailable,
     }
     code = response.status_int
+    # TOD: look for neutron exceptions format
     exc = exceptions.get(code, webob.exc.HTTPInternalServerError)
     try:
         message = response.json_body.popitem()[1].get("message")
