@@ -55,14 +55,14 @@ def exception_from_response(response):
         503: webob.exc.HTTPServiceUnavailable,
     }
     code = response.status_int
+    exc = exceptions.get(code, webob.exc.HTTPInternalServerError)
     try:
         message = response.json_body.popitem()[1].get("message")
     except Exception:
         LOG.exception("Unknown error happenened processing response %s"
                       % response)
-        message = "Not message details provided"
+        message = exc.message
 
-    exc = exceptions.get(code, webob.exc.HTTPInternalServerError)
     return exc(explanation=message)
 
 
