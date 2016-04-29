@@ -58,12 +58,11 @@ def exception_from_response(response):
     exc = exceptions.get(code, webob.exc.HTTPInternalServerError)
     try:
         message = response.json_body.popitem()[1].get("message")
+        exc = exc(explanation=message)
     except Exception:
         LOG.exception("Unknown error happenened processing response %s"
                       % response)
-        message = exc.message
-
-    return exc(explanation=message)
+    return exc
 
 
 class OpenStackNeutron(helpers.BaseHelper):
