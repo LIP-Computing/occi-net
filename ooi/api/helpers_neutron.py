@@ -21,8 +21,49 @@ import webob.exc
 
 from ooi.api import helpers
 from ooi import exception
+from ooi.log import log as logging
 from ooi.openstack import helpers as os_helpers
 from ooi import utils
+
+LOG = logging.getLogger(__name__)
+
+
+def exception_from_response(response):
+    """Convert an OpenStack V2 Fault into a webob exception.
+
+    Since we are calling the OpenStack API we should process the Faults
+    produced by them. Extract the Fault information according to [1] and
+    convert it back to a webob exception.
+
+    [1] http://docs.openstack.org/developer/nova/v2/faults.html
+
+    :param response: a webob.Response containing an exception
+    :returns: a webob.exc.exception object
+    """
+    exceptions = {
+        400: webob.exc.HTTPBadRequest,
+        401: webob.exc.HTTPUnauthorized,
+        403: webob.exc.HTTPForbidden,
+        404: webob.exc.HTTPNotFound,
+        405: webob.exc.HTTPMethodNotAllowed,
+        406: webob.exc.HTTPNotAcceptable,
+        409: webob.exc.HTTPConflict,
+        413: webob.exc.HTTPRequestEntityTooLarge,
+        415: webob.exc.HTTPUnsupportedMediaType,
+        429: webob.exc.HTTPTooManyRequests,
+        501: webob.exc.HTTPNotImplemented,
+        503: webob.exc.HTTPServiceUnavailable,
+    }
+    code = response.status_int
+    try:
+        message = response.json_body.popitem()[1].get("message")
+    except Exception:
+        LOG.exception("Unknown error happenened processing response %s"
+                      % response)
+        message = "Not message details provided"
+
+    exc = exceptions.get(code, webob.exc.HTTPInternalServerError)
+    return exc(explanation=message)
 
 
 class OpenStackNeutron(helpers.BaseHelper):
@@ -87,6 +128,8 @@ class OpenStackNeutron(helpers.BaseHelper):
             ooi_net_list.append(ooi_net)
         return ooi_net_list
 
+
+
     @staticmethod
     def get_from_response(response, element, default):
         """Get a JSON element from a valid response or raise an exception.
@@ -107,7 +150,7 @@ class OpenStackNeutron(helpers.BaseHelper):
         elif response.status_int in [204]:
             return []
         else:
-            raise helpers.exception_from_response(response)
+            raise exception_from_response(response)
 
     def _get_req(self, req, method,
                  path=None,
