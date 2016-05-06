@@ -68,9 +68,7 @@ class OpenStackNeutron(helpers.BaseHelper):
         self.neutron_endpoint = neutron_endpoint
 
     translation = {
-        "networks": {"occi.core.title": "name",
-                     "org.openstack.network.public": "router:external",
-                     "org.openstack.network.shared": "shared",
+        "networks": {"occi.core.title": "name"
                      },
         "subnets": {"occi.core.id": "network_id",
                     "org.openstack.network.ip_version": "ip_version",
