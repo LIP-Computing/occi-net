@@ -515,6 +515,8 @@ class OpenStackNeutron(helpers.BaseHelper):
                 self.translation['subnets'], parameters)
 
             subnet_param["network_id"] = net["id"]
+            if not "ip_version" in subnet_param:
+                subnet_param['ip_version'] = 4
             net["subnet_info"] = self.create_resource(
                 req, 'subnets', subnet_param)
 
