@@ -616,15 +616,14 @@ class OpenStackHelper(BaseHelper):
             raise exception_from_response(response)
 
     @staticmethod
-    def _build_link(net_id, compute_id, ip_id, id=None, mac=None, pool=None,
+    def _build_link(net_id, compute_id, ip_id, mac=None, pool=None,
                     state='active'):
         link = {}
         link['mac'] = mac
         link['pool'] = pool
         link['network_id'] = net_id
         link['compute_id'] = compute_id
-        link['ip'] = ip_id
-        link['ip_id'] = id
+        link['ip_id'] = ip_id
         link['state'] = state
         return link
 
@@ -692,10 +691,11 @@ class OpenStackHelper(BaseHelper):
             for p in ports:
                 for ip in p["fixed_ips"]:
                     mac = p['mac_addr']
-                    state = p["port_state"]
+                    state = p["port_state"] # fixme: translate
                     link = self._build_link(p["net_id"],
                                             s['id'],
                                             ip['ip_address'],
+                                            ip_id=p["port_id"],
                                             mac=mac,
                                             state=state)
                     link_list.append(link)
@@ -704,6 +704,7 @@ class OpenStackHelper(BaseHelper):
                         link = self._build_link(p["net_id"],
                                                 float_ip['instance_id'],
                                                 float_ip['ip'],
+                                                ip_id=float_ip["id"],
                                                 pool=float_ip["pool"]
                                                 )
                         link_list.append(link)
@@ -736,6 +737,7 @@ class OpenStackHelper(BaseHelper):
             return self._build_link(port["net_id"],
                                     compute_id,
                                     ip['ip_address'],
+                                    ip_id=ip["port_id"],
                                     mac=port['mac_addr'],
                                     state=port["port_state"])
 
@@ -851,7 +853,7 @@ class OpenStackNovaNetwork(BaseHelper):
         return ooi_net_list
 
     @staticmethod
-    def _build_link(net_id, compute_id, ip, mac=None, pool=None,
+    def _build_link(net_id, compute_id, ip, ip_id, mac=None, pool=None,
                     state='active'):
         link = {}
         link['mac'] = mac
@@ -859,6 +861,7 @@ class OpenStackNovaNetwork(BaseHelper):
         link['network_id'] = net_id
         link['compute_id'] = compute_id
         link['ip'] = ip
+        link['ip_id'] = ip_id
         link['state'] = state
         return link
 

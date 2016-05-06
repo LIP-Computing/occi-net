@@ -40,10 +40,7 @@ def _get_network_link_resources(link_list):
             ip = l.get('ip', None)
             state = l.get('state', None)
             ip_id = l.get("ip_id")
-            if net_pool:  # mac is public network id
-                net_id = network_api.PUBLIC_NETWORK
-            else:
-                net_id = l['network_id']
+            net_id = l['network_id']
             n = network.NetworkResource(title="network",
                                         id=net_id)
             c = compute.ComputeResource(title="Compute",
