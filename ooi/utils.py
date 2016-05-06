@@ -88,5 +88,6 @@ def translate_parameters(translation, parameters):
     out = {}
     for key in parameters.keys():
         if key in translation:
-            out[translation[key]] = parameters[key]
+            if parameters[key]:
+                out[translation[key]] = parameters[key]
     return out
