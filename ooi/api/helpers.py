@@ -616,14 +616,15 @@ class OpenStackHelper(BaseHelper):
             raise exception_from_response(response)
 
     @staticmethod
-    def _build_link(net_id, compute_id, ip, mac=None, pool=None,
+    def _build_link(net_id, compute_id, ip_id, id=None, mac=None, pool=None,
                     state='active'):
         link = {}
         link['mac'] = mac
         link['pool'] = pool
         link['network_id'] = net_id
         link['compute_id'] = compute_id
-        link['ip'] = ip
+        link['ip'] = ip_id
+        link['ip_id'] = id
         link['state'] = state
         return link
 
@@ -653,6 +654,7 @@ class OpenStackHelper(BaseHelper):
                     link = self._build_link(network_id,
                                             compute_id,
                                             ip['ip'],
+                                            ip_id=ip["id"],
                                             pool=ip["pool"]
                                             )
                     return link
@@ -667,6 +669,7 @@ class OpenStackHelper(BaseHelper):
                             return self._build_link(network_id,
                                                     compute_id,
                                                     address,
+                                                    ip_id=p["port_id"],
                                                     mac=mac,
                                                     state=state)
         raise exception.NotFound()
@@ -736,24 +739,21 @@ class OpenStackHelper(BaseHelper):
                                     mac=port['mac_addr'],
                                     state=port["port_state"])
 
-    def delete_port(self, req, compute_id, mac):
+    def delete_port(self, req, compute_id, ip_id):
         """Delete a port to the subnet
 
         Returns the port information
 
         :param req: the incoming network
         :param compute_id: compute id
-        :param mac: mac
+        :param ip_id: ip id
         """
-        ports = self._get_ports(req, compute_id)
         path = "servers/%s/os-interface" % compute_id
-        for p in ports:
-            if p["mac_addr"] == mac:
-                tenant_id = self.tenant_from_req(req)
-                path = "/%s/%s/%s" % (tenant_id, path, p['port_id'])
-                os_req = self._get_req(req, path=path, method="DELETE")
-                os_req.get_response(self.app)
-                return []
+        tenant_id = self.tenant_from_req(req)
+        path = "/%s/%s/%s" % (tenant_id, path, ip_id)
+        os_req = self._get_req(req, path=path, method="DELETE")
+        os_req.get_response(self.app)
+        return []
 
         raise exception.LinkNotFound(
             "Interface %s not found" % mac
@@ -794,6 +794,7 @@ class OpenStackHelper(BaseHelper):
                 net_id,
                 server_id,
                 ip["ip"],
+                ip_id=ip["id"],
                 pool=ip["pool"])
         except Exception:
             raise exception.OCCIInvalidSchema()

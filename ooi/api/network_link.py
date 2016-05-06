@@ -34,13 +34,12 @@ def _get_network_link_resources(link_list):
     occi_network_resources = []
     if link_list:
         for l in link_list:
-            compute_id = l.get('compute_id', None)
+            compute_id = l.get('compute_id')
             mac = l.get('mac', None)
             net_pool = l.get('pool', None)
             ip = l.get('ip', None)
             state = l.get('state', None)
-            # fixme: translate state.
-            # fixme: add interface id.
+            ip_id = l.get("ip_id")
             if net_pool:  # mac is public network id
                 net_id = network_api.PUBLIC_NETWORK
             else:
@@ -52,6 +51,7 @@ def _get_network_link_resources(link_list):
                                         )
             iface = os_network.OSNetworkInterface(c, n, mac, ip,
                                                   pool=net_pool,
+                                                  ip_id=ip_id,
                                                   state=state)
             occi_network_resources.append(iface)
     return occi_network_resources
@@ -137,7 +137,8 @@ class Controller(base.Controller):
             req,
             attrs.get("occi.core.source"),
             compute.ComputeResource.kind)
-        parameters = {"occi.core.target": net_id, "occi.core.source": server_id }
+        parameters = {"occi.core.target": net_id,
+                      "occi.core.source": server_id}
         if os_network.OSFloatingIPPool.scheme in obj["schemes"]:
                 parameters["pool_name"] = (
                     obj["schemes"][os_network.OSFloatingIPPool.scheme][0]
@@ -164,13 +165,13 @@ class Controller(base.Controller):
         server = iface.source.id
         if iface.target.id == network_api.PUBLIC_NETWORK:
             # remove floating IP
-            self.os_helper.remove_floating_ip(req,
-                                              server,
+            self.os_helper.remove_floating_ip(req, server,
                                               iface.address)
 
             # release IP
-            self.os_helper.release_floating_ip(req, iface.ip_id)
+            self.os_helper.release_floating_ip(req,
+                                               iface.ip_id)
         else:
             self.os_helper.delete_port(
-                req, server, iface.mac)
+                req, server, iface.ip_id)
         return []
