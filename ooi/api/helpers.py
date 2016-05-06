@@ -737,7 +737,7 @@ class OpenStackHelper(BaseHelper):
             return self._build_link(port["net_id"],
                                     compute_id,
                                     ip['ip_address'],
-                                    ip_id=ip["port_id"],
+                                    ip_id=port["port_id"],
                                     mac=port['mac_addr'],
                                     state=port["port_state"])
 
