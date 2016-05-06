@@ -616,13 +616,14 @@ class OpenStackHelper(BaseHelper):
             raise exception_from_response(response)
 
     @staticmethod
-    def _build_link(net_id, compute_id, ip_id, mac=None, pool=None,
+    def _build_link(net_id, compute_id, ip, ip_id, mac=None, pool=None,
                     state='active'):
         link = {}
         link['mac'] = mac
         link['pool'] = pool
         link['network_id'] = net_id
         link['compute_id'] = compute_id
+        link['ip'] = ip
         link['ip_id'] = ip_id
         link['state'] = state
         return link
@@ -635,7 +636,7 @@ class OpenStackHelper(BaseHelper):
         return self.get_from_response(response, "interfaceAttachments", [])
 
     def get_compute_net_link(self, req, compute_id, network_id,
-                             address, parameters=None):
+                             address):
         """Get a specific network/server link
 
         It shows a specific link (either private or public ip)
@@ -644,7 +645,6 @@ class OpenStackHelper(BaseHelper):
         :param compute_id: server id
         :param network_id: network id
         :param address: ip connected
-        :param parameters: the incoming parameters
         """
         if network_id == "PUBLIC":
             floating_ips = self.get_floating_ips(req)
