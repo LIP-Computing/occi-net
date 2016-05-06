@@ -787,6 +787,8 @@ class OpenStackHelper(BaseHelper):
         net_id = parameters.get('occi.core.target')
         server_id = parameters.get('occi.core.source')
         pool_name = parameters.get("pool_name", None)
+        # fixme: raise an error if the first port has
+        # already a floating-ip
         ip = self.allocate_floating_ip(req, pool_name)
         # Add it to server
         self.associate_floating_ip(req, server_id, ip["ip"])
