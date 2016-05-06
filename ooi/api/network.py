@@ -121,16 +121,6 @@ class Controller(base.Controller):
                 occi_network_resources.append(s)
         return occi_network_resources
 
-    def _public_index(self, req):
-        pools = self.os_helper.get_floating_ip_pools(req)
-        net = None
-        if pools:
-            net = os_network.OSNetworkResource(
-                title=PUBLIC_NETWORK,
-                id=PUBLIC_NETWORK,
-                state="active")
-        return net
-
     def index(self, req):
         """List networks
 
@@ -140,7 +130,13 @@ class Controller(base.Controller):
         occi_networks = self.os_helper.index(req, attributes)
         occi_network_resources = self._get_network_resources(
             occi_networks)
-        occi_network_resources.append(self._public_index(req))
+        # todo: control with neutron that it exists
+        # but it have to exists.
+        public_net = os_network.OSNetworkResource(
+            title=PUBLIC_NETWORK,
+            id=PUBLIC_NETWORK,
+            state="active")
+        occi_network_resources.append(public_net)
         return collection.Collection(
             resources=occi_network_resources)
 
