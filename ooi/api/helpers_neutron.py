@@ -104,10 +104,10 @@ class OpenStackNeutron(helpers.BaseHelper):
             status = net.get("status", None)
             ooi_net["state"] = os_helpers.network_status(status)
             public = net.get('router:external', None)
-            # if public:
-            #     ooi_net["id"] = 'PUBLIC'
-            # else:
-            ooi_net["id"] = net["id"]
+            if public:
+                ooi_net["id"] = 'PUBLIC'
+            else:
+                ooi_net["id"] = net["id"]
             ooi_net["name"] = net.get("name", None)
             if "subnet_info" in net:
                 sub = net["subnet_info"]

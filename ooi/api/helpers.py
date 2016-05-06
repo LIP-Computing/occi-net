@@ -938,6 +938,7 @@ class OpenStackNovaNetwork(BaseHelper):
         response = os_req.get_response(self.app)
         nets = self.get_from_response(response, "networks", [])
         ooi_networks = self._build_networks(nets)
+        # fixme(jorgesece): create/control public network
         return ooi_networks
 
     def get_network_details(self, req, id):

@@ -130,13 +130,7 @@ class Controller(base.Controller):
         occi_networks = self.os_helper.index(req, attributes)
         occi_network_resources = self._get_network_resources(
             occi_networks)
-        # todo: control with neutron that it exists
-        # but it have to exists.
-        public_net = os_network.OSNetworkResource(
-            title=PUBLIC_NETWORK,
-            id=PUBLIC_NETWORK,
-            state="active")
-        occi_network_resources.append(public_net)
+
         return collection.Collection(
             resources=occi_network_resources)
 
