@@ -360,7 +360,6 @@ class TestNetOpenStackHelper(base.TestCase):
         router_id = uuid.uuid4().hex
         public_net = uuid.uuid4().hex
         state = "ACTIVE"
-        project = "project_id"
         ip_version = 4
         cidr = "0.0.0.0/24"
         gate_way = "0.0.0.1"

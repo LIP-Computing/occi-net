@@ -169,7 +169,7 @@ class OpenStackHelper(BaseHelper):
     required = {"networks": {"occi.core.title": "label",
                              "occi.network.address": "cidr",
                              }
-            }
+                }
 
     def _get_index_req(self, req):
         tenant_id = self.tenant_from_req(req)
@@ -695,7 +695,7 @@ class OpenStackHelper(BaseHelper):
             for p in ports:
                 for ip in p["fixed_ips"]:
                     mac = p['mac_addr']
-                    state = p["port_state"] # fixme: translate
+                    state = p["port_state"]  # fixme: translate
                     link = self._build_link(p["net_id"],
                                             s['id'],
                                             ip['ip_address'],
@@ -762,7 +762,7 @@ class OpenStackHelper(BaseHelper):
         return []
 
         raise exception.LinkNotFound(
-            "Interface %s not found" % mac
+            "Interface %s not found" % ip_id
         )
 
     def get_network_id(self, req, mac, server_id):
@@ -893,10 +893,10 @@ class OpenStackHelper(BaseHelper):
         path = "os-networks"
         tenant_id = self.tenant_from_req(req)
         path = "/%s/%s" % (tenant_id, path)
-        body = utils.make_body('network', parameters)
+        body = utils.make_body('network', net_param)
         os_req = self._get_req(req, path=path,
-                             content_type="application/json",
-                             body=json.dumps(body), method="POST")
+                               content_type="application/json",
+                               body=json.dumps(body), method="POST")
         response = os_req.get_response(self.app)
         net = self.get_from_response(
             response, "network", {})

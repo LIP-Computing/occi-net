@@ -118,8 +118,6 @@ class OpenStackNeutron(helpers.BaseHelper):
             ooi_net_list.append(ooi_net)
         return ooi_net_list
 
-
-
     @staticmethod
     def get_from_response(response, element, default):
         """Get a JSON element from a valid response or raise an exception.
@@ -516,7 +514,7 @@ class OpenStackNeutron(helpers.BaseHelper):
                 self.translation['subnets'], parameters)
 
             subnet_param["network_id"] = net["id"]
-            if not "ip_version" in subnet_param:
+            if "ip_version" not in subnet_param:
                 subnet_param['ip_version'] = 4
             net["subnet_info"] = self.create_resource(
                 req, 'subnets', subnet_param)

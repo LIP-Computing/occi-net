@@ -1370,7 +1370,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         params = {"occi.core.source": device_id,
                   "occi.core.target": net_id}
         resp = fakes.create_fake_json_resp(
-            {"floating_ip": {"ip": ip, "pool": pool, 'id':ip_id}},
+            {"floating_ip": {"ip": ip, "pool": pool, 'id': ip_id}},
             202
         )
         req_all = mock.MagicMock()
