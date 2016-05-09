@@ -36,6 +36,17 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         }
         }
 
+    @mock.patch.object(helpers.OpenStackNovaNetwork, "_get_req")
+    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    def test_list_networks_with_public(self, m_t, m_rq):
+        id = uuid.uuid4().hex
+        resp = fakes.create_fake_json_resp({"networks": [{"id": id}]}, 200)
+        req_mock = mock.MagicMock()
+        req_mock.get_response.return_value = resp
+        m_rq.return_value = req_mock
+        ret = self.helper.index(None, None)
+        self.assertEqual(2, ret.__len__())
+
     @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_get_request")
     def test_index(self, m):
         id = uuid.uuid4().hex
@@ -58,6 +69,13 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         ret = self.helper.get_network_details(None, id)
         self.assertEqual("active", ret["state"])
         m.assert_called_with(None, "os-networks/%s" % id)
+
+    def test_get_network_public(self):
+        id = 'PUBLIC'
+        self.assertRaises(exception.NotFound,
+                          self.helper.get_network_details,
+                          None,
+                          id)
 
     @mock.patch.object(helpers.OpenStackNovaNetwork, "_get_req")
     @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
@@ -101,3 +119,11 @@ class TestNovaNetOpenStackHelper(base.TestCase):
                           self.helper.create_network,
                           None,
                           parameters)
+
+    @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_create_request")
+    def test_delete_net(self, m):
+        id = uuid.uuid4().hex
+        self.assertRaises(exception.NotImplemented,
+                          self.helper.delete_network,
+                          None,
+                          id)

@@ -458,7 +458,7 @@ class OpenStackNeutron(helpers.BaseHelper):
         :param id: net identification
         """
         if id == 'PUBLIC':
-            id = self._get_public_network()
+            id = self._get_public_network(req)
         path = "/networks/%s" % id
         req = self._make_get_request(req, path)
         response = req.get_response()

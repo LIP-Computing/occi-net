@@ -52,7 +52,26 @@ class TestNetOpenStackHelper(base.TestCase):
         m.assert_called_with(None, "/networks", None)
 
     @mock.patch.object(helpers_neutron.OpenStackNeutron, "_get_req")
-    def test_index2(self, m):
+    def test_get_list_with_public(self, m):
+        id_public = uuid.uuid4().hex
+        id_private = uuid.uuid4().hex
+        net_private = {"status": "ACTIVE", "id": id_private}
+        net_public = {"status": "ACTIVE", "id": id_public,
+                      'router:external': True}
+        resp = fakes.create_fake_json_resp({
+            "networks": [net_private, net_public]}, 200)
+        req_mock = mock.MagicMock()
+        req_mock.get_response.return_value = resp
+        m.return_value = req_mock
+        ret = self.helper.index(None, None)
+        self.assertEqual(2, ret.__len__())
+        self.assertEqual(id_private, ret[0]['id'])
+        self.assertEqual('PUBLIC', ret[1]['id'])
+        m.assert_called_with(None, method="GET",
+                             path="/networks", query_string=None)
+
+    @mock.patch.object(helpers_neutron.OpenStackNeutron, "_get_req")
+    def test_index_req(self, m):
         resp = fakes.create_fake_json_resp({"networks": ["FOO"]}, 200)
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
@@ -86,7 +105,25 @@ class TestNetOpenStackHelper(base.TestCase):
         m.assert_called_with(None, "/networks/%s" % id)
 
     @mock.patch.object(helpers_neutron.OpenStackNeutron, "_get_req")
-    def test_get_network2(self, m):
+    def test_get_network_public(self, m):
+        id = 'PUBLIC'
+        resp_get_public = fakes.create_fake_json_resp(
+            {"networks": [{"status": "ACTIVE", "id": id}]}, 200)
+        req_mock_public = mock.MagicMock()
+        req_mock_public.get_response.return_value = resp_get_public
+        resp = fakes.create_fake_json_resp(
+            {"network": {"status": "ACTIVE", "id": id}}, 200)
+        req_mock = mock.MagicMock()
+        req_mock.get_response.return_value = resp
+        m.side_effect = [req_mock_public, req_mock]
+        ret = self.helper.get_network_details(None, id)
+        self.assertEqual("active", ret["state"])
+        m.assert_called_with(None, method="GET",
+                             path="/networks/%s" % id,
+                             query_string=None)
+
+    @mock.patch.object(helpers_neutron.OpenStackNeutron, "_get_req")
+    def test_get_network_req(self, m):
         id = uuid.uuid4().hex
         resp = fakes.create_fake_json_resp(
             {"network": {"status": "ACTIVE", "id": id}}, 200)
