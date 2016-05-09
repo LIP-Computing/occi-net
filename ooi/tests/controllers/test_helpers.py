@@ -1223,10 +1223,12 @@ class TestOpenStackHelperReqs(TestBaseHelper):
     def test_create_port(self, m_tenant, m_create):
         ip = '22.0.0.1'
         net_id = uuid.uuid4().hex
+        port_id = uuid.uuid4().hex
         mac = '890234'
         device_id = uuid.uuid4().hex
         p = {"interfaceAttachment": {
             "net_id": net_id,
+            "port_id": port_id,
             "fixed_ips": [{"ip_address": ip}],
             "mac_addr": mac, "port_state": "ACTIVE"
         }}
@@ -1239,6 +1241,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         self.assertEqual(ip, ret['ip'])
         self.assertEqual(net_id, ret['network_id'])
         self.assertEqual(mac, ret['mac'])
+        self.assertEqual(port_id, ret['ip_id'])
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_ports")
     @mock.patch.object(helpers.OpenStackHelper, "_get_req")
@@ -1362,11 +1365,12 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         net_id = uuid.uuid4().hex
         device_id = uuid.uuid4().hex
         ip = uuid.uuid4().hex
+        ip_id = uuid.uuid4().hex
         pool = uuid.uuid4().hex
         params = {"occi.core.source": device_id,
                   "occi.core.target": net_id}
         resp = fakes.create_fake_json_resp(
-            {"floating_ip": {"ip": ip, "pool": pool}},
+            {"floating_ip": {"ip": ip, "pool": pool, 'id':ip_id}},
             202
         )
         req_all = mock.MagicMock()

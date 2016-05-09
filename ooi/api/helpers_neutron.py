@@ -86,14 +86,14 @@ class OpenStackNeutron(helpers.BaseHelper):
 
     @staticmethod
     def _build_link(net_id, compute_id, ip, mac=None, pool=None,
-                    state='active'):
+                    state='ACTIVE'):
         link = {}
         link['mac'] = mac
         link['pool'] = pool
         link['network_id'] = net_id
         link['compute_id'] = compute_id
         link['ip'] = ip
-        link['state'] = state
+        link['state'] = os_helpers.network_status(state)
         return link
 
     @staticmethod
@@ -106,6 +106,7 @@ class OpenStackNeutron(helpers.BaseHelper):
             public = net.get('router:external', None)
             if public:
                 ooi_net["id"] = 'PUBLIC'
+                # todo (jorgesece): include info about pools
             else:
                 ooi_net["id"] = net["id"]
             ooi_net["name"] = net.get("name", None)
@@ -456,6 +457,8 @@ class OpenStackNeutron(helpers.BaseHelper):
         :param req: the incoming network
         :param id: net identification
         """
+        if id == 'PUBLIC':
+            id = self._get_public_network()
         path = "/networks/%s" % id
         req = self._make_get_request(req, path)
         response = req.get_response()

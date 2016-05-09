@@ -938,7 +938,13 @@ class OpenStackNovaNetwork(BaseHelper):
         response = os_req.get_response(self.app)
         nets = self.get_from_response(response, "networks", [])
         ooi_networks = self._build_networks(nets)
-        # fixme(jorgesece): create/control public network
+        pools = 1
+        # todo: merge in OSHelper and use the other methods.
+        # self.os_helper.get_floating_ip_pools(req)
+        if pools:
+            net = {'id': 'PUBLIC', 'label': 'PUBLIC'}
+            public_net = self._build_networks([net])[0]
+            ooi_networks.append(public_net)
         return ooi_networks
 
     def get_network_details(self, req, id):
@@ -949,6 +955,11 @@ class OpenStackNovaNetwork(BaseHelper):
         :param req: the incoming network
         :param id: net identification
         """
+        if id == 'PUBLIC':
+            raise exception.NetworkNotFound(
+                "PUBLIC is a symbolic network for associate floating IPs"
+            )
+
         path = "os-networks/%s" % id
         os_req = self._make_get_request(req, path)
         response = os_req.get_response(self.app)

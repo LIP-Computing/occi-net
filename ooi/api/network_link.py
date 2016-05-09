@@ -83,7 +83,7 @@ class Controller(base.Controller):
         try:
             server_id, network_id, server_addr = id.split('_', 2)
         except ValueError:
-            raise exception.OCCIInvalidSchema(link_id=id)
+            raise exception.LinkNotFound(link_id=id)
         try:
             link = self.os_helper.get_compute_net_link(
                 req,

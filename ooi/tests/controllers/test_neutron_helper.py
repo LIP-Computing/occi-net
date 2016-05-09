@@ -30,10 +30,7 @@ class TestNetOpenStackHelper(base.TestCase):
         super(TestNetOpenStackHelper, self).setUp()
         self.version = "version foo bar baz"
         self.helper = helpers_neutron.OpenStackNeutron(self.version)
-        self.translation = {"networks": {"occi.core.title": "name",
-                                         "occi.core.id": "network_id",
-                                         "occi.network.state": "status",
-                                         "X_PROJECT_ID": "tenant_id",
+        self.translation = {"networks": {"occi.core.title": "name"
                                          },
                             "subnets": {"occi.core.id": "network_id",
                                         "org.openstack.network.ip_version":
@@ -333,7 +330,7 @@ class TestNetOpenStackHelper(base.TestCase):
         parameters = {"occi.core.title": name,
                       "occi.core.id": net_id,
                       "occi.network.state": state,
-                      "X_PROJECT_ID": project,
+
                       "org.openstack.network.ip_version": ip_version,
                       "occi.network.address": cidr,
                       "occi.network.gateway": gate_way

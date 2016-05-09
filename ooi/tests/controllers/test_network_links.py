@@ -80,22 +80,22 @@ class TestNetworkLinkController(base.TestController):
         server_addr = "192.168.253.1"
         link_id = "%s_%s_%s" % (
             server_id, net_id, server_addr)
-        mac_id = uuid.uuid4().hex
+        ip_ident = uuid.uuid4().hex
 
         class FakeNetworkLink(object):
             target = collections.namedtuple("Target", ["id"])(net_id)
             source = collections.namedtuple("Source", ["id"])(server_id)
             address = server_addr
-            mac = mac_id
+            mac = 'foo'
             id = link_id
-            ip_id = "foo"
+            ip_id = ip_ident
 
         mock_get.return_value = FakeNetworkLink()
         mock_delete.return_value = []
         ret = self.controller.delete(None, link_id)
         self.assertEqual([], ret)
         mock_get.assert_called_with(None, link_id)
-        mock_delete.assert_called_with(None, server_id, mac_id)
+        mock_delete.assert_called_with(None, server_id, ip_ident)
 
     @mock.patch.object(helpers.OpenStackHelper, "release_floating_ip")
     @mock.patch.object(helpers.OpenStackHelper, "remove_floating_ip")
