@@ -81,7 +81,7 @@ class Controller(base.Controller):
                 neutron_ooi_endpoint
             )
         else:
-            self.os_helper = helpers.OpenStackNovaNetwork(
+            self.os_helper = helpers.OpenStackHelper(
                 self.app,
                 self.openstack_version
             )
@@ -127,7 +127,7 @@ class Controller(base.Controller):
         :param req: request object
         """
         attributes = process_parameters(req)
-        occi_networks = self.os_helper.index(req, attributes)
+        occi_networks = self.os_helper.list_networks(req, attributes)
         occi_network_resources = self._get_network_resources(
             occi_networks)
 

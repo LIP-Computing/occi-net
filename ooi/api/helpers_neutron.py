@@ -475,7 +475,7 @@ class OpenStackNeutron(helpers.BaseHelper):
 
         return ooi_networks[0]
 
-    def index(self, req, parameters):
+    def list_networks(self, req, parameters):
         """List networks.
 
         It returns json code from the server

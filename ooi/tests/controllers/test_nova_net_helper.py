@@ -27,7 +27,7 @@ class TestNovaNetOpenStackHelper(base.TestCase):
     def setUp(self):
         super(TestNovaNetOpenStackHelper, self).setUp()
         self.version = "version foo bar baz"
-        self.helper = helpers.OpenStackNovaNetwork(None, self.version)
+        self.helper = helpers.OpenStackHelper(None, self.version)
         self.translation = {"networks": {
             "occi.core.title": "label",
             "occi.core.id": "id",
@@ -36,7 +36,7 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         }
         }
 
-    @mock.patch.object(helpers.OpenStackNovaNetwork, "_get_req")
+    @mock.patch.object(helpers.OpenStackHelper, "_get_req")
     @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
     def test_list_networks_with_public(self, m_t, m_rq):
         id = uuid.uuid4().hex
@@ -44,31 +44,25 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m_rq.return_value = req_mock
-        ret = self.helper.index(None, None)
+        ret = self.helper.list_networks(None, None)
         self.assertEqual(2, ret.__len__())
 
-    @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_get_request")
-    def test_index(self, m):
+    @mock.patch.object(helpers.OpenStackHelper, "_get_req")
+    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    def test_list_networks(self, m_t, m_rq):
         id = uuid.uuid4().hex
+        tenant_id = uuid.uuid4().hex
+        m_t.return_value = tenant_id
         resp = fakes.create_fake_json_resp({"networks": [{"id": id}]}, 200)
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
-        m.return_value = req_mock
-        ret = self.helper.index(None, None)
+        m_rq.return_value = req_mock
+        ret = self.helper.list_networks(None, None)
         self.assertEqual(id, ret[0]['id'])
-        m.assert_called_with(None, "os-networks", None)
-
-    @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_get_request")
-    def test_get_network(self, m):
-        id = uuid.uuid4().hex
-        resp = fakes.create_fake_json_resp(
-            {"network": {"status": "ACTIVE", "id": id}}, 200)
-        req_mock = mock.MagicMock()
-        req_mock.get_response.return_value = resp
-        m.return_value = req_mock
-        ret = self.helper.get_network_details(None, id)
-        self.assertEqual("active", ret["state"])
-        m.assert_called_with(None, "os-networks/%s" % id)
+        m_rq.assert_called_with(
+            None, method="GET",
+            path="/%s/os-networks" % (tenant_id),
+        )
 
     def test_get_network_public(self):
         id = 'PUBLIC'
@@ -77,9 +71,9 @@ class TestNovaNetOpenStackHelper(base.TestCase):
                           None,
                           id)
 
-    @mock.patch.object(helpers.OpenStackNovaNetwork, "_get_req")
+    @mock.patch.object(helpers.OpenStackHelper, "_get_req")
     @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
-    def test_get_network2(self, m_t, m_rq):
+    def test_get_network(self, m_t, m_rq):
         id = uuid.uuid4().hex
         address = uuid.uuid4().hex
         gateway = uuid.uuid4().hex
@@ -102,10 +96,9 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         m_rq.assert_called_with(
             None, method="GET",
             path="/%s/os-networks/%s" % (tenant_id, id),
-            query_string=None)
+            )
 
-    @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_create_request")
-    def test_create_net(self, m):
+    def test_create_net(self):
         name = "name_net"
         net_id = uuid.uuid4().hex
         cidr = "0.0.0.0"
@@ -120,8 +113,7 @@ class TestNovaNetOpenStackHelper(base.TestCase):
                           None,
                           parameters)
 
-    @mock.patch.object(helpers.OpenStackNovaNetwork, "_make_create_request")
-    def test_delete_net(self, m):
+    def test_delete_net(self):
         id = uuid.uuid4().hex
         self.assertRaises(exception.NotImplemented,
                           self.helper.delete_network,

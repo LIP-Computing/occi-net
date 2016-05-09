@@ -63,7 +63,7 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.index(None, None)
+        ret = self.helper.list_networks(None, None)
         self.assertEqual(2, ret.__len__())
         self.assertEqual(id_private, ret[0]['id'])
         self.assertEqual('PUBLIC', ret[1]['id'])
@@ -88,7 +88,7 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.index(None, None)
+        ret = self.helper.list_networks(None, None)
         self.assertEqual(id, ret[0]['id'])
         m.assert_called_with(None, "/networks", None)
 
