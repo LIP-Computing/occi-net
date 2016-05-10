@@ -854,25 +854,18 @@ class OpenStackHelper(BaseHelper):
         :param id: net identification
         """
         if id == 'PUBLIC':
-            raise exception.NetworkNotFound(
-                "PUBLIC is a symbolic network for associate floating IPs"
-            )
-
-        path = "os-networks/%s" % id
-        tenant_id = self.tenant_from_req(req)
-        path = "/%s/%s" % (tenant_id, path)
-        os_req = self._get_req(req, path=path,
-                               method="GET")
-        response = os_req.get_response(self.app)
-        net = self.get_from_response(response, "network", {})
+            net = {'id': 'PUBLIC',
+                   'label': 'PUBLIC_to_associate_Floating_IPs'}
+        else:
+            path = "os-networks/%s" % id
+            tenant_id = self.tenant_from_req(req)
+            path = "/%s/%s" % (tenant_id, path)
+            os_req = self._get_req(req, path=path,
+                                   method="GET")
+            response = os_req.get_response(self.app)
+            net = self.get_from_response(response, "network", {})
         ooi_networks = self._build_networks([net])
         return ooi_networks[0]
-
-    def delete_network(self, req, id):
-        raise exception.NotImplemented("Nova Network not supported")
-
-    # def create_network(self, req, parameters):
-      #  raise exception.NotImplemented("Nova Network not supported")
 
     def create_network(self, req, parameters):
         """Create a network in nova-network.
@@ -881,13 +874,11 @@ class OpenStackHelper(BaseHelper):
         :param parameters: parameters with values
          for the new network
         """
-        translation = {
-            "networks": {"occi.core.title": "label",
-                         "occi.core.id": "id",
-                         "occi.network.address": "cidr",
-                         "occi.network.gateway": "gateway",
-                         "org.openstack.network.shared": "share_address",
-                         }}
+        translation = {"occi.core.title": "label",
+                       "occi.network.address": "cidr",
+                       "occi.network.gateway": "gateway",
+                       "org.openstack.network.shared": "share_address",
+                       }
         net_param = utils.translate_parameters(
             translation, parameters)
         path = "os-networks"
@@ -903,7 +894,7 @@ class OpenStackHelper(BaseHelper):
         ooi_net = self._build_networks([net])
         return ooi_net[0]
 
-    def delete_network_prototype(self, req, id):
+    def delete_network(self, req, id):
         """Delete a network.
 
         It returns json code from the server
@@ -916,6 +907,5 @@ class OpenStackHelper(BaseHelper):
         tenant_id = self.tenant_from_req(req)
         path = "/%s/%s/%s" % (tenant_id, path, id)
         os_req = self._get_req(req, path=path, method="DELETE")
-        response = os_req.get_response(self.app)
-        net = self.get_from_response(response, "network", {})
-        return net
+        os_req.get_response(self.app)
+        return []
