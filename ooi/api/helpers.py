@@ -639,9 +639,10 @@ class OpenStackHelper(BaseHelper):
         os_req = self._get_req(req, path=path, method="GET")
         response = os_req.get_response(self.app)
         try:
-            result = self.get_from_response(response, "interfaceAttachments", [])
+            result = self.get_from_response(response,
+                                            "interfaceAttachments", [])
         except Exception as e:
-            LOG.exception("Interfaces can not be shown:" + e.explanation)
+            LOG.exception("Interfaces can not be shown: " + e.explanation)
         return result
 
     def get_compute_net_link(self, req, compute_id, network_id,
@@ -792,7 +793,7 @@ class OpenStackHelper(BaseHelper):
             if server_mac == mac:
                 return p['net_id']
 
-        return "FIXED"
+        raise webob.exc.HTTPNotFound
 
     def assign_floating_ip(self, req, parameters):
         """assign floating ip to a server

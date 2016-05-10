@@ -244,9 +244,12 @@ class Controller(ooi.api.base.Controller):
                     if addr["OS-EXT-IPS:type"] == "floating":
                         net_id = network_api.PUBLIC_NETWORK
                     else:
-                        net_id = self.os_helper.get_network_id(
-                            req, addr['OS-EXT-IPS-MAC:mac_addr'], id
-                        )
+                        try:
+                            net_id = self.os_helper.get_network_id(
+                                req, addr['OS-EXT-IPS-MAC:mac_addr'], id
+                            )
+                        except webob.exc.HTTPNotFound:
+                            net_id = "FIXED"
                     comp.add_link(_create_network_link(addr, comp, net_id))
 
         return [comp]
