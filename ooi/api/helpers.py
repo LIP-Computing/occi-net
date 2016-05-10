@@ -633,11 +633,16 @@ class OpenStackHelper(BaseHelper):
         return link
 
     def _get_ports(self, req, compute_id):
+        result = []
         tenant_id = self.tenant_from_req(req)
         path = "/%s/servers/%s/os-interface" % (tenant_id, compute_id)
         os_req = self._get_req(req, path=path, method="GET")
         response = os_req.get_response(self.app)
-        return self.get_from_response(response, "interfaceAttachments", [])
+        try:
+            result = self.get_from_response(response, "interfaceAttachments", [])
+        except Exception as e:
+            LOG.exception("Interfaces can not be shown:" + e.explanation)
+        return result
 
     def get_compute_net_link(self, req, compute_id, network_id,
                              address):
@@ -712,6 +717,15 @@ class OpenStackHelper(BaseHelper):
                                                 pool=float_ip["pool"]
                                                 )
                         link_list.append(link)
+        if not link_list:
+            for ip in floating_ips:
+                link = self._build_link("PUBLIC",
+                                        ip['instance_id'],
+                                        ip['ip'],
+                                        ip_id=ip["id"],
+                                        pool=ip["pool"]
+                                        )
+                link_list.append(link)
         return link_list
 
     def create_port(self, req, parameters):
@@ -778,7 +792,7 @@ class OpenStackHelper(BaseHelper):
             if server_mac == mac:
                 return p['net_id']
 
-        raise webob.exc.HTTPNotFound
+        return "FIXED"
 
     def assign_floating_ip(self, req, parameters):
         """assign floating ip to a server
