@@ -869,12 +869,12 @@ class OpenStackHelper(BaseHelper):
         return ooi_networks[0]
 
     def delete_network(self, req, id):
-        raise exception.NotImplemented("Nova Netrwork not supported")
+        raise exception.NotImplemented("Nova Network not supported")
+
+    # def create_network(self, req, parameters):
+      #  raise exception.NotImplemented("Nova Network not supported")
 
     def create_network(self, req, parameters):
-        raise exception.NotImplemented("Nova Netrwork not supported")
-
-    def create_network_prototype(self, req, parameters):
         """Create a network in nova-network.
 
         :param req: the incoming request
