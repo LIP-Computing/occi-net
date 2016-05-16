@@ -355,7 +355,7 @@ class OpenStackNeutron(helpers.BaseHelper):
             p['device_id'],
             p["fixed_ips"][0]["ip_address"],
             mac=p["mac_address"],
-            state=os_helpers.network_status(p["status"]))
+            state=p["status"])
         return link
 
     def delete_port(self, req, iface):
@@ -698,7 +698,7 @@ class OpenStackNeutron(helpers.BaseHelper):
                             p['device_id'],
                             p["fixed_ips"][0]["ip_address"],
                             mac=p["mac_address"],
-                            state=os_helpers.network_status(p["status"]))
+                            state=p["status"])
                         return link_private
             raise exception.NotFound()
         except Exception:

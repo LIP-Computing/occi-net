@@ -23,6 +23,7 @@ import six.moves.urllib.parse as urlparse
 
 from ooi import exception
 from ooi.log import log as logging
+from ooi.openstack import helpers as os_helpers
 from ooi import utils
 
 import webob.exc
@@ -629,7 +630,7 @@ class OpenStackHelper(BaseHelper):
         link['compute_id'] = compute_id
         link['ip'] = ip
         link['ip_id'] = ip_id
-        link['state'] = state
+        link['state'] = os_helpers.vm_state(state)
         return link
 
     def _get_ports(self, req, compute_id):
@@ -657,16 +658,27 @@ class OpenStackHelper(BaseHelper):
         :param address: ip connected
         """
         if network_id == "PUBLIC":
-            floating_ips = self.get_floating_ips(req)
-            for ip in floating_ips:
-                if address == ip['ip']:
-                    link = self._build_link(network_id,
-                                            compute_id,
-                                            ip['ip'],
-                                            ip_id=ip["id"],
-                                            pool=ip["pool"]
-                                            )
-                    return link
+            s = self.get_server(req, compute_id)
+            addresses = s.get("addresses", {})
+            for addr_set in addresses.values():
+                for addr in addr_set:
+                    if addr["addr"] == address:
+                        floating_ips = self.get_floating_ips(
+                            req
+                        )
+                        mac = addr["OS-EXT-IPS-MAC:mac_addr"]
+                        for ip in floating_ips:
+                            if address == ip['ip']:
+                                link = self._build_link(
+                                    network_id,
+                                    compute_id,
+                                    ip['ip'],
+                                    ip_id=ip["id"],
+                                    pool=ip["pool"],
+                                    mac=mac,
+                                    state=ip['status']
+                                )
+                                return link
         else:
             ports = self._get_ports(req, compute_id)
             for p in ports:
@@ -715,7 +727,8 @@ class OpenStackHelper(BaseHelper):
                                                 float_ip['instance_id'],
                                                 float_ip['ip'],
                                                 ip_id=float_ip["id"],
-                                                pool=float_ip["pool"]
+                                                pool=float_ip["pool"],
+                                                state=float_ip['status']
                                                 )
                         link_list.append(link)
         if not link_list:
