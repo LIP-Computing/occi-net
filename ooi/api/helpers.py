@@ -621,8 +621,8 @@ class OpenStackHelper(BaseHelper):
             raise exception_from_response(response)
 
     @staticmethod
-    def _build_link(net_id, compute_id, ip, ip_id, mac=None, pool=None,
-                    state='active'):
+    def _build_link(net_id, compute_id, ip, ip_id=None, mac=None, pool=None,
+                    state='ACTIVE'):
         link = {}
         link['mac'] = mac
         link['pool'] = pool
@@ -657,41 +657,28 @@ class OpenStackHelper(BaseHelper):
         :param network_id: network id
         :param address: ip connected
         """
-        if network_id == "PUBLIC":
-            s = self.get_server(req, compute_id)
-            server_addrs = s.get("addresses", {})
-            for addr_set in server_addrs.values():
-                for addr in addr_set:
-                    if addr["addr"] == address:
+
+        s = self.get_server(req, compute_id)
+        pool = None
+        server_addrs = s.get("addresses", {})
+        for addr_set in server_addrs.values():
+            for addr in addr_set:
+                if addr["addr"] == address:
+                    mac = addr["OS-EXT-IPS-MAC:mac_addr"]
+
+                    if network_id == "PUBLIC":
                         floating_ips = self.get_floating_ips(
                             req
                         )
-                        mac = addr["OS-EXT-IPS-MAC:mac_addr"]
                         for ip in floating_ips:
                             if address == ip['ip']:
-                                link = self._build_link(
-                                    network_id,
-                                    compute_id,
-                                    ip['ip'],
-                                    ip_id=ip["id"],
-                                    pool=ip["pool"],
-                                    mac=mac
-                                )
-                                return link
-        else:
-            ports = self._get_ports(req, compute_id)
-            for p in ports:
-                if p["net_id"] == network_id:
-                    for ip in p["fixed_ips"]:
-                        if ip['ip_address'] == address:
-                            mac = p['mac_addr']
-                            state = p["port_state"]
-                            return self._build_link(network_id,
-                                                    compute_id,
-                                                    address,
-                                                    ip_id=p["port_id"],
-                                                    mac=mac,
-                                                    state=state)
+                                pool = ip['pool']
+                    return self._build_link(network_id,
+                                            compute_id,
+                                            address,
+                                            mac=mac,
+                                            pool=pool
+                                            )
         raise exception.NotFound()
 
     def list_compute_net_links(self, req, parameters=None):

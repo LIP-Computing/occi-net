@@ -39,7 +39,7 @@ def _get_network_link_resources(link_list):
             net_pool = l.get('pool', None)
             ip = l.get('ip', None)
             state = l.get('state', None)
-            ip_id = l.get("ip_id")
+            ip_id = l.get('ip_id', None)
             net_id = l['network_id']
             n = network.NetworkResource(title="network",
                                         id=net_id)
