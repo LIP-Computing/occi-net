@@ -105,13 +105,6 @@ class BaseHelper(object):
         self.app = app
         self.openstack_version = openstack_version
 
-    @staticmethod
-    def tenant_from_req(req):
-        try:
-            return req.environ["HTTP_X_PROJECT_ID"]
-        except KeyError:
-            raise exception.Forbidden(reason="Cannot find project ID")
-
     def _get_req(self, req, method,
                  path=None,
                  content_type="application/json",
@@ -170,6 +163,13 @@ class OpenStackHelper(BaseHelper):
                              "occi.network.address": "cidr",
                              }
                 }
+
+    @staticmethod
+    def tenant_from_req(req):
+        try:
+            return req.environ["HTTP_X_PROJECT_ID"]
+        except KeyError:
+            raise exception.Forbidden(reason="Cannot find project ID")
 
     def _get_index_req(self, req):
         tenant_id = self.tenant_from_req(req)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright 2015 Spanish National Research Council
+# Copyright 2016 LIP - Lisbon
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -1219,7 +1220,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         m_exc.assert_called_with(resp)
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
     def test_create_port(self, m_tenant, m_create):
         ip = '22.0.0.1'
         net_id = uuid.uuid4().hex
@@ -1245,7 +1246,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_ports")
     @mock.patch.object(helpers.OpenStackHelper, "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
     def test_delete_port(self, m_tenant, m_delete, m_ports):
         ip = '22.0.0.1'
         net_id = uuid.uuid4().hex
@@ -1266,7 +1267,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
 
     @mock.patch.object(helpers.OpenStackHelper,
                        "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
     def test_get_network_id(self, m_ten, m_req):
         m_ten.return_value = uuid.uuid4().hex
         mac = uuid.uuid4().hex
@@ -1287,7 +1288,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
 
     @mock.patch.object(helpers.OpenStackHelper,
                        "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
     def test_get_network_id_empty(self, m_ten, m_req):
         m_ten.return_value = uuid.uuid4().hex
         mac = uuid.uuid4().hex
@@ -1306,7 +1307,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
 
     @mock.patch.object(helpers.OpenStackHelper,
                        "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
     def test_associate_associate_err(self, m_ten, m_req):
         m_ten.return_value = uuid.uuid4().hex
         net_id = uuid.uuid4().hex
@@ -1337,7 +1338,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
 
     @mock.patch.object(helpers.OpenStackHelper,
                        "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
     def test_allocation_err(self, m_ten, m_req):
         m_ten.return_value = uuid.uuid4().hex
         net_id = uuid.uuid4().hex
@@ -1359,7 +1360,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
 
     @mock.patch.object(helpers.OpenStackHelper,
                        "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
     def test_associate_floating_ip(self, m_ten, m_req):
         m_ten.return_value = uuid.uuid4().hex
         net_id = uuid.uuid4().hex

@@ -29,7 +29,7 @@ from ooi.occi.infrastructure import network_link
 from ooi.openstack import network as os_network
 from ooi.tests import base
 from ooi.tests import fakes
-from ooi.tests import fakes_neutron as fake_nets
+from ooi.tests import fakes_network as fake_nets
 
 
 class TestNetworkLinkController(base.TestController):

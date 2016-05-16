@@ -25,7 +25,7 @@ from ooi.api import network as network_api
 from ooi import exception
 from ooi.occi.infrastructure import network as occi_network
 from ooi.tests import base
-from ooi.tests import fakes_neutron as fakes
+from ooi.tests import fakes_network as fakes
 
 
 class TestNetworkControllerNeutron(base.TestController):

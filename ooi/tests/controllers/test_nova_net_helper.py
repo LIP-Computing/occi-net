@@ -20,7 +20,7 @@ import mock
 
 from ooi.api import helpers
 from ooi.tests import base
-from ooi.tests import fakes_neutron as fakes
+from ooi.tests import fakes_network as fakes
 from ooi import utils
 
 
@@ -38,7 +38,7 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         }
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
     def test_list_networks_with_public(self, m_t, m_rq):
         id = uuid.uuid4().hex
         resp = fakes.create_fake_json_resp({"networks": [{"id": id}]}, 200)
@@ -49,7 +49,7 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         self.assertEqual(2, ret.__len__())
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
     def test_list_networks(self, m_t, m_rq):
         id = uuid.uuid4().hex
         tenant_id = uuid.uuid4().hex
@@ -71,7 +71,7 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         self.assertEqual(id, ret["id"])
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
     def test_get_network(self, m_t, m_rq):
         id = uuid.uuid4().hex
         address = uuid.uuid4().hex
@@ -98,7 +98,7 @@ class TestNovaNetOpenStackHelper(base.TestCase):
             )
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
     def test_create_net(self, m_t, m_rq):
         tenant_id = uuid.uuid4().hex
         m_t.return_value = tenant_id
@@ -134,7 +134,7 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         self.assertEqual(net_id, ret['id'])
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_req")
-    @mock.patch.object(helpers.BaseHelper, "tenant_from_req")
+    @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
     def test_delete_net(self, m_t, m_rq):
         tenant_id = uuid.uuid4().hex
         m_t.return_value = tenant_id

@@ -20,7 +20,7 @@ import mock
 from ooi.api import helpers_neutron
 from ooi.api import network
 from ooi.occi.core import collection
-from ooi.tests import fakes_neutron as fakes
+from ooi.tests import fakes_network as fakes
 from ooi.tests.middleware import test_middleware
 from ooi import utils
 from ooi import wsgi
