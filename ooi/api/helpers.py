@@ -660,12 +660,12 @@ class OpenStackHelper(BaseHelper):
 
         s = self.get_server(req, compute_id)
         pool = None
+        ip_id = None
         server_addrs = s.get("addresses", {})
         for addr_set in server_addrs.values():
             for addr in addr_set:
                 if addr["addr"] == address:
                     mac = addr["OS-EXT-IPS-MAC:mac_addr"]
-
                     if network_id == "PUBLIC":
                         floating_ips = self.get_floating_ips(
                             req
@@ -673,11 +673,20 @@ class OpenStackHelper(BaseHelper):
                         for ip in floating_ips:
                             if address == ip['ip']:
                                 pool = ip['pool']
+                                ip_id = ip['id']
+                    else:
+                        ports = self._get_ports(req, compute_id)
+                        for p in ports:
+                            if p["net_id"] == network_id:
+                                for ip in p["fixed_ips"]:
+                                    if ip['ip_address'] == address:
+                                        ip_id = p['port_id']
                     return self._build_link(network_id,
                                             compute_id,
                                             address,
                                             mac=mac,
-                                            pool=pool
+                                            pool=pool,
+                                            ip_id=ip_id
                                             )
         raise exception.NotFound()
 
