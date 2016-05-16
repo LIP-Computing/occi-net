@@ -659,8 +659,8 @@ class OpenStackHelper(BaseHelper):
         """
         if network_id == "PUBLIC":
             s = self.get_server(req, compute_id)
-            addresses = s.get("addresses", {})
-            for addr_set in addresses.values():
+            server_addrs = s.get("addresses", {})
+            for addr_set in server_addrs.values():
                 for addr in addr_set:
                     if addr["addr"] == address:
                         floating_ips = self.get_floating_ips(
@@ -675,8 +675,7 @@ class OpenStackHelper(BaseHelper):
                                     ip['ip'],
                                     ip_id=ip["id"],
                                     pool=ip["pool"],
-                                    mac=mac,
-                                    state=ip['status']
+                                    mac=mac
                                 )
                                 return link
         else:
