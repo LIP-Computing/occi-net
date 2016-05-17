@@ -722,8 +722,8 @@ class OpenStackHelper(BaseHelper):
                                                 float_ip['instance_id'],
                                                 float_ip['ip'],
                                                 ip_id=float_ip["id"],
-                                                pool=float_ip["pool"],
-                                                state=float_ip['status']
+                                                mac=mac,
+                                                pool=float_ip["pool"]
                                                 )
                         link_list.append(link)
         if not link_list:
