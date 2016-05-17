@@ -15,7 +15,6 @@
 # under the License.
 
 import copy
-import json
 
 import webob.exc
 
@@ -26,38 +25,6 @@ from ooi.openstack import helpers as os_helpers
 from ooi import utils
 
 LOG = logging.getLogger(__name__)
-
-
-def exception_from_response(response):
-    """Manage exception from the response
-
-    :param response: a webob.Response containing an exception
-    :returns: a webob.exc.exception object
-    """
-    exceptions = {
-        400: webob.exc.HTTPBadRequest,
-        401: webob.exc.HTTPUnauthorized,
-        403: webob.exc.HTTPForbidden,
-        404: webob.exc.HTTPNotFound,
-        405: webob.exc.HTTPMethodNotAllowed,
-        406: webob.exc.HTTPNotAcceptable,
-        409: webob.exc.HTTPConflict,
-        413: webob.exc.HTTPRequestEntityTooLarge,
-        415: webob.exc.HTTPUnsupportedMediaType,
-        429: webob.exc.HTTPTooManyRequests,
-        501: webob.exc.HTTPNotImplemented,
-        503: webob.exc.HTTPServiceUnavailable,
-    }
-    code = response.status_int
-    # TOD: look for neutron exceptions format
-    exc = exceptions.get(code, webob.exc.HTTPInternalServerError)
-    try:
-        message = response.json_body.popitem()[1].get("message")
-        exc = exc(explanation=message)
-    except Exception:
-        LOG.exception("Unknown error happenened processing response %s"
-                      % response)
-    return exc
 
 
 class OpenStackNeutron(helpers.BaseHelper):
@@ -138,105 +105,7 @@ class OpenStackNeutron(helpers.BaseHelper):
         elif response.status_int in [204]:
             return []
         else:
-            raise exception_from_response(response)
-
-    def _get_req(self, req, method,
-                 path=None,
-                 content_type="application/json",
-                 body=None,
-                 query_string=""):
-        """Return a new Request object to interact with OpenStack.
-
-        This method will create a new request starting with the same WSGI
-        environment as the original request, prepared to interact with
-        OpenStack. Namely, it will override the script name to match the
-        OpenStack version. It will also override the path, content_type and
-        body of the request, if any of those keyword arguments are passed.
-
-        :param req: the original request
-        :param path: new path for the request
-        :param content_type: new content type for the request, defaults to
-                             "application/json" if not specified
-        :param body: new body for the request
-        :param query_string: query string for the request, defaults to an empty
-                             query if not specified
-        :returns: a Request object
-        """
-        server = self.neutron_endpoint
-        environ = copy.copy(req.environ)
-        try:
-            if "HTTP_X-Auth-Token" not in environ:
-                env_token = req.environ["keystone.token_auth"]
-                token = env_token.get_auth_ref(None)['auth_token']
-                environ = {"HTTP_X-Auth-Token": token}
-        except Exception:
-            raise webob.exc.HTTPUnauthorized
-
-        new_req = webob.Request.blank(path=path,
-                                      environ=environ, base_url=server)
-        new_req.query_string = query_string
-        new_req.method = method
-        if path is not None:
-            new_req.path_info = path
-        if content_type is not None:
-            new_req.content_type = content_type
-        if body is not None:
-            new_req.body = utils.utf8(body)
-
-        return new_req
-
-    def _make_get_request(self, req, path, parameters=None):
-        """Create GET request
-
-        This method create a GET Request instance
-
-        :param req: the incoming request
-        :param path: element location
-        :param parameters: parameters to filter results
-        :param tenant: include tenant in the query parameters
-        """
-        query_string = utils.get_query_string(parameters)
-        return self._get_req(req, path=path,
-                             query_string=query_string, method="GET")
-
-    def _make_create_request(self, req, resource, parameters):
-        """Create CREATE request
-
-        This method create a CREATE Request instance
-
-        :param req: the incoming request
-        :param parameters: parameters with values
-        """
-        path = "/%s" % resource
-        single_resource = resource[:-1]
-        body = utils.make_body(single_resource, parameters)
-        return self._get_req(req, path=path,
-                             content_type="application/json",
-                             body=json.dumps(body), method="POST")
-
-    def _make_delete_request(self, req, path, id):
-        """Create DELETE request
-
-        This method create a DELETE Request instance
-
-        :param req: the incoming request
-        :param path: element location
-        """
-        path = "%s/%s" % (path, id)
-        return self._get_req(req, path=path, method="DELETE")
-
-    def _make_put_request(self, req, path, parameters):
-        """Create DELETE request
-
-        This method create a DELETE Request instance
-
-        :param req: the incoming request
-        :param path: element location
-        """
-        body = utils.make_body(None, parameters)
-        return self._get_req(req, path=path,
-                             content_type="application/json",
-                             body=json.dumps(body), method="PUT")
+            raise helpers.exception_from_response(response)
 
     def _get_public_network(self, req):
         """Get public network
@@ -655,8 +524,9 @@ class OpenStackNeutron(helpers.BaseHelper):
                         port["network_id"],
                         port['device_id'],
                         f_ip['floating_ip_address'],
+                        mac=port["mac_address"],
                         pool=f_ip['floating_network_id'])
-                    # FIXME(jorgesece) could be port mac
+
                     link_list.append(link_public)
         except Exception:
             raise exception.NotFound()

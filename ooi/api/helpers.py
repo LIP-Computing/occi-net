@@ -89,15 +89,15 @@ def exception_from_response(response):
         503: webob.exc.HTTPServiceUnavailable,
     }
     code = response.status_int
+    exc = exceptions.get(code, webob.exc.HTTPInternalServerError)
     try:
         message = response.json_body.popitem()[1].get("message")
+        exc = exc(explanation=message)
     except Exception:
         LOG.exception("Unknown error happenened processing response %s"
                       % response)
         return webob.exc.HTTPInternalServerError()
-
-    exc = exceptions.get(code, webob.exc.HTTPInternalServerError)
-    return exc(explanation=message)
+    return exc
 
 
 class BaseHelper(object):
@@ -128,8 +128,22 @@ class BaseHelper(object):
                              query if not specified
         :returns: a Request object
         """
-        new_req = webob.Request(copy.copy(req.environ))
-        new_req.script_name = self.openstack_version
+        if hasattr(self, 'neutron_endpoint'):
+            server = self.neutron_endpoint
+            environ = copy.copy(req.environ)
+            try:
+                if "HTTP_X-Auth-Token" not in environ:
+                    env_token = req.environ["keystone.token_auth"]
+                    token = env_token.get_auth_ref(None)['auth_token']
+                    environ = {"HTTP_X-Auth-Token": token}
+            except Exception:
+                raise webob.exc.HTTPUnauthorized
+
+            new_req = webob.Request.blank(path=path,
+                                          environ=environ, base_url=server)
+        else:
+            new_req = webob.Request(copy.copy(req.environ))
+            new_req.script_name = self.openstack_version
         new_req.query_string = query_string
         new_req.method = method
         if path is not None:
@@ -156,6 +170,59 @@ class BaseHelper(object):
             return response.json_body.get(element, default)
         else:
             raise exception_from_response(response)
+
+    def _make_get_request(self, req, path, parameters=None):
+        """Create GET request
+
+        This method creates a GET Request instance
+
+        :param req: the incoming request
+        :param path: element location
+        :param parameters: parameters to filter results
+        :param tenant: include tenant in the query parameters
+        """
+        query_string = utils.get_query_string(parameters)
+        return self._get_req(req, path=path,
+                             query_string=query_string, method="GET")
+
+    def _make_create_request(self, req, resource, parameters):
+        """Create CREATE request
+
+        This method creates a CREATE Request instance
+
+        :param req: the incoming request
+        :param parameters: parameters with values
+        """
+        path = "/%s" % resource
+        single_resource = resource[:-1]
+        body = utils.make_body(single_resource, parameters)
+        return self._get_req(req, path=path,
+                             content_type="application/json",
+                             body=json.dumps(body), method="POST")
+
+    def _make_delete_request(self, req, path, id):
+        """Create DELETE request
+
+        This method creates a DELETE Request instance
+
+        :param req: the incoming request
+        :param path: element location
+        """
+        path = "%s/%s" % (path, id)
+        return self._get_req(req, path=path, method="DELETE")
+
+    def _make_put_request(self, req, path, parameters):
+        """Create DELETE request
+
+        This method creates a DELETE Request instance
+
+        :param req: the incoming request
+        :param path: element location
+        """
+        body = utils.make_body(None, parameters)
+        return self._get_req(req, path=path,
+                             content_type="application/json",
+                             body=json.dumps(body), method="PUT")
 
 
 class OpenStackHelper(BaseHelper):
@@ -262,7 +329,7 @@ class OpenStackHelper(BaseHelper):
             "imageRef": image,
             "flavorRef": flavor,
         }}
-        # fixme: add network:
+        # FIXME(jorgesece): Add network ID (Bug 1524935)
         # if net_id:
         # body['server']['network'] = {'uuid': net_id}
         if user_data is not None:
@@ -708,7 +775,7 @@ class OpenStackHelper(BaseHelper):
             for p in ports:
                 for ip in p["fixed_ips"]:
                     mac = p['mac_addr']
-                    state = p["port_state"]  # fixme: translate
+                    state = p["port_state"]
                     link = self._build_link(p["net_id"],
                                             s['id'],
                                             ip['ip_address'],
@@ -814,7 +881,7 @@ class OpenStackHelper(BaseHelper):
         net_id = parameters.get('occi.core.target')
         server_id = parameters.get('occi.core.source')
         pool_name = parameters.get("pool_name", None)
-        # fixme: raise an error if the first port has
+        # FIXME(jorgesece): raise an error if the first port has
         # already a floating-ip
         ip = self.allocate_floating_ip(req, pool_name)
         # Add it to server
