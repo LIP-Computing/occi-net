@@ -85,28 +85,6 @@ class OpenStackNeutron(helpers.BaseHelper):
             ooi_net_list.append(ooi_net)
         return ooi_net_list
 
-    @staticmethod
-    def get_from_response(response, element, default):
-        """Get a JSON element from a valid response or raise an exception.
-
-        This method will extract an element a JSON response
-         (falling back to a default value) if the response has a code
-          of 200, otherwise it will raise a webob.exc.exception
-
-        :param response: The webob.Response object
-        :param element: The element to look for in the JSON body
-        :param default: The default element to be returned if not found.
-        """
-        if response.status_int in [200, 201, 202]:
-            if element:
-                return response.json_body.get(element, default)
-            else:
-                return response.json_body
-        elif response.status_int in [204]:
-            return []
-        else:
-            raise helpers.exception_from_response(response)
-
     def _get_public_network(self, req):
         """Get public network
 

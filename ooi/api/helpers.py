@@ -167,7 +167,12 @@ class BaseHelper(object):
         :param default: The default element to be returned if not found.
         """
         if response.status_int in [200, 201, 202]:
-            return response.json_body.get(element, default)
+            if element:
+                return response.json_body.get(element, default)
+            else:
+                return response.json_body
+        elif response.status_int in [204]:
+            return []
         else:
             raise exception_from_response(response)
 
