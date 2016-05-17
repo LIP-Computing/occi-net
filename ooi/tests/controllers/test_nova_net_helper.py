@@ -45,9 +45,30 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         resp = fakes.create_fake_json_resp({"networks": [{"id": id}]}, 200)
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
-        m_rq.return_value = req_mock
+        resp_float = fakes.create_fake_json_resp(
+            {"floating_ip_pools": [{"id": id}]}, 200
+        )
+        req_mock_float = mock.MagicMock()
+        req_mock_float.get_response.return_value = resp_float
+        m_rq.side_effect = [req_mock, req_mock_float]
         ret = self.helper.list_networks(None, None)
         self.assertEqual(2, ret.__len__())
+
+    @mock.patch.object(helpers.OpenStackHelper, "_get_req")
+    @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
+    def test_list_networks_with_no_public(self, m_t, m_rq):
+        id = uuid.uuid4().hex
+        resp = fakes.create_fake_json_resp({"networks": [{"id": id}]}, 200)
+        req_mock = mock.MagicMock()
+        req_mock.get_response.return_value = resp
+        resp_float = fakes.create_fake_json_resp(
+            {"floating_ip_pools": []}, 204
+        )
+        req_mock_float = mock.MagicMock()
+        req_mock_float.get_response.return_value = resp_float
+        m_rq.side_effect = [req_mock, req_mock_float]
+        ret = self.helper.list_networks(None, None)
+        self.assertEqual(1, ret.__len__())
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_req")
     @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
@@ -56,14 +77,25 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         tenant_id = uuid.uuid4().hex
         m_t.return_value = tenant_id
         resp = fakes.create_fake_json_resp({"networks": [{"id": id}]}, 200)
+        resp_float = fakes.create_fake_json_resp(
+            {"floating_ip_pools": [{"id": id}]}, 200
+        )
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
-        m_rq.return_value = req_mock
+        req_mock_float = mock.MagicMock()
+        req_mock_float.get_response.return_value = resp_float
+        m_rq.side_effect = [req_mock, req_mock_float]
         ret = self.helper.list_networks(None, None)
         self.assertEqual(id, ret[0]['id'])
-        m_rq.assert_called_with(
-            None, method="GET",
-            path="/%s/os-networks" % (tenant_id),
+        self.assertEqual(
+            {'method': 'GET','path': '/%s/os-networks'
+                                     % (tenant_id)},
+            m_rq.call_args_list[0][1]
+        )
+        self.assertEqual(
+            {'method': 'GET','path': '/%s/os-floating-ip-pools'
+                                     % (tenant_id)},
+            m_rq.call_args_list[1][1]
         )
 
     def test_get_network_public(self):

@@ -28,7 +28,8 @@ from ooi.openstack import network as os_network
 PUBLIC_NETWORK = "PUBLIC"
 
 
-def parse_validate_schema(req, scheme=None):
+def parse_validate_schema(req, scheme=None,
+                          required_attr=None):
     """Parse attributes, even Validate scheme
 
 
@@ -38,24 +39,28 @@ def parse_validate_schema(req, scheme=None):
 
     :param req: request
     :param: scheme: scheme to validate
+    :param: required_attr: attributes required
     """
     parser = req.get_parser()(req.headers, req.body)
     if scheme:
         attributes = parser.parse()
         validator = occi_validator.Validator(attributes)
         validator.validate(scheme)
+        validator.validate_attributes(required_attr)
     else:
         attributes = parser.parse_attributes(req.headers)
     return attributes
 
 
-def process_parameters(req, scheme=None):
+def process_parameters(req, scheme=None,
+                       required_attr=None):
     """Get attributes from request parameters
 
     :param req: request
     :param: scheme: scheme to validate
+    :param: required_attr: attributes required
     """
-    parameters = parse_validate_schema(req, scheme)
+    parameters = parse_validate_schema(req, scheme, required_attr)
     try:
         attributes = {}
         if 'X_PROJECT_ID' in req.headers:
@@ -73,6 +78,15 @@ def process_parameters(req, scheme=None):
 class Controller(base.Controller):
     def __init__(self, app=None, openstack_version=None,
                  neutron_ooi_endpoint=None):
+        """Network controller initialization
+
+        :param app: application
+        :param: openstack_version: nova version
+        :param: neutron_ooi_endpoint: This parameter
+        indicates the Neutron endpoint to load the Neutron Helper.
+        If it is None, nova-network is used.
+        """
+
         super(Controller, self).__init__(
             app=app,
             openstack_version=openstack_version)
@@ -85,17 +99,6 @@ class Controller(base.Controller):
                 self.app,
                 self.openstack_version
             )
-
-    @staticmethod
-    def _validate_attributes(required, attributes):
-        """Get attributes from request parameters
-
-        :param required: required attributes
-        :param attributes: request attributes
-        """
-        for at in required:
-            if at not in attributes:
-                raise exception.Invalid("Expecting %s attribute" % at)
 
     @staticmethod
     def _get_network_resources(networks_list):
@@ -160,9 +163,8 @@ class Controller(base.Controller):
                 os_network.OSNetwork()
             ]
         }
-        attributes = process_parameters(req, scheme)
-        self._validate_attributes(
-            self.os_helper.required["networks"], attributes)
+        required = self.os_helper.required["networks"]
+        attributes = process_parameters(req, scheme, required)
         net = self.os_helper.create_network(req, attributes)
         occi_network_resources = self._get_network_resources([net])
         return collection.Collection(

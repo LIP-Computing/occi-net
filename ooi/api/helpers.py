@@ -907,7 +907,7 @@ class OpenStackHelper(BaseHelper):
     def _build_networks(networks):
         ooi_net_list = []
         for net in networks:
-            # todo: manage IP_v6
+            # todo(jorgesece): manage IP_v6
             ooi_net = {}
             ooi_net["address"] = net.get("cidr", None)
             ooi_net["state"] = "active"
@@ -931,9 +931,7 @@ class OpenStackHelper(BaseHelper):
         response = os_req.get_response(self.app)
         nets = self.get_from_response(response, "networks", [])
         ooi_networks = self._build_networks(nets)
-        pools = 1
-        # todo: merge in OSHelper and use the other methods.
-        # self.os_helper.get_floating_ip_pools(req)
+        pools = self.get_floating_ip_pools(req)
         if pools:
             net = {'id': 'PUBLIC', 'label': 'PUBLIC'}
             public_net = self._build_networks([net])[0]

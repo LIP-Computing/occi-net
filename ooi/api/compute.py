@@ -177,7 +177,7 @@ class Controller(ooi.api.base.Controller):
                                               public_key=key_data)
 
         block_device_mapping_v2 = self._build_block_mapping(req, obj)
-        # fixme: add network id
+        # fixme(jorgesece): indicates network ID to solve Bug 1524935.
         server = self.os_helper.create_server(
             req,
             name,
@@ -240,7 +240,7 @@ class Controller(ooi.api.base.Controller):
         if addresses:
             for addr_set in addresses.values():
                 for addr in addr_set:
-                    # TODO(jorgesece): pool?
+                    # TODO(jorgesece): add pool information
                     if addr["OS-EXT-IPS:type"] == "floating":
                         net_id = network_api.PUBLIC_NETWORK
                     else:
