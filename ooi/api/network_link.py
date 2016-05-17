@@ -134,21 +134,20 @@ class Controller(base.Controller):
             req,
             attrs.get("occi.core.source"),
             compute.ComputeResource.kind)
-        parameters = {"occi.core.target": net_id,
-                      "occi.core.source": server_id}
+        pool = None
         if os_network.OSFloatingIPPool.scheme in obj["schemes"]:
-                parameters["pool_name"] = (
+                pool = (
                     obj["schemes"][os_network.OSFloatingIPPool.scheme][0]
                 )
         # Allocate public IP and associate it ot the server
         if net_id == network_api.PUBLIC_NETWORK:
             os_link = self.os_helper.assign_floating_ip(
-                req,
-                parameters)
+                req, net_id, server_id, pool
+            )
         else:
             # Allocate private network
             os_link = self.os_helper.create_port(
-                req, parameters)
+                req, net_id, server_id)
         occi_link = _get_network_link_resources([os_link])
         return collection.Collection(resources=occi_link)
 

@@ -91,7 +91,7 @@ class Validator(object):
         attr = self.parsed_obj.get("attributes", {})
         if required:
             for at in required:
-                if at not in attr.keys():
+                if at not in attr:
                     raise exception.Invalid(
                         "Expecting %s attribute" % at
                     )

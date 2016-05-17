@@ -64,7 +64,7 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.list_networks(None, None)
+        ret = self.helper.list_networks(None)
         self.assertEqual(2, ret.__len__())
         self.assertEqual(id_private, ret[0]['id'])
         self.assertEqual('PUBLIC', ret[1]['id'])
@@ -89,7 +89,7 @@ class TestNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m.return_value = req_mock
-        ret = self.helper.list_networks(None, None)
+        ret = self.helper.list_networks(None)
         self.assertEqual(id, ret[0]['id'])
         m.assert_called_with(None, "/networks", None)
 
@@ -382,7 +382,11 @@ class TestNetOpenStackHelper(base.TestCase):
                                {"id": router_id},
                                {"id": 0}]
         list_net.return_value = [{'id': public_net}]
-        ret = self.helper.create_network(None, parameters)
+        ret = self.helper.create_network(None,
+                                         name=name,
+                                         cidr=cidr,
+                                         gateway=gate_way,
+                                         ip_version=ip_version)
         self.assertEqual(net_id, ret["id"])
         param = utils.translate_parameters(
             self.translation["networks"], parameters)
@@ -465,9 +469,6 @@ class TestNetOpenStackHelper(base.TestCase):
     def test_assign_floating_ip(self, m_add, m_list, m_get_net):
         compute_id = uuid.uuid4().hex
         net_id = uuid.uuid4().hex
-        param_occi = {'occi.core.target': net_id,
-                      'occi.core.source': compute_id
-                      }
         f_id = uuid.uuid4().hex
         ip = '0.0.0.1'
         port = {'id': 11, 'network_id': net_id,
@@ -478,7 +479,7 @@ class TestNetOpenStackHelper(base.TestCase):
         m_add.return_value = {"id": f_id,
                               'floating_ip_address': ip,
                               'floating_network_id': '84'}
-        ret = self.helper.assign_floating_ip(None, param_occi)
+        ret = self.helper.assign_floating_ip(None, device_id=compute_id)
         self.assertEqual(net_id, ret['network_id'])
         self.assertEqual(ip, ret['ip'])
         m_list.assert_called_with(None, 'ports', param)
@@ -508,7 +509,7 @@ class TestNetOpenStackHelper(base.TestCase):
              "mac_address": mac, "status": "ACTIVE"
              }
         m_create.return_value = p
-        ret = self.helper.create_port(None, {'sa': 1})
+        ret = self.helper.create_port(None, net_id, device_id)
         self.assertEqual(device_id, ret['compute_id'])
         self.assertEqual(ip, ret['ip'])
         self.assertEqual(net_id, ret['network_id'])

@@ -48,7 +48,7 @@ class TestNetworkControllerNeutron(base.TestController):
             expected = self.controller._get_network_resources(ooi_net)
             self.assertEqual(result.resources.__len__(),
                              expected.__len__())
-            m_index.assert_called_with(req, 'networks', None)
+            m_index.assert_called_with(req, 'networks')
 
     @mock.patch.object(helpers_neutron.OpenStackNeutron, "get_network_details")
     def test_show(self, m_network):
@@ -204,7 +204,7 @@ class TestNetworkControllerNova(base.TestController):
             expected = self.controller._get_network_resources(ooi_net)
             self.assertEqual(result.resources.__len__(),
                              expected.__len__())
-            m_index.assert_called_with(req, None)
+            m_index.assert_called_with(req)
 
     @mock.patch.object(helpers.OpenStackHelper, "get_network_details")
     def test_show(self, m_network):

@@ -51,7 +51,7 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         req_mock_float = mock.MagicMock()
         req_mock_float.get_response.return_value = resp_float
         m_rq.side_effect = [req_mock, req_mock_float]
-        ret = self.helper.list_networks(None, None)
+        ret = self.helper.list_networks(None)
         self.assertEqual(2, ret.__len__())
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_req")
@@ -67,7 +67,7 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         req_mock_float = mock.MagicMock()
         req_mock_float.get_response.return_value = resp_float
         m_rq.side_effect = [req_mock, req_mock_float]
-        ret = self.helper.list_networks(None, None)
+        ret = self.helper.list_networks(None)
         self.assertEqual(1, ret.__len__())
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_req")
@@ -85,16 +85,16 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         req_mock_float = mock.MagicMock()
         req_mock_float.get_response.return_value = resp_float
         m_rq.side_effect = [req_mock, req_mock_float]
-        ret = self.helper.list_networks(None, None)
+        ret = self.helper.list_networks(None)
         self.assertEqual(id, ret[0]['id'])
         self.assertEqual(
-            {'method': 'GET','path': '/%s/os-networks'
-                                     % (tenant_id)},
+            {'method': 'GET',
+             'path': '/%s/os-networks' % (tenant_id)},
             m_rq.call_args_list[0][1]
         )
         self.assertEqual(
-            {'method': 'GET','path': '/%s/os-floating-ip-pools'
-                                     % (tenant_id)},
+            {'method': 'GET',
+             'path': '/%s/os-floating-ip-pools' % (tenant_id)},
             m_rq.call_args_list[1][1]
         )
 
@@ -151,7 +151,11 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = resp
         m_rq.return_value = req_mock
-        ret = self.helper.create_network(None, parameters)
+        ret = self.helper.create_network(None,
+                                         name=name,
+                                         cidr=cidr,
+                                         gateway=gateway,
+                                         )
         net_param = utils.translate_parameters(
             self.translation['networks'], parameters)
         body = utils.make_body('network', net_param)

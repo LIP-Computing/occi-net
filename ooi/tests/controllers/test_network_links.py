@@ -254,7 +254,7 @@ class TestNetworkLinkController(base.TestController):
         self.assertIsInstance(link.target, network.NetworkResource)
         self.assertEqual(net_id, link.target.id)
         self.assertEqual(server_id, link.source.id)
-        mock_assign.assert_called_with(mock.ANY, parameters)
+        mock_assign.assert_called_with(mock.ANY, net_id, server_id, None)
 
     @mock.patch.object(helpers.OpenStackHelper, "create_port")
     @mock.patch("ooi.api.helpers.get_id_with_kind")
@@ -280,7 +280,7 @@ class TestNetworkLinkController(base.TestController):
         self.assertIsInstance(link.target, network.NetworkResource)
         self.assertEqual(net_id, link.target.id)
         self.assertEqual(server_id, link.source.id)
-        mock_cre_port.assert_called_with(mock.ANY, parameters)
+        mock_cre_port.assert_called_with(mock.ANY, net_id, server_id)
 
     @mock.patch("ooi.api.helpers.get_id_with_kind")
     @mock.patch("ooi.occi.validator.Validator")

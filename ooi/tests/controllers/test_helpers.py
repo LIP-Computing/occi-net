@@ -1237,7 +1237,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         req_mock = mock.MagicMock()
         req_mock.get_response.return_value = response
         m_create.return_value = req_mock
-        ret = self.helper.create_port(None, {'occi.core.source': device_id})
+        ret = self.helper.create_port(None, net_id, device_id)
         self.assertEqual(device_id, ret['compute_id'])
         self.assertEqual(ip, ret['ip'])
         self.assertEqual(net_id, ret['network_id'])
@@ -1314,8 +1314,6 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         device_id = uuid.uuid4().hex
         ip = uuid.uuid4().hex
         pool = uuid.uuid4().hex
-        params = {"occi.core.source": device_id,
-                  "occi.core.target": net_id}
         resp = fakes.create_fake_json_resp(
             {"floating_ip": {"ip": ip, "pool": pool}},
             202
@@ -1334,7 +1332,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         self.assertRaises(webob.exc.HTTPInternalServerError,
                           self.helper.assign_floating_ip,
                           None,
-                          params)
+                          net_id, device_id)
 
     @mock.patch.object(helpers.OpenStackHelper,
                        "_get_req")
@@ -1343,8 +1341,6 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         m_ten.return_value = uuid.uuid4().hex
         net_id = uuid.uuid4().hex
         device_id = uuid.uuid4().hex
-        params = {"occi.core.source": device_id,
-                  "occi.core.target": net_id}
         fault = {"computeFault": {"message": "bad", "code": 500}}
         resp = fakes.create_fake_json_resp(
             fault,
@@ -1356,7 +1352,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         self.assertRaises(webob.exc.HTTPInternalServerError,
                           self.helper.assign_floating_ip,
                           None,
-                          params)
+                          net_id, device_id)
 
     @mock.patch.object(helpers.OpenStackHelper,
                        "_get_req")
@@ -1368,8 +1364,6 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         ip = uuid.uuid4().hex
         ip_id = uuid.uuid4().hex
         pool = uuid.uuid4().hex
-        params = {"occi.core.source": device_id,
-                  "occi.core.target": net_id}
         resp = fakes.create_fake_json_resp(
             {"floating_ip": {"ip": ip, "pool": pool, 'id': ip_id}},
             202
@@ -1381,7 +1375,7 @@ class TestOpenStackHelperReqs(TestBaseHelper):
         req_ass.get_response.return_value = resp_ass
         m_req.side_effect = [req_all,
                              req_ass]
-        ret = self.helper.assign_floating_ip(None, params)
+        ret = self.helper.assign_floating_ip(None, net_id, device_id)
         self.assertIsNotNone(ret)
         self.assertEqual(net_id, ret['network_id'])
         self.assertEqual(device_id, ret['compute_id'])

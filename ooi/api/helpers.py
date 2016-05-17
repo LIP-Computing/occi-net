@@ -762,11 +762,10 @@ class OpenStackHelper(BaseHelper):
                                             )
         raise exception.NotFound()
 
-    def list_compute_net_links(self, req, parameters=None):
+    def list_compute_net_links(self, req):
         """Get floating IPs for the tenant.
 
         :param req: the incoming request
-        :param parameters: paramaters
         """
         floating_ips = self.get_floating_ips(req)
         float_list = {}
@@ -809,20 +808,19 @@ class OpenStackHelper(BaseHelper):
                 link_list.append(link)
         return link_list
 
-    def create_port(self, req, parameters):
+    def create_port(self, req, network_id, device_id):
         """Add a port to the subnet
 
         Returns the port information
 
         :param req: the incoming network
-        :param parameters: list of parameters
+        :param network_id: network id
+        :param device_id: device id
         """
-        translation = {"occi.core.target": "net_id",
-                       "occi.core.source": "server_id",
-                       }
-        param_port = utils.translate_parameters(
-            translation,
-            parameters)
+        param_port = {
+            'net_id': network_id,
+            'server_id': device_id
+        }
         compute_id = param_port.get("server_id")
         tenant_id = self.tenant_from_req(req)
         path = "/%s/servers/%s/os-interface" % (tenant_id, compute_id)
@@ -875,27 +873,26 @@ class OpenStackHelper(BaseHelper):
 
         raise webob.exc.HTTPNotFound
 
-    def assign_floating_ip(self, req, parameters):
+    def assign_floating_ip(self, req, network_id, device_id,
+                           pool=None):
         """assign floating ip to a server
 
         :param req: the incoming request
-        :param paramet: network and compute identification
+        :param network_id: network id
+        :param device_id: device id
         """
         # net_id it is not needed if
         # there is just one port of the VM
-        net_id = parameters.get('occi.core.target')
-        server_id = parameters.get('occi.core.source')
-        pool_name = parameters.get("pool_name", None)
         # FIXME(jorgesece): raise an error if the first port has
         # already a floating-ip
-        ip = self.allocate_floating_ip(req, pool_name)
+        ip = self.allocate_floating_ip(req, pool)
         # Add it to server
-        self.associate_floating_ip(req, server_id, ip["ip"])
+        self.associate_floating_ip(req, device_id, ip["ip"])
 
         try:
             link_public = self._build_link(
-                net_id,
-                server_id,
+                network_id,
+                device_id,
                 ip["ip"],
                 ip_id=ip["id"],
                 pool=ip["pool"])
@@ -917,7 +914,7 @@ class OpenStackHelper(BaseHelper):
             ooi_net_list.append(ooi_net)
         return ooi_net_list
 
-    def list_networks(self, req, parameters=None):
+    def list_networks(self, req):
         """Get a list of servers for a tenant.
 
         :param req: the incoming request
@@ -960,20 +957,20 @@ class OpenStackHelper(BaseHelper):
         ooi_networks = self._build_networks([net])
         return ooi_networks[0]
 
-    def create_network(self, req, parameters):
+    def create_network(self, req, name, cidr,
+                       gateway=None, ip_version=None):
         """Create a network in nova-network.
 
         :param req: the incoming request
-        :param parameters: parameters with values
-         for the new network
+        :param name: network resource to manage
+        :param cidr: parameters with values
+        :param gateway: gateway ip
+        :param ip_version: ip version
         """
-        translation = {"occi.core.title": "label",
-                       "occi.network.address": "cidr",
-                       "occi.network.gateway": "gateway",
-                       "org.openstack.network.shared": "share_address",
-                       }
-        net_param = utils.translate_parameters(
-            translation, parameters)
+        net_param = {'label': name,
+                     'cidr': cidr,
+                     'gateway': gateway
+                     }
         path = "os-networks"
         tenant_id = self.tenant_from_req(req)
         path = "/%s/%s" % (tenant_id, path)

@@ -129,8 +129,7 @@ class Controller(base.Controller):
 
         :param req: request object
         """
-        attributes = process_parameters(req)
-        occi_networks = self.os_helper.list_networks(req, attributes)
+        occi_networks = self.os_helper.list_networks(req)
         occi_network_resources = self._get_network_resources(
             occi_networks)
 
@@ -163,9 +162,18 @@ class Controller(base.Controller):
                 os_network.OSNetwork()
             ]
         }
-        required = self.os_helper.required["networks"]
+        required = ["occi.core.title",
+                    "occi.network.address",
+                    ]
         attributes = process_parameters(req, scheme, required)
-        net = self.os_helper.create_network(req, attributes)
+        name = attributes.get('occi.core.title')
+        cidr = attributes.get('occi.network.address')
+        gateway = attributes.get('occi.network.gateway', None)
+        ip_version = attributes.get('org.openstack.network.ip_version', None)
+        net = self.os_helper.create_network(req, name=name,
+                                            cidr=cidr,
+                                            gateway=gateway,
+                                            ip_version=ip_version)
         occi_network_resources = self._get_network_resources([net])
         return collection.Collection(
             resources=occi_network_resources)

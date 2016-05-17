@@ -14,15 +14,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import copy
-
-import webob.exc
-
 from ooi.api import helpers
 from ooi import exception
 from ooi.log import log as logging
 from ooi.openstack import helpers as os_helpers
-from ooi import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -33,23 +28,6 @@ class OpenStackNeutron(helpers.BaseHelper):
     def __init__(self, neutron_endpoint):
         super(OpenStackNeutron, self).__init__(None, None)
         self.neutron_endpoint = neutron_endpoint
-
-    translation = {
-        "networks": {"occi.core.title": "name"
-                     },
-        "subnets": {"occi.core.id": "network_id",
-                    "org.openstack.network.ip_version": "ip_version",
-                    "occi.network.address": "cidr",
-                    "occi.network.gateway": "gateway_ip"
-                    },
-        "networks_link": {"occi.core.target": "network_id",
-                          "occi.core.source": "device_id",
-                          },
-    }
-    required = {"networks": {"occi.core.title": "name",
-                             "occi.network.address": "cidr",
-                             }
-                }
 
     @staticmethod
     def _build_link(net_id, compute_id, ip, mac=None, pool=None,
@@ -98,7 +76,7 @@ class OpenStackNeutron(helpers.BaseHelper):
                                          att_public)
         return net_public[0]["id"]
 
-    def list_resources(self, req, resource, parameters):
+    def list_resources(self, req, resource, parameters=None):
         """List resources.
 
         It returns json code from the server
@@ -181,19 +159,20 @@ class OpenStackNeutron(helpers.BaseHelper):
             response, None, {})
         return json_response
 
-    def create_port(self, req, parameters):
+    def create_port(self, req, network_id, device_id):
         """Add a port to the subnet
 
         Returns the port information
 
         :param req: the incoming network
-        :param parameters: list of parameters
+        :param network_id: network id
+        :param device_id: device id
         """
-        param_device_owner = {'device_owner': 'compute:nova'}
-        attributes_port = utils.translate_parameters(
-            self.translation['networks_link'],
-            parameters)
-        attributes_port.update(param_device_owner)
+        attributes_port = {
+            'device_owner': 'compute:nova',
+            'network_id': network_id,
+            'device_id': device_id
+        }
         p = self.create_resource(req,
                                  'ports',
                                  attributes_port)
@@ -205,15 +184,14 @@ class OpenStackNeutron(helpers.BaseHelper):
             state=p["status"])
         return link
 
-    def delete_port(self, req, iface):
+    def delete_port(self, req, mac):
         """Delete a port to the subnet
 
         Returns the port information
 
         :param req: the incoming network
-        :param iface: link information
+        :param mac: link mac
         """
-        mac = iface['mac']
         attributes_port = {
             "mac_address": mac
         }
@@ -320,7 +298,7 @@ class OpenStackNeutron(helpers.BaseHelper):
 
         return ooi_networks[0]
 
-    def list_networks(self, req, parameters):
+    def list_networks(self, req):
         """List networks.
 
         It returns json code from the server
@@ -328,15 +306,14 @@ class OpenStackNeutron(helpers.BaseHelper):
         :param req: the incoming request
         :param parameters: query parameters
         """
-        param = utils.translate_parameters(
-            self.translation['networks'], parameters)
         networks = self.list_resources(req,
-                                       'networks',
-                                       param)
+                                       'networks'
+                                       )
         ooi_networks = self._build_networks(networks)
         return ooi_networks
 
-    def create_network(self, req, parameters):
+    def create_network(self, req, name, cidr,
+                       gateway=None, ip_version=None):
         """Create a full neutron network.
 
         It creates a private network conected to the public one.
@@ -345,22 +322,29 @@ class OpenStackNeutron(helpers.BaseHelper):
         In case of error, the objects already created are deleted.
 
         :param req: the incoming request
-        :param resource: network resource to manage
-        :param parameters: parameters with values
-         for the new network
+        :param name: network resource to manage
+        :param cidr: parameters with values
+        :param gateway: gateway ip
+        :param ip_version: ip version
         """
         # NETWORK
-        net_param = utils.translate_parameters(
-            self.translation['networks'], parameters)
+        net_param = {'name': name}
         net = self.create_resource(req,
                                    'networks',
                                    net_param)
         # SUBNETWORK
         try:
-            subnet_param = utils.translate_parameters(
-                self.translation['subnets'], parameters)
+            if not ip_version:
+                ip_version = 4
+            subnet_param = {'network_id': net["id"],
+                            'cidr': cidr,
+                            'ip_version': ip_version
+                            }
+            if gateway:
+                subnet_param.update(
+                    {'gateway_ip': gateway}
+                )
 
-            subnet_param["network_id"] = net["id"]
             if "ip_version" not in subnet_param:
                 subnet_param['ip_version'] = 4
             net["subnet_info"] = self.create_resource(
@@ -393,12 +377,11 @@ class OpenStackNeutron(helpers.BaseHelper):
         ooi_net = self._build_networks([net])
         return ooi_net[0]
 
-    def delete_network(self, req, id, parameters=None):
+    def delete_network(self, req, id):
         """Delete a full network.
 
         :param req: the incoming request
         :param id: net identification
-        :param parameters: parameters
         """
         param = {"network_id": id}
         ports = self.list_resources(req, 'ports', param)
@@ -418,18 +401,15 @@ class OpenStackNeutron(helpers.BaseHelper):
                                         id)
         return response
 
-    def assign_floating_ip(self, req, parameters):
+    def assign_floating_ip(self, req, device_id):
         """assign floating ip to a server
 
         :param req: the incoming request
-        :param paramet: network and compute identification
+        :param device_id: device id
         """
         # net_id it is not needed if
         # there is just one port of the VM
-        attributes_port = utils.translate_parameters(
-            self.translation['networks_link'],
-            parameters)
-        attributes_port.pop('network_id')
+        attributes_port = {'device_id': device_id}
         try:
             net_public = self._get_public_network(req)
         except Exception:
@@ -466,22 +446,22 @@ class OpenStackNeutron(helpers.BaseHelper):
 
         return response
 
-    def list_compute_net_links(self, req, parameters=None):
+    def list_compute_net_links(self, req, network_id,
+                               device_id):
         """List the network and compute links
 
         It lists every private and public ip related to
         the servers of the tenant
 
         :param req: the incoming request
-        :param parameters: the incoming parameters
+        :param network_id: id network
+        :param device_id: id device
         """
-        # net_id it is not needed if
-        # there is just one port of the VM
-        param_port = {'device_owner': 'compute:nova'}
-        param_common = utils.translate_parameters(
-            self.translation['networks_link'], parameters)
 
-        param_port.update(param_common)
+        param_port = {'device_owner': 'compute:nova',
+                      'device_id': device_id,
+                      'network_id': network_id
+                      }
         link_list = []
         try:
             ports = self.list_resources(req, 'ports', param_port)
@@ -511,7 +491,7 @@ class OpenStackNeutron(helpers.BaseHelper):
         return link_list
 
     def get_compute_net_link(self, req, compute_id, network_id,
-                             ip, parameters=None):
+                             ip):
         """Get a specific network/server link
 
         It shows a specific link (either private or public ip)
@@ -520,7 +500,6 @@ class OpenStackNeutron(helpers.BaseHelper):
         :param compute_id: server id
         :param network_id: network id
         :param ip: ip connected
-        :param parameters: the incoming parameters
         """
         try:
             if network_id == "PUBLIC":
