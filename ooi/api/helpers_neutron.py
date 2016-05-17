@@ -50,7 +50,7 @@ class OpenStackNeutron(helpers.BaseHelper):
             ooi_net["state"] = os_helpers.network_status(status)
             public = net.get('router:external', None)
             if public:
-                ooi_net["id"] = 'PUBLIC'
+                ooi_net["id"] = os_helpers.PUBLIC_NETWORK
                 # todo (jorgesece): include info about pools
             else:
                 ooi_net["id"] = net["id"]
@@ -280,7 +280,7 @@ class OpenStackNeutron(helpers.BaseHelper):
         :param req: the incoming network
         :param id: net identification
         """
-        if id == 'PUBLIC':
+        if id == os_helpers.PUBLIC_NETWORK:
             id = self._get_public_network(req)
         path = "/networks/%s" % id
         req = self._make_get_request(req, path)
@@ -502,7 +502,7 @@ class OpenStackNeutron(helpers.BaseHelper):
         :param ip: ip connected
         """
         try:
-            if network_id == "PUBLIC":
+            if network_id == os_helpers.PUBLIC_NETWORK:
                 param = {'floating_ip_address': ip}
                 flo_ips = self.list_resources(req,
                                               'floatingips',

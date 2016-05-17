@@ -20,7 +20,6 @@ import webob.exc
 
 import ooi.api.base
 import ooi.api.helpers
-import ooi.api.network as network_api
 from ooi import exception
 from ooi.occi.core import collection
 from ooi.occi.infrastructure import compute
@@ -242,7 +241,7 @@ class Controller(ooi.api.base.Controller):
                 for addr in addr_set:
                     # TODO(jorgesece): add pool information
                     if addr["OS-EXT-IPS:type"] == "floating":
-                        net_id = network_api.PUBLIC_NETWORK
+                        net_id = helpers.PUBLIC_NETWORK
                     else:
                         try:
                             net_id = self.os_helper.get_network_id(

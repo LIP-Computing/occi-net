@@ -23,6 +23,7 @@ from ooi.occi.infrastructure import compute
 from ooi.occi.infrastructure import network
 from ooi.occi.infrastructure import network_link
 from ooi.occi import validator as occi_validator
+from ooi.openstack import helpers as os_helpers
 from ooi.openstack import network as os_network
 
 
@@ -140,7 +141,7 @@ class Controller(base.Controller):
                     obj["schemes"][os_network.OSFloatingIPPool.scheme][0]
                 )
         # Allocate public IP and associate it ot the server
-        if net_id == network_api.PUBLIC_NETWORK:
+        if net_id == os_helpers.PUBLIC_NETWORK:
             os_link = self.os_helper.assign_floating_ip(
                 req, net_id, server_id, pool
             )
@@ -159,7 +160,7 @@ class Controller(base.Controller):
         """
         iface = self._get_interface_from_id(req, id)
         server = iface.source.id
-        if iface.target.id == network_api.PUBLIC_NETWORK:
+        if iface.target.id == os_helpers.PUBLIC_NETWORK:
             # remove floating IP
             self.os_helper.remove_floating_ip(req, server,
                                               iface.address)

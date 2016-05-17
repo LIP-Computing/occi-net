@@ -25,9 +25,6 @@ from ooi.occi import validator as occi_validator
 from ooi.openstack import network as os_network
 
 
-PUBLIC_NETWORK = "PUBLIC"
-
-
 def parse_validate_schema(req, scheme=None,
                           required_attr=None):
     """Parse attributes, even Validate scheme

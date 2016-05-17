@@ -18,6 +18,7 @@
 from ooi.occi import helpers
 
 _PREFIX = "http://schemas.openstack.org/"
+PUBLIC_NETWORK = "PUBLIC"
 
 
 def build_scheme(category):

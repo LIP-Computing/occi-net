@@ -738,7 +738,7 @@ class OpenStackHelper(BaseHelper):
             for addr in addr_set:
                 if addr["addr"] == address:
                     mac = addr["OS-EXT-IPS-MAC:mac_addr"]
-                    if network_id == "PUBLIC":
+                    if network_id == os_helpers.PUBLIC_NETWORK:
                         floating_ips = self.get_floating_ips(
                             req
                         )
@@ -799,7 +799,7 @@ class OpenStackHelper(BaseHelper):
                         link_list.append(link)
         if not link_list:
             for ip in floating_ips:
-                link = self._build_link("PUBLIC",
+                link = self._build_link(os_helpers.PUBLIC_NETWORK,
                                         ip['instance_id'],
                                         ip['ip'],
                                         ip_id=ip["id"],
@@ -930,7 +930,8 @@ class OpenStackHelper(BaseHelper):
         ooi_networks = self._build_networks(nets)
         pools = self.get_floating_ip_pools(req)
         if pools:
-            net = {'id': 'PUBLIC', 'label': 'PUBLIC'}
+            net = {'id': os_helpers.PUBLIC_NETWORK,
+                   'label': os_helpers.PUBLIC_NETWORK}
             public_net = self._build_networks([net])[0]
             ooi_networks.append(public_net)
         return ooi_networks
@@ -943,8 +944,8 @@ class OpenStackHelper(BaseHelper):
         :param req: the incoming network
         :param id: net identification
         """
-        if id == 'PUBLIC':
-            net = {'id': 'PUBLIC',
+        if id == os_helpers.PUBLIC_NETWORK:
+            net = {'id': os_helpers.PUBLIC_NETWORK,
                    'label': 'PUBLIC_to_associate_Floating_IPs'}
         else:
             path = "os-networks/%s" % id
