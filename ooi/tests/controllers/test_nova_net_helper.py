@@ -30,13 +30,6 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         super(TestNovaNetOpenStackHelper, self).setUp()
         self.version = "version foo bar baz"
         self.helper = helpers.OpenStackHelper(None, self.version)
-        self.translation = {"networks": {
-            "occi.core.title": "label",
-            "occi.core.id": "id",
-            "occi.network.address": "cidr",
-            "occi.network.gateway": "gateway",
-        }
-        }
 
     @mock.patch.object(helpers.OpenStackHelper, "_get_req")
     @mock.patch.object(helpers.OpenStackHelper, "tenant_from_req")
@@ -139,9 +132,9 @@ class TestNovaNetOpenStackHelper(base.TestCase):
         net_id = uuid.uuid4().hex
         cidr = "0.0.0.0"
         gateway = "0.0.0.1"
-        parameters = {"occi.core.title": name,
-                      "occi.network.address": cidr,
-                      "occi.network.gateway": gateway
+        parameters = {"label": name,
+                      "cidr": cidr,
+                      "gateway": gateway
                       }
         resp = fakes.create_fake_json_resp(
             {"network": {"id": net_id, "label": name,
@@ -156,9 +149,7 @@ class TestNovaNetOpenStackHelper(base.TestCase):
                                          cidr=cidr,
                                          gateway=gateway,
                                          )
-        net_param = utils.translate_parameters(
-            self.translation['networks'], parameters)
-        body = utils.make_body('network', net_param)
+        body = utils.make_body('network', parameters)
         m_rq.assert_called_with(
             None, method="POST",
             content_type='application/json',
