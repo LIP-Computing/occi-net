@@ -176,7 +176,7 @@ class Controller(ooi.api.base.Controller):
                                               public_key=key_data)
 
         block_device_mapping_v2 = self._build_block_mapping(req, obj)
-        # fixme(jorgesece): indicates network ID to solve Bug 1524935.
+        # FIXME(jorgesece): indicates network ID to solve Bug 1524935.
         server = self.os_helper.create_server(
             req,
             name,

@@ -51,7 +51,7 @@ class OpenStackNeutron(helpers.BaseHelper):
             public = net.get('router:external', None)
             if public:
                 ooi_net["id"] = os_helpers.PUBLIC_NETWORK
-                # todo (jorgesece): include info about pools
+                # TODO(jorgesece): include info about pools
             else:
                 ooi_net["id"] = net["id"]
             ooi_net["name"] = net.get("name", None)

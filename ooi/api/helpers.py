@@ -904,7 +904,7 @@ class OpenStackHelper(BaseHelper):
     def _build_networks(networks):
         ooi_net_list = []
         for net in networks:
-            # todo(jorgesece): manage IP_v6
+            # TODO(jorgesece): manage IP_v6
             ooi_net = {}
             ooi_net["address"] = net.get("cidr", None)
             ooi_net["state"] = "active"

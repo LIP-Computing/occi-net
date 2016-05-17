@@ -64,7 +64,7 @@ class Controller(base.Controller):
         )
 
     def index(self, req):
-        """List NetworksLinks
+        """List NetworkLinks
 
         :param req: request object
         """
