@@ -15,7 +15,6 @@ Moreover, the following options are available:
  * ``ooi_listen_port``: Port ooi will bind to. Defaults to ``8787``.
  * ``ooi_workers``: Number of workers to spawn, by default it is set to the
    number of CPUs in the node.
- * ``neutron_endpoint``: Neutron end point which access to the Neutron Restful API.
 
 Paste Configuration
 *******************
@@ -38,14 +37,11 @@ First it is needed to add the OCCI filter like this::
     [filter:occi]
     paste.filter_factory = ooi.wsgi:OCCIMiddleware.factory
     openstack_version = /v2
-    neutron_endpoint =  http://127.0.0.1:9696/v2.0
+    neutron_ooi_endpoint = http://127.0.0.1:9696/v2.0
 
 ``openstack_version`` can be configured to any of the supported OpenStack API
 versions, as indicated in Table :ref:`api-versions`. If it is not configured,
 by default it will take the ``/v2.1`` value.
-``neturon_endpoint`` configures the Neutron endpoint which access to the
- Neutron Restful API for network management. If it is not configured, by
- default, it will take ``http://127.0.0.1:9696/v2.0.``
 
 .. _api-versions:
 
@@ -57,6 +53,9 @@ by default it will take the ``/v2.1`` value.
     v2                    ``/v2``               ``[composite:openstack_compute_api_v2]``
     v2.1                  ``/v2.1``             ``[composite:openstack_compute_api_v21]``
     ===================== ===================== =============================================
+
+``neutron_ooi_endpoint`` configures the neutron endpoint. It is an optional parameter that configures
+the network management by using neutron. If this is not set, the system will use nova-network.
 
 The next step is to create a ``composite`` section for the OCCI interface. It
 is needed to duplicate the :ref:`corresponding OpenStack API ``composite``<api-versions>` section,

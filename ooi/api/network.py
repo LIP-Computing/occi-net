@@ -27,11 +27,11 @@ from ooi.openstack import network as os_network
 
 def parse_validate_schema(req, scheme=None,
                           required_attr=None):
-    """Parse attributes, even Validate scheme
+    """Parse attributes and validate scheme
 
 
     Returns attributes from request
-    If scheme is specified, it validate the OCCI scheme:
+    If scheme is specified, it validates the OCCI scheme:
      -Raises exception in case of being invalid
 
     :param req: request

@@ -145,7 +145,7 @@ floating_ips = {
 }
 
 networks = {
-    tenants["foo"]["id"]: [],
+    tenants["foo"]["id"]: [{"id": uuid.uuid4().hex}],
     tenants["bar"]["id"]: [],
     tenants["baz"]["id"]: [
         {"id": uuid.uuid4().hex},
@@ -458,6 +458,8 @@ class FakeApp(object):
                            "os-floating-ip-pools")
             self._populate(path, "floating_ip", floating_ips[tenant["id"]],
                            "os-floating-ips")
+            self._populate(path, "network", networks[tenant["id"]],
+                           "os-networks")
             self._populate_ports(path, servers[tenant["id"]],
                                  ports[tenant["id"]])
             # NOTE(aloga): dict_values un Py3 is not serializable in JSON
