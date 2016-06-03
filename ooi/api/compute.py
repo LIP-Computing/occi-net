@@ -137,12 +137,6 @@ class Controller(ooi.api.base.Controller):
                     network.NetworkResource.kind)
                 net = {'uuid': net_id}
                 networks.append(net)
-        if not networks:
-            try:
-                net_response = self.os_helper.get_networks(req)
-                networks.append({'uuid':net_response[0]['id']})
-            except KeyError:
-                pass
         return networks
 
     def create(self, req, body):

@@ -919,24 +919,20 @@ class OpenStackHelper(BaseHelper):
             ooi_net_list.append(ooi_net)
         return ooi_net_list
 
-    def get_networks(self, req):
-        path = "os-networks"
-        tenant_id = self.tenant_from_req(req)
-        path = "/%s/%s" % (tenant_id, path)
-        os_req = self._get_req(req, path=path,
-                               method="GET")
-        response = os_req.get_response(self.app)
-        nets = self.get_from_response(response,
-                                      "networks", [])
-        return self._build_networks(nets)
-
     def list_networks(self, req):
         """Get a list of servers for a tenant.
 
         :param req: the incoming request
         :param parameters: parameters with tenant
         """
-        ooi_networks = self.get_networks(req)
+        path = "os-networks"
+        tenant_id = self.tenant_from_req(req)
+        path = "/%s/%s" % (tenant_id, path)
+        os_req = self._get_req(req, path=path,
+                               method="GET")
+        response = os_req.get_response(self.app)
+        nets = self.get_from_response(response, "networks", [])
+        ooi_networks = self._build_networks(nets)
         pools = self.get_floating_ip_pools(req)
         if pools:
             net = {'id': os_helpers.PUBLIC_NETWORK,
