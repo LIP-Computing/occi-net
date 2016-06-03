@@ -34,7 +34,7 @@ def _get_network_link_resources(link_list):
     occi_network_resources = []
     if link_list:
         for l in link_list:
-            compute_id = l.get('compute_id')
+            compute_id = l['compute_id']
             mac = l.get('mac', None)
             net_pool = l.get('pool', None)
             ip = l.get('ip', None)
