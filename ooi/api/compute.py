@@ -137,6 +137,8 @@ class Controller(ooi.api.base.Controller):
                     network.NetworkResource.kind)
                 net = {'uuid': net_id}
                 networks.append(net)
+        if not network:
+            networks = None
         return networks
 
     def create(self, req, body):
@@ -189,7 +191,6 @@ class Controller(ooi.api.base.Controller):
                                               public_key=key_data)
 
         block_device_mapping_v2 = self._build_block_mapping(req, obj)
-        # FIXME(jorgesece): indicates network ID to solve Bug 1524935.
         networks = self._get_network_from_req(req, obj)
         server = self.os_helper.create_server(
             req,

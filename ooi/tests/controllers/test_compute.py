@@ -553,11 +553,22 @@ class TestComputeController(base.TestController):
             {"uuid": net_id_2}
         ]
         self.assertEqual(expected, ret)
-        self.assertEqual((None, net_id_1, occi_network.NetworkResource.kind),
-                 m_get_id.call_args_list[1][0])
-        self.assertEqual((None, net_id_2, occi_network.NetworkResource.kind),
-                         m_get_id.call_args_list[0][0])
-
+        self.assertEqual(2, m_get_id.call_count)
+        self.assertEqual((None, mock.ANY,
+                          occi_network.NetworkResource.kind),
+                         m_get_id.call_args_list[1][0])
+        self.assertEqual((None, mock.ANY,
+                          occi_network.NetworkResource.kind),
+                         m_get_id.call_args_list[0][0]
+                         )
+        self.assertNotEqual(m_get_id.call_args_list[0][0][1],
+                            m_get_id.call_args_list[1][0][1])
+        self.assertIn(m_get_id.call_args_list[0][0][1],
+                      [net_id_1, net_id_2]
+                      )
+        self.assertIn(m_get_id.call_args_list[1][0][1],
+                      [net_id_1, net_id_2]
+                      )
 
     @mock.patch.object(helpers.OpenStackHelper, "create_server")
     @mock.patch.object(compute.Controller, "_get_network_from_req")
@@ -595,7 +606,7 @@ class TestComputeController(base.TestController):
     @mock.patch.object(compute.Controller, "_get_network_from_req")
     @mock.patch("ooi.occi.validator.Validator")
     def test_create_server_with_network_link_several(self, m_validator,
-                                             m_net, m_server):
+                                                     m_net, m_server):
         tenant = fakes.tenants["foo"]
         req = self._build_req(tenant["id"])
         obj = {
@@ -622,5 +633,3 @@ class TestComputeController(base.TestController):
                                     block_device_mapping_v2=[],
                                     networks=net)
         m_net.assert_called_with(req, obj)
-
-
