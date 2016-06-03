@@ -137,8 +137,6 @@ class Controller(ooi.api.base.Controller):
                     network.NetworkResource.kind)
                 net = {'uuid': net_id}
                 networks.append(net)
-        if not network:
-            networks = None
         return networks
 
     def create(self, req, body):

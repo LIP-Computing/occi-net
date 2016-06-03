@@ -335,9 +335,6 @@ class OpenStackHelper(BaseHelper):
             "imageRef": image,
             "flavorRef": flavor,
         }}
-        # FIXME(jorgesece): Add network ID (Bug 1524935)
-        # if net_id:
-        # body['server']['network'] = {'uuid': net_id}
         if user_data is not None:
             body["server"]["user_data"] = user_data
         if key_name is not None:
