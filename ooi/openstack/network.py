@@ -93,7 +93,6 @@ class OSNetwork(mixin.Mixin):
             ])
         )
 
-
 os_network = OSNetwork()
 
 
@@ -155,8 +154,13 @@ class OSNetworkResource(network.NetworkResource):
 
     @property
     def allocation(self):
-        return self.attributes["occi.network.network.allocation"].value
+        return self.attributes["occi.network.allocation"].value
 
     @allocation.setter
     def allocation(self, value):
-        self.attributes["occi.network.network.allocation"] = value
+        self.attributes["occi.network.allocation"].value = value
+
+
+neutron_network = mixin.Mixin(helpers.build_scheme("infrastructure/network"),
+                              "neutron", "Network component",
+                              )
