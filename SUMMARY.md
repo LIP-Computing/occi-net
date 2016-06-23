@@ -6,6 +6,6 @@ ooi is an implementation the Open Grid Forum's
 for [OpenStack](http://www.openstack.org).
 
 * [About OOI](README.md)
-* [User guide](doc/source/user/usage.md)
+* [User guide](doc/source/user/usage.rst)
 
 
