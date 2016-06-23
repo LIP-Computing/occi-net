@@ -1,6 +1,13 @@
-Developer documentation
+Usage documentation
 =======================
 
+Discovery
+*****************
+In order to discover the available resources in the system, OOI provide a view of the relevant resources for its usage::
+
+    curl -H "X-Auth-token: "$OS_TOKEN http://127.0.0.23:8787/occi1.1/-/
+
+It will show the OCCI and OpenStack resources related to OOI.
 
 Network
 *****************
@@ -128,7 +135,20 @@ Create network link
 It allows to create link between VMs and networks. It could be with a private or public network:
 In case of private network::
 
+    curl -X POST http://127.0.0.23:8787/occi1.1/networklink/ -H 'X-Auth-Token: '$OS_TOKEN
+    -H 'Category: networkinterface; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"'
+    -H 'Content-Type: text/occi'
+    -H 'X-OCCI-Attribute: occi.core.target=http://127.0.0.23:8787/occi1.1/network/PUBLIC,
+    occi.core.source=http://127.0.0.23:8787/occi1.1/compute/cb83a70a-5202-4b9e-a525-649c72005300'
+
 In case of private network::
+
+    curl -X POST http://127.0.0.23:8787/occi1.1/networklink/ -H 'X-Auth-Token: '$OS_TOKEN
+    -H 'Category: networkinterface; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"'
+    -H 'Content-Type: text/occi'
+    -H 'X-OCCI-Attribute: occi.core.target=http://127.0.0.23:8787/occi1.1/network/d856c264-1999-489d-888e-f84db9093979,
+    occi.core.source=http://127.0.0.23:8787/occi1.1/compute/cb83a70a-5202-4b9e-a525-649c72005300'
+
 
 In case of private network::
  dsfds
@@ -144,7 +164,7 @@ It returns a 204 empty response.
 Compute
 *****************
 
-It allows to create, list, show and delete VMs
+It allows to create, list, show and delete VMs.
 
 List Computes
 ------
