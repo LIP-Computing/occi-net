@@ -34,7 +34,6 @@ It shows the network features::
     curl -H "X-Auth-token: "$OS_TOKEN http://127.0.0.23:8787/occi1.1/network/b8a3d813-65da-4910-a80c-f97b4ba31fd4
 
 
-
 It returns a HTTP 200 with output::
 
     Category: network; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind"; title="network resource";
@@ -150,10 +149,6 @@ In case of private network::
     occi.core.source=http://127.0.0.23:8787/occi1.1/compute/cb83a70a-5202-4b9e-a525-649c72005300'
 
 
-In case of private network::
- dsfds
-
-
 Delete network link
 ------
 It deletes a network link::
@@ -218,10 +213,10 @@ Create Compute
 
 It creates a full VM using the default resources, including links to storage and private networks::
 
- curl -X POST http://127.0.0.23:8787/occi1.1/compute/ -H 'X-Auth-Token: '$OS_TOKEN
- -H 'Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind", 5f4311da-2ee2-47a6-913b-5d8496486c62;
- scheme="http://schemas.openstack.org/template/os#"; class="mixin", 2; scheme="http://schemas.openstack.org/template/resource#";
- class="mixin"' -H 'Content-Type: text/occi' -H 'X-OCCI-Attribute: occi.core.title="OOI_VM_1"'
+    curl -X POST http://127.0.0.23:8787/occi1.1/compute/ -H 'X-Auth-Token: '$OS_TOKEN
+    -H 'Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind", 5f4311da-2ee2-47a6-913b-5d8496486c62;
+    scheme="http://schemas.openstack.org/template/os#"; class="mixin", 2; scheme="http://schemas.openstack.org/template/resource#";
+    class="mixin"' -H 'Content-Type: text/occi' -H 'X-OCCI-Attribute: occi.core.title="OOI_VM_1"'
 
 Also we can specify the network to be linked::
 
@@ -235,7 +230,7 @@ Also we can specify the network to be linked::
 
 It returns a HTTP 201 with output::
 
- X-OCCI-Location: http://127.0.0.23:8787/occi1.1/compute/4a7dc666-33d2-495e-93fe-ccd224c98c11
+    X-OCCI-Location: http://127.0.0.23:8787/occi1.1/compute/4a7dc666-33d2-495e-93fe-ccd224c98c11
 
 Delete Compute
 ------
