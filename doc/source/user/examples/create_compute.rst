@@ -1,2 +1,0 @@
-
-curl -H "Content-Type: text/occi" -H "x-auth-token: $KID" -H 'Category: compute; scheme="http://schemas.ogf.org/occi/infrastructure#"; class="kind", 5f4311da-2ee2-47a6-913b-5d8496486c62; scheme="http://schemas.openstack.org/template/os#"; class=mixin, 42; scheme="http://schemas.openstack.org/template/resource#"; class=mixin' -H  'X-OCCI-Attribute: occi.core.title="pruebaCompute"' -X POST  http://localhost:8787/occi1.1/compute

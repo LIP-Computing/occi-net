@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/ooi-net.iml" filepath="$PROJECT_DIR$/.idea/ooi-net.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/occi-net.iml" filepath="$PROJECT_DIR$/.idea/occi-net.iml" />
     </modules>
   </component>
 </project>

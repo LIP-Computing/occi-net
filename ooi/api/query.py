@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 # Copyright 2015 Spanish National Research Council
-# Copyright 2015 LIP - INDIGO-DataCloud
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -94,7 +93,6 @@ class Controller(base.Controller):
         l.extend(network.NetworkResource.actions)
         if self.neutron_ooi_endpoint:
             l.append(os_network.neutron_network)
-            l.append(os_network.os_network)
         l.append(network.ip_network)
         l.append(network_link.NetworkInterface.kind)
         l.append(network_link.ip_network_interface)
