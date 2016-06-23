@@ -173,6 +173,7 @@ It allows to create VM::
     curl  -H "X-Auth-token: "$OS_TOKEN http://127.0.0.23:8787/occi1.1/compute
 
 It returns a HTTP 200 with output::
+
     X-OCCI-Location: http://127.0.0.23:8787/occi1.1/compute/703910d7-97f7-4e3e-9243-30830591f624
     X-OCCI-Location: http://127.0.0.23:8787/occi1.1/compute/0ce5df96-7e61-4a8e-b821-9ebb88e77e07
 
@@ -233,6 +234,7 @@ Also we can specify the network to be linked::
     -H 'Content-Type: text/occi' -H 'X-OCCI-Attribute: occi.core.title="OOI_VM_1"'
 
 It returns a HTTP 201 with output::
+
  X-OCCI-Location: http://127.0.0.23:8787/occi1.1/compute/4a7dc666-33d2-495e-93fe-ccd224c98c11
 
 Delete Compute
