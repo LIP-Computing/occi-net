@@ -1,5 +1,6 @@
 Installation
 ============
+This document explain the process to install OOI.
 
 Installation via packages
 *************************
