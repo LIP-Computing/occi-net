@@ -1,11 +1,15 @@
 Installation
 ============
-This document explain the process to install OOI.
 
 Installation via packages
 *************************
 
-TBD
+ooi packages are released through the EGI's `AppDB`_. In the `ooi`_ middleware
+page you will find the latest production and release candidates, as long as the
+repositories for the major GNU/Linux distributions.
+
+.. _AppDB: https://appdb.egi.eu/
+.. _ooi: https://appdb.egi.eu/store/software/ooi
 
 Instalation from pip
 ********************
